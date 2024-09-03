@@ -4,8 +4,13 @@ from typing import Optional, List
 from contextlib import contextmanager
 import sys
 import os
+import logging
 
 app = FastAPI()
+
+# Use the logger instead of print
+logger = logging.getLogger("uvicorn")
+logger.info("Application is starting up...")
 
 @contextmanager
 def add_sys_path(path):
@@ -80,6 +85,10 @@ async def generate_answer(
         async with httpx.AsyncClient() as client:
             response = await client.get(infer_file_url, params=params)
             response.raise_for_status()  # Raise an exception for HTTP errors
+            # Log detailed response information
+            logger.info(f"Response status code: {response.status_code}")
+            logger.info(f"Response headers: {response.headers}")
+            logger.info(f"Response content: {response.text}")
 
         # Return the response from the machtiani-commit-file-retrieval service
         return response.json()
