@@ -2,7 +2,7 @@ import httpx
 from fastapi import FastAPI, Query, HTTPException
 from typing import Optional, List
 from contextlib import contextmanager
-from .utils import aggregate_file_paths
+from .utils import aggregate_file_paths, remove_duplicate_file_paths
 import sys
 import os
 import logging
@@ -93,6 +93,8 @@ async def generate_response(
 
         # Aggregate file paths
         list_file_path_entry = aggregate_file_paths(list_file_search_response)
+        # Remove redundant entries
+        list_file_path_entry = remove_duplicate_file_paths(list_file_path_entry)
 
         return list_file_path_entry
 

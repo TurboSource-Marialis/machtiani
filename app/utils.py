@@ -53,3 +53,9 @@ def aggregate_file_paths(responses: List[FileSearchResponse]) -> List[FilePathEn
         file_paths.extend(response.file_paths)
     return file_paths
 
+def remove_duplicate_file_paths(file_paths: List[FilePathEntry]) -> List[FilePathEntry]:
+    unique_paths = {}
+    for entry in file_paths:
+        if entry.path not in unique_paths:
+            unique_paths[entry.path] = entry
+    return list(unique_paths.values())
