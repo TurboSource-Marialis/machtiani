@@ -1,6 +1,6 @@
 import httpx
 from fastapi import FastAPI, Query, HTTPException
-from typing import Optional, List
+from typing import Optional, List, Dict
 from contextlib import contextmanager
 from .utils import aggregate_file_paths, remove_duplicate_file_paths
 import sys
@@ -60,7 +60,7 @@ except ModuleNotFoundError as e:
     print(f"ModuleNotFoundError: {e}")
     print("Failed to import the module. Please check the paths and directory structure.")
 
-@app.post("/generate-response", response_model=List[FilePathEntry])
+@app.post("/generate-response", response_model=Dict[str, str])
 async def generate_response(
     prompt: str = Query(..., description="The prompt to search for"),
     project: str = Query(..., description="The project to search"),
@@ -68,9 +68,10 @@ async def generate_response(
     model: EmbeddingModel = Query(..., description="The embedding model used"),
     api_key: str = Query(..., description="The OpenAI API key."),
     match_strength: MatchStrength = Query(MatchStrength.HIGH, description="The strength of the match")
-) -> List[FilePathEntry]:
+) -> Dict[str, str]:
     infer_file_url = "http://commit-file-retrieval:5070/infer-file/"
-
+    retrieve_file_contents_url = f"http://commit-file-retrieval:5070/retrieve-file-contents/?project_name={project}"
+    
     params = {
         "prompt": prompt,
         "project": project,
@@ -82,6 +83,7 @@ async def generate_response(
 
     try:
         async with httpx.AsyncClient() as client:
+            # First, call the infer-file endpoint
             response = await client.get(infer_file_url, params=params)
             response.raise_for_status()
             logger.info(f"Response status code: {response.status_code}")
@@ -91,12 +93,22 @@ async def generate_response(
             # Parse the JSON response into a list of FileSearchResponse objects
             list_file_search_response = [FileSearchResponse(**item) for item in response.json()]
 
-        # Aggregate file paths
-        list_file_path_entry = aggregate_file_paths(list_file_search_response)
-        # Remove redundant entries
-        list_file_path_entry = remove_duplicate_file_paths(list_file_path_entry)
+            # Aggregate and deduplicate file paths
+            list_file_path_entry = aggregate_file_paths(list_file_search_response)
+            list_file_path_entry = remove_duplicate_file_paths(list_file_path_entry)
 
-        return list_file_path_entry
+            # Prepare the list of file paths for the retrieve-file-contents endpoint
+            file_paths_payload = [entry.dict() for entry in list_file_path_entry]
+
+            # Log the payload for debugging
+            logger.info(f"Payload for retrieve-file-contents: {file_paths_payload}")
+
+            # Call the retrieve-file-contents endpoint with the deduplicated paths
+            content_response = await client.post(retrieve_file_contents_url, json=file_paths_payload)
+            content_response.raise_for_status()
+
+            # Return the file contents
+            return content_response.json()
 
     except httpx.RequestError as exc:
         raise HTTPException(status_code=500, detail=f"Error connecting to machtiani-commit-file-retrieval: {exc}")
