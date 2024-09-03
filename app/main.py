@@ -2,7 +2,7 @@ import httpx
 from fastapi import FastAPI, Query, HTTPException
 from typing import Optional, List, Dict
 from contextlib import contextmanager
-from .utils import aggregate_file_paths, remove_duplicate_file_paths
+from .utils import aggregate_file_paths, remove_duplicate_file_paths, send_prompt_to_openai
 import sys
 import os
 import logging
@@ -71,7 +71,7 @@ async def generate_response(
 ) -> Dict[str, str]:
     infer_file_url = "http://commit-file-retrieval:5070/infer-file/"
     retrieve_file_contents_url = f"http://commit-file-retrieval:5070/retrieve-file-contents/?project_name={project}"
-    
+
     params = {
         "prompt": prompt,
         "project": project,
@@ -107,8 +107,19 @@ async def generate_response(
             content_response = await client.post(retrieve_file_contents_url, json=file_paths_payload)
             content_response.raise_for_status()
 
-            # Return the file contents
-            return content_response.json()
+            # Get the file contents
+            file_contents = content_response.json()
+
+            # Append the file contents to the prompt
+            combined_prompt = f"{prompt}\n\nHere are the relevant files:\n"
+            for path, content in file_contents.items():
+                combined_prompt += f"\n--- {path} ---\n{content}\n"
+
+            # Use the utility function to send the combined prompt to OpenAI
+            openai_response = send_prompt_to_openai(combined_prompt, api_key)
+
+            # Return the OpenAI response
+            return {"openai_response": openai_response}
 
     except httpx.RequestError as exc:
         raise HTTPException(status_code=500, detail=f"Error connecting to machtiani-commit-file-retrieval: {exc}")

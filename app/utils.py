@@ -1,3 +1,5 @@
+from langchain_core.prompts import PromptTemplate
+from langchain_openai import ChatOpenAI
 from typing import List
 from contextlib import contextmanager
 import sys
@@ -59,3 +61,26 @@ def remove_duplicate_file_paths(file_paths: List[FilePathEntry]) -> List[FilePat
         if entry.path not in unique_paths:
             unique_paths[entry.path] = entry
     return list(unique_paths.values())
+
+def send_prompt_to_openai(prompt_text: str, api_key: str, model: str = "gpt-4o-mini") -> str:
+    """
+    Sends a prompt to OpenAI and returns the response.
+
+    :param prompt_text: The text prompt to send to OpenAI.
+    :param api_key: The API key for authentication with OpenAI.
+    :param model: The model to use (default is "gpt-4o-mini").
+    :return: The response from OpenAI as a string.
+    """
+    # Define the prompt template
+    prompt = PromptTemplate(input_variables=["input_text"], template="{input_text}")
+
+    # Initialize OpenAI LLM with the provided API key
+    openai_llm = ChatOpenAI(api_key=api_key, model=model)
+
+    # Chain the prompt and the LLM
+    openai_chain = prompt | openai_llm
+
+    # Execute the chain with the invoke method and return the response
+    openai_response = openai_chain.invoke({"input_text": prompt_text})
+    return openai_response.content
+
