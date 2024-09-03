@@ -60,8 +60,8 @@ except ModuleNotFoundError as e:
     print(f"ModuleNotFoundError: {e}")
     print("Failed to import the module. Please check the paths and directory structure.")
 
-@app.post("/generate-answer", response_model=List[FilePathEntry])
-async def generate_answer(
+@app.post("/generate-response", response_model=List[FilePathEntry])
+async def generate_response(
     prompt: str = Query(..., description="The prompt to search for"),
     project: str = Query(..., description="The project to search"),
     mode: SearchMode = Query(..., description="Search mode: content, commit, or super"),
