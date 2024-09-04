@@ -22,7 +22,7 @@ After launch, try machtiani's only endpoint [generate-response](http://localhost
 
 - [ x ] Retrieve file content and add to prompt.
 
-- [   ] Fetch on UI is tempermental, if wrong url and token given, it will messup. Maybe all that should be done strictly on commit-file-retrieval server side, the url and token. just pass project name
+- [ x ] Fetch on UI is tempermental, if wrong url and token given, it will messup. Maybe all that should be done strictly on commit-file-retrieval server side, the url and token. just pass project name
 
 - [  ] Separate command for sending edited markdown (don't wrap # User)
 
