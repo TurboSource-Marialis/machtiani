@@ -1,15 +1,40 @@
 #!/bin/bash
 
+# Initialize variables
+markdown_flag=false
+markdown_file=""
+
+# Parse the --markdown flag and file path
+while [[ "$1" == --* ]]; do
+    case "$1" in
+        --markdown)
+            markdown_flag=true
+            markdown_file="$2"
+            shift 2
+            ;;
+        *)
+            echo "Unknown option: $1"
+            exit 1
+            ;;
+    esac
+done
+
 # Check if required arguments are provided
-if [ "$#" -ne 3 ]; then
-    echo "Usage: $0 <prompt> <project> <match_strength>"
+if [ "$#" -lt 2 ]; then
+    echo "Usage: $0 [--markdown <markdown_file>] <project> <match_strength>"
     exit 1
 fi
 
 # Assign arguments to variables
-prompt="$1"
-project="$2"
-match_strength="$3"
+if [ "$markdown_flag" = true ]; then
+    prompt=$(cat "$markdown_file")
+else
+    prompt="$1"
+    shift
+fi
+
+project="$1"
+match_strength="$2"
 
 # Check if OPENAI_API_KEY is set
 if [ -z "$OPENAI_API_KEY" ]; then
@@ -34,7 +59,11 @@ temp_dir=$(mktemp -d)
 
 # Save the Markdown content to a file in the temporary directory
 temp_file="$temp_dir/response.md"
-echo -e "# User\n\n$prompt\n\n# Assitant\n\n$openai_response" > "$temp_file"
+if [ "$markdown_flag" = true ]; then
+    echo -e "$prompt\n\n# Assitant\n\n$openai_response" > "$temp_file"
+else
+    echo -e "# User\n\n$prompt\n\n# Assitant\n\n$openai_response" > "$temp_file"
+fi
 
 # Open the Markdown file
 glow "$temp_file"
