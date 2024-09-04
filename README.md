@@ -24,5 +24,6 @@ After launch, try machtiani's only endpoint [generate-response](http://localhost
 
 - [ x ] Fetch on UI is tempermental, if wrong url and token given, it will messup. Maybe all that should be done strictly on commit-file-retrieval server side, the url and token. just pass project name
 
-- [  ] Separate command for sending edited markdown (don't wrap # User)
+- [ x ] Separate command for sending edited markdown (don't wrap # User)
+        (completed with commmit 5a69231d4b48b6cd8c1b1e3b54a1b57c3d295a74)
 
