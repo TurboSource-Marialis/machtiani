@@ -34,7 +34,7 @@ temp_dir=$(mktemp -d)
 
 # Save the Markdown content to a file in the temporary directory
 temp_file="$temp_dir/response.md"
-echo -e "# API Response for: $prompt\n\n$openai_response" > "$temp_file"
+echo -e "# User\n\n$prompt\n\n# Assitant\n\n$openai_response" > "$temp_file"
 
 # Open the Markdown file
 glow "$temp_file"
