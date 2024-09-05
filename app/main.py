@@ -65,10 +65,18 @@ async def generate_response(
     prompt: str = Query(..., description="The prompt to search for"),
     project: str = Query(..., description="The project to search"),
     mode: SearchMode = Query(..., description="Search mode: content, commit, or super"),
-    model: EmbeddingModel = Query(..., description="The embedding model used"),
+    model: str = Query("gpt-4o-mini", description="The embedding model used"),
     api_key: str = Query(..., description="The OpenAI API key."),
-    match_strength: MatchStrength = Query(MatchStrength.HIGH, description="The strength of the match")
+    match_strength: str = Query("mid", description="The strength of the match")
 ) -> Dict[str, str]:
+    # Validate the model
+    if model not in ["gpt-4o", "gpt-4o-mini"]:
+        raise HTTPException(status_code=400, detail="Invalid model selected. Choose either 'gpt-4o' or 'gpt-4o-mini'.")
+
+    # Validate the match strength
+    if match_strength not in ["high", "mid", "low"]:
+        raise HTTPException(status_code=400, detail="Invalid match strength selected. Choose either 'high', 'mid', or 'low'.")
+
     infer_file_url = "http://commit-file-retrieval:5070/infer-file/"
     retrieve_file_contents_url = f"http://commit-file-retrieval:5070/retrieve-file-contents/?project_name={project}"
 
@@ -76,8 +84,8 @@ async def generate_response(
         "prompt": prompt,
         "project": project,
         "mode": mode.value,
-        "model": model.value,
-        "match_strength": match_strength.value,
+        "model": model,
+        "match_strength": match_strength,
         "api_key": api_key,
     }
 

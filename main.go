@@ -12,12 +12,17 @@ import (
     "github.com/charmbracelet/glamour"
 )
 
+const (
+    defaultModel      = "gpt-4o-mini"
+    defaultMatchStrength = "mid"
+)
+
 func main() {
-    // Initialize variables
     markdownFlag := false
     markdownFile := ""
+    model := defaultModel
+    matchStrength := defaultMatchStrength
 
-    // Parse command line arguments
     args := os.Args[1:]
     for len(args) > 0 && strings.HasPrefix(args[0], "--") {
         switch args[0] {
@@ -28,18 +33,34 @@ func main() {
             markdownFlag = true
             markdownFile = args[1]
             args = args[2:]
+        case "--model":
+            if len(args) < 2 {
+                log.Fatal("Error: --model flag requires a model name.")
+            }
+            model = args[1]
+            if model != "gpt-4o" && model != "gpt-4o-mini" {
+                log.Fatal("Error: Invalid model selected. Choose either 'gpt-4o' or 'gpt-4o-mini'.")
+            }
+            args = args[2:]
+        case "--match-strength":
+            if len(args) < 2 {
+                log.Fatal("Error: --match-strength flag requires a strength option.")
+            }
+            matchStrength = args[1]
+            if matchStrength != "high" && matchStrength != "mid" && matchStrength != "low" {
+                log.Fatal("Error: Invalid match strength selected. Choose either 'high', 'mid', or 'low'.")
+            }
+            args = args[2:]
         default:
             log.Fatalf("Unknown option: %s\n", args[0])
         }
     }
 
-    // Check if required arguments are provided
     if len(args) < 2 {
         fmt.Println("Usage: go run script.go [--markdown <markdown_file>] <project> <match_strength>")
         os.Exit(1)
     }
 
-    // Assign arguments to variables
     var prompt string
     if markdownFlag {
         content, err := ioutil.ReadFile(markdownFile)
@@ -53,20 +74,16 @@ func main() {
     }
 
     project := args[0]
-    matchStrength := args[1]
 
-    // Check if OPENAI_API_KEY is set
     openAIAPIKey := os.Getenv("OPENAI_API_KEY")
     if openAIAPIKey == "" {
         log.Fatal("Error: OPENAI_API_KEY environment variable is not set.")
     }
 
-    // URL encode the prompt
     encodedPrompt := url.QueryEscape(prompt)
 
-    // Make the API call
-    apiURL := fmt.Sprintf("http://localhost:5071/generate-response?prompt=%s&project=%s&mode=commit&model=gpt-4o-mini&api_key=%s&match_strength=%s",
-        encodedPrompt, project, openAIAPIKey, matchStrength)
+    apiURL := fmt.Sprintf("http://localhost:5071/generate-response?prompt=%s&project=%s&mode=commit&model=%s&api_key=%s&match_strength=%s",
+        encodedPrompt, project, model, openAIAPIKey, matchStrength)
     resp, err := http.Post(apiURL, "application/json", nil)
     if err != nil {
         log.Fatalf("Error making API call: %v\n", err)
@@ -83,7 +100,10 @@ func main() {
         log.Fatalf("Error parsing JSON response: %v\n", err)
     }
 
-    openAIResponse := response["openai_response"].(string)
+    openAIResponse, ok := response["openai_response"].(string)
+    if !ok {
+        log.Fatalf("Error: openai_response key missing or not a string in the response")
+    }
     openAIResponse = strings.ReplaceAll(openAIResponse, "\\n", "\n")
     openAIResponse = strings.ReplaceAll(openAIResponse, "\\\"", "\"")
 
@@ -106,22 +126,20 @@ func main() {
         log.Fatalf("Error writing to temporary file: %v\n", err)
     }
 
-    // Use the default "dark" style and adjust word wrap and margins
+    // Use glamour to render the Markdown content
     renderer, err := glamour.NewTermRenderer(
         glamour.WithAutoStyle(),
-        glamour.WithWordWrap(120), // Adjust word wrap to make the text 1/3 wider
+        glamour.WithWordWrap(120),
     )
     if err != nil {
         log.Fatalf("Error creating renderer: %v", err)
     }
 
-    // Render the Markdown content
     out, err := renderer.Render(markdownContent)
     if err != nil {
         log.Fatalf("Error rendering Markdown: %v", err)
     }
 
-    // Print the rendered content to the terminal
     fmt.Println(out)
 
     // Print out the path to the file
