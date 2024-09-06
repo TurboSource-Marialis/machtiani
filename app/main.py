@@ -110,6 +110,9 @@ async def generate_response(
 
             # Log the payload for debugging
             logger.info(f"Payload for retrieve-file-contents: {file_paths_payload}")
+            # Check if file_paths_payload is empty and return an appropriate response if so
+            if not file_paths_payload:
+                return {"machtiani": "no files found"}
 
             # Call the retrieve-file-contents endpoint with the deduplicated paths
             content_response = await client.post(retrieve_file_contents_url, json=file_paths_payload)

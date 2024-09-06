@@ -107,7 +107,12 @@ func main() {
 
     openAIResponse, ok := response["openai_response"].(string)
     if !ok {
-        log.Fatalf("Error: openai_response key missing or not a string in the response")
+        // Check for the "machtiani" key if "openai_response" is not found
+        if machtianiResponse, exists := response["machtiani"].(string); exists && machtianiResponse == "no files found" {
+            log.Fatalf("Fatal error: %s", machtianiResponse)
+        } else {
+            log.Fatalf("Error: openai_response key missing and no fatal machtiani condition met")
+        }
     }
     openAIResponse = strings.ReplaceAll(openAIResponse, "\\n", "\n")
     openAIResponse = strings.ReplaceAll(openAIResponse, "\\\"", "\"")
