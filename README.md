@@ -1,3 +1,5 @@
+See optional_project_flag.md for unimplemented next change.
+
 # machtiani
 
 Code chat, against retrieved files from commits.
