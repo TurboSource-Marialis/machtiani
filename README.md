@@ -87,3 +87,4 @@ After launch, try machtiani's only endpoint [generate-response](http://localhost
 - [x] Retrieve file content and add to prompt.
 - [x] Fetch on UI is temperamental; if the wrong URL and token are given, it will mess up. Maybe all that should be done strictly on the commit-file-retrieval server side, the URL and token, just pass the project name.
 - [x] Separate command for sending edited markdown (don't wrap # User) (completed with commit 5a69231d4b48b6cd8c1b1e3b54a1b57c3d295a74).
+- [ ] Return list of files used in response with `--mode commit`
