@@ -102,3 +102,6 @@ After launch, try machtiani's only endpoint [generate-response](http://localhost
 - [x] Separate command for sending edited markdown (don't wrap # User) (completed with commit 5a69231d4b48b6cd8c1b1e3b54a1b57c3d295a74).
 - [x] Return list of files used in response with `--mode commit`
 - [x] machtiani.ignore
+- [ ] Auto-save results in `.machtiani/chat/`. Should name the same if passing filename as --markdown.
+- [ ] Auto-generate an appropriate file name for generated markdown.
+
