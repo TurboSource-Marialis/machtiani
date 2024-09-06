@@ -8,7 +8,6 @@ import (
     "net/http"
     "net/url"
     "os"
-    "strings"
     "encoding/json"
     "github.com/charmbracelet/glamour"
 )
@@ -114,8 +113,6 @@ func main() {
             log.Fatalf("Error: openai_response key missing and no fatal machtiani condition met")
         }
     }
-    openAIResponse = strings.ReplaceAll(openAIResponse, "\\n", "\n")
-    openAIResponse = strings.ReplaceAll(openAIResponse, "\\\"", "\"")
 
     // Create a temporary directory
     tempDir, err := ioutil.TempDir("", "response")
