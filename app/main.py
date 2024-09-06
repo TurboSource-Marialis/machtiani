@@ -89,6 +89,14 @@ async def generate_response(
         "api_key": api_key,
     }
 
+    # Initialize ignore_files list by reading from .machtiani.ignore
+    ignore_files = []
+    try:
+        with open('.machtiani.ignore', 'r') as f:
+            ignore_files = [line.strip() for line in f if line.strip()]
+    except FileNotFoundError:
+        logger.warning("No .machtiani.ignore file found, proceeding without ignoring any files.")
+
     try:
         async with httpx.AsyncClient() as client:
             # First, call the infer-file endpoint
@@ -109,6 +117,9 @@ async def generate_response(
                 # Aggregate and deduplicate file paths
                 list_file_path_entry = aggregate_file_paths(list_file_search_response)
                 list_file_path_entry = remove_duplicate_file_paths(list_file_path_entry)
+
+                # Filter out ignored files
+                list_file_path_entry = [entry for entry in list_file_path_entry if entry.path not in ignore_files]
 
                 # Prepare the list of file paths for the retrieve-file-contents endpoint
                 file_paths_payload = [entry.dict() for entry in list_file_path_entry]
