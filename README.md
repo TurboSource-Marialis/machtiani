@@ -54,18 +54,31 @@ machtiani [flags] [prompt]
 
 2. **Providing a direct prompt:**
    ```bash
-   machtiani "Add a new enpdpoint to get stats."
+   machtiani "Add a new endpoint to get stats."
    ```
 
 3. **Specifying additional parameters:**
    ```bash
    machtiani -project "your_project_name" -model "gpt-4o" -match-strength "high" -mode "commit" "Add a new endpoint to get stats."
    ```
-4. **Content mode**
 
+4. **Content mode**
    ```bash
-   machtiani --mardkown old_result.md --mode content
+   machtiani --markdown old_result.md --mode content
    ```
+
+### Ignoring Files with `.machtiani.ignore`
+
+To exclude specific files from being processed by the application, you can create a `.machtiani.ignore` file in the root of your project directory. The files listed in this file will be ignored during the retrieval process.
+
+#### Example `.machtiani.ignore` file:
+```
+poetry.lock
+go.sum
+go.mod
+```
+
+Each line in the `.machtiani.ignore` file should contain the name of a file or directory that you want to ignore. Ensure that there are no leading or trailing spaces in the file names.
 
 ### Environment Variables
 
