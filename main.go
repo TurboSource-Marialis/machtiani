@@ -10,31 +10,50 @@ import (
     "os"
     "encoding/json"
     "github.com/charmbracelet/glamour"
+    "strings"
 )
 
 const (
     defaultModel        = "gpt-4o-mini"
     defaultMatchStrength = "mid"
+    defaultMode         = "commit"
 )
 
 func main() {
+    // Define custom flag set
+    fs := flag.NewFlagSet("machtiani", flag.ContinueOnError)
+
     // Add command-line flags for optional arguments
-    markdownFlag := flag.String("markdown", "", "Path to the markdown file")
-    projectFlag := flag.String("project", "", "Name of the project (if not set, it will be fetched from git)")
-    modelFlag := flag.String("model", defaultModel, "Model to use (options: gpt-4o, gpt-4o-mini)")
-    matchStrengthFlag := flag.String("match-strength", defaultMatchStrength, "Match strength (options: high, mid, low)")
+    markdownFlag := fs.String("markdown", "", "Path to the markdown file")
+    projectFlag := fs.String("project", "", "Name of the project (if not set, it will be fetched from git)")
+    modelFlag := fs.String("model", defaultModel, "Model to use (options: gpt-4o, gpt-4o-mini)")
+    matchStrengthFlag := fs.String("match-strength", defaultMatchStrength, "Match strength (options: high, mid, low)")
+    modeFlag := fs.String("mode", defaultMode, "Search mode: content, commit, or super")
 
-    // Parse command-line flags
-    flag.Parse()
-    args := flag.Args()
+    // Custom argument parsing
+    args := os.Args[1:]
+    var promptParts []string
+    var flagArgs []string
 
-    // Print the arguments passed
-    fmt.Println("Arguments passed:")
-    fmt.Printf("Markdown file: %s\n", *markdownFlag)
-    fmt.Printf("Project name: %s\n", *projectFlag)
-    fmt.Printf("Model: %s\n", *modelFlag)
-    fmt.Printf("Match strength: %s\n", *matchStrengthFlag)
-    fmt.Printf("Remaining args (prompt): %v\n", args)
+    for i := 0; i < len(args); i++ {
+        if strings.HasPrefix(args[i], "-") {
+            flagArgs = append(flagArgs, args[i])
+            if i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
+                flagArgs = append(flagArgs, args[i+1])
+                i++
+            }
+        } else {
+            promptParts = append(promptParts, args[i])
+        }
+    }
+
+    // Parse flags
+    if err := fs.Parse(flagArgs); err != nil {
+        log.Fatalf("Error parsing flags: %v", err)
+    }
+
+    // Join prompt parts
+    prompt := strings.Join(promptParts, " ")
 
     // Retrieve project name from Git if not provided
     var project string
@@ -60,19 +79,32 @@ func main() {
         log.Fatalf("Error: Invalid match strength selected. Choose either 'high', 'mid', or 'low'.")
     }
 
+    // Validate mode argument
+    mode := *modeFlag
+    if mode != "content" && mode != "commit" && mode != "super" {
+        log.Fatalf("Error: Invalid mode selected. Choose either 'content', 'commit', or 'super'.")
+    }
+    fmt.Printf("Debug: Mode selected: %s\n", mode)
+
     // Determine the prompt source (file or command-line argument)
-    var prompt string
     if *markdownFlag != "" {
-        content, err := ioutil.ReadFile(*markdownFlag)
+        fileContent, err := ioutil.ReadFile(*markdownFlag)
         if err != nil {
             log.Fatalf("Error reading markdown file: %v", err)
         }
-        prompt = string(content)
-    } else if len(args) > 0 {
-        prompt = args[0]
-    } else {
+        prompt = string(fileContent)
+    } else if prompt == "" {
         log.Fatal("Error: No prompt provided. Please provide either a prompt or a markdown file.")
     }
+
+    // Print the arguments passed
+    fmt.Println("Arguments passed:")
+    fmt.Printf("Markdown file: %s\n", *markdownFlag)
+    fmt.Printf("Project name: %s\n", *projectFlag)
+    fmt.Printf("Model: %s\n", *modelFlag)
+    fmt.Printf("Match strength: %s\n", *matchStrengthFlag)
+    fmt.Printf("Mode: %s\n", *modeFlag)
+    fmt.Printf("Prompt: %s\n", prompt)
 
     // Ensure the OpenAI API key is set
     openAIAPIKey := os.Getenv("OPENAI_API_KEY")
@@ -82,8 +114,9 @@ func main() {
 
     // Prepare API request
     encodedPrompt := url.QueryEscape(prompt)
-    apiURL := fmt.Sprintf("http://localhost:5071/generate-response?prompt=%s&project=%s&mode=commit&model=%s&api_key=%s&match_strength=%s",
-        encodedPrompt, project, model, openAIAPIKey, matchStrength)
+    apiURL := fmt.Sprintf("http://localhost:5071/generate-response?prompt=%s&project=%s&mode=%s&model=%s&api_key=%s&match_strength=%s",
+        encodedPrompt, project, mode, model, openAIAPIKey, matchStrength)
+    fmt.Printf("Debug: API URL: %s\n", apiURL)
 
     // Make API request
     resp, err := http.Post(apiURL, "application/json", nil)
@@ -103,6 +136,7 @@ func main() {
     if err := json.Unmarshal(body, &response); err != nil {
         log.Fatalf("Error parsing JSON response: %v", err)
     }
+    fmt.Printf("Debug: Full API response: %+v\n", response)
 
     openAIResponse, ok := response["openai_response"].(string)
     if !ok {
@@ -154,4 +188,3 @@ func main() {
     // Print out the path to the file
     fmt.Printf("Response saved to %s and opened in your default Markdown viewer.\n", tempFile)
 }
-

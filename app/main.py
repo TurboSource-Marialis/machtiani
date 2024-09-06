@@ -64,7 +64,7 @@ except ModuleNotFoundError as e:
 async def generate_response(
     prompt: str = Query(..., description="The prompt to search for"),
     project: str = Query(..., description="The project to search"),
-    mode: SearchMode = Query(..., description="Search mode: content, commit, or super"),
+    mode: SearchMode = Query(SearchMode.commit, description="Search mode: content, commit, or super"),
     model: str = Query("gpt-4o-mini", description="The embedding model used"),
     api_key: str = Query(..., description="The OpenAI API key."),
     match_strength: str = Query("mid", description="The strength of the match")
@@ -101,30 +101,34 @@ async def generate_response(
             # Parse the JSON response into a list of FileSearchResponse objects
             list_file_search_response = [FileSearchResponse(**item) for item in response.json()]
 
-            # Aggregate and deduplicate file paths
-            list_file_path_entry = aggregate_file_paths(list_file_search_response)
-            list_file_path_entry = remove_duplicate_file_paths(list_file_path_entry)
+            if mode == SearchMode.content:
+                # Skip file retrieval and appending if mode is 'content'
+                combined_prompt = prompt
+            else:
+                # Aggregate and deduplicate file paths
+                list_file_path_entry = aggregate_file_paths(list_file_search_response)
+                list_file_path_entry = remove_duplicate_file_paths(list_file_path_entry)
 
-            # Prepare the list of file paths for the retrieve-file-contents endpoint
-            file_paths_payload = [entry.dict() for entry in list_file_path_entry]
+                # Prepare the list of file paths for the retrieve-file-contents endpoint
+                file_paths_payload = [entry.dict() for entry in list_file_path_entry]
 
-            # Log the payload for debugging
-            logger.info(f"Payload for retrieve-file-contents: {file_paths_payload}")
-            # Check if file_paths_payload is empty and return an appropriate response if so
-            if not file_paths_payload:
-                return {"machtiani": "no files found"}
+                # Log the payload for debugging
+                logger.info(f"Payload for retrieve-file-contents: {file_paths_payload}")
+                # Check if file_paths_payload is empty and return an appropriate response if so
+                if not file_paths_payload:
+                    return {"machtiani": "no files found"}
 
-            # Call the retrieve-file-contents endpoint with the deduplicated paths
-            content_response = await client.post(retrieve_file_contents_url, json=file_paths_payload)
-            content_response.raise_for_status()
+                # Call the retrieve-file-contents endpoint with the deduplicated paths
+                content_response = await client.post(retrieve_file_contents_url, json=file_paths_payload)
+                content_response.raise_for_status()
 
-            # Get the file contents
-            file_contents = content_response.json()
+                # Get the file contents
+                file_contents = content_response.json()
 
-            # Append the file contents to the prompt
-            combined_prompt = f"{prompt}\n\nHere are the relevant files:\n"
-            for path, content in file_contents.items():
-                combined_prompt += f"\n--- {path} ---\n{content}\n"
+                # Append the file contents to the prompt
+                combined_prompt = f"{prompt}\n\nHere are the relevant files:\n"
+                for path, content in file_contents.items():
+                    combined_prompt += f"\n--- {path} ---\n{content}\n"
 
             # Use the utility function to send the combined prompt to OpenAI
             openai_response = send_prompt_to_openai(combined_prompt, api_key)
