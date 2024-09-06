@@ -1,6 +1,7 @@
 package main
 
 import (
+    "encoding/json"
     "flag"
     "fmt"
     "io/ioutil"
@@ -8,9 +9,9 @@ import (
     "net/http"
     "net/url"
     "os"
-    "encoding/json"
-    "github.com/charmbracelet/glamour"
     "strings"
+
+    "github.com/charmbracelet/glamour"
 )
 
 const (
@@ -148,6 +149,21 @@ func main() {
         }
     }
 
+    retrievedFilePaths, ok := response["retrieved_file_paths"].([]interface{})
+    if !ok {
+        log.Fatalf("Error: retrieved_file_paths key missing or invalid")
+    }
+
+    // Convert retrieved file paths to a slice of strings
+    var filePaths []string
+    for _, path := range retrievedFilePaths {
+        filePath, ok := path.(string)
+        if !ok {
+            log.Fatalf("Error: invalid file path in retrieved_file_paths")
+        }
+        filePaths = append(filePaths, filePath)
+    }
+
     // Create a temporary directory
     tempDir, err := ioutil.TempDir("", "response")
     if err != nil {
@@ -161,6 +177,15 @@ func main() {
         markdownContent = fmt.Sprintf("%s\n\n# Assistant\n\n%s", prompt, openAIResponse)
     } else {
         markdownContent = fmt.Sprintf("# User\n\n%s\n\n# Assistant\n\n%s", prompt, openAIResponse)
+    }
+
+    fmt.Printf("Debug: filePaths: %+v\n", filePaths)
+
+    if len(filePaths) > 0 {
+        markdownContent += "\n\n# Retrieved Files\n\n"
+        for _, filePath := range filePaths {
+            markdownContent += fmt.Sprintf("- %s\n", filePath)
+        }
     }
 
     if err := ioutil.WriteFile(tempFile, []byte(markdownContent), 0644); err != nil {
@@ -188,3 +213,4 @@ func main() {
     // Print out the path to the file
     fmt.Printf("Response saved to %s and opened in your default Markdown viewer.\n", tempFile)
 }
+

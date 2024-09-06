@@ -42,7 +42,8 @@ try:
     with add_sys_path(path_to_add):
         from utils.enums import (
             FilePathEntry,
-            FileSearchResponse
+            FileSearchResponse,
+            FileContentResponse
         )
     logger.info("Imports successful.")
 except ModuleNotFoundError as e:
