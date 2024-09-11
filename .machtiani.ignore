@@ -1,7 +1,6 @@
 go.sum
 go.mod
 poetry.lock
-main.go
 pyproject.toml
 machtiani.sh
 
