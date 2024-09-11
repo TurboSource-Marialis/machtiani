@@ -103,7 +103,7 @@ After launch, try machtiani's only endpoint [generate-response](http://localhost
 - [x] Return list of files used in response with `--mode commit`
 - [x] machtiani.ignore
 - [x] Improve style and organization of web UI. Add links to fetch, add, and load on home page.
-- [ ] Break up main.go into a well-organized go proj file structure.
+- [x] Break up main.go into a well-organized go proj file structure.
 - [ ] Add as submodule [aicommit](https://chatgpt.com/share/7f3871ea-b125-41fc-8fdc-2d817e70030d).
 - [ ] Calculate and cap token usage.
 - [ ] In commit-file-retrieval, get the most recent path (in case of name change) from git of a file and only use that.
