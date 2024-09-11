@@ -80,6 +80,11 @@ func Execute() {
         log.Fatalf("Error making API call: %v", err)
     }
 
+    // Check for error in response
+    if errorMsg, ok := apiResponse["error"].(string); ok {
+        log.Fatalf("Error from API: %s", errorMsg)
+    }
+
     handleAPIResponse(prompt, apiResponse, *markdownFlag)
 }
 

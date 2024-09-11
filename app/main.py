@@ -161,3 +161,6 @@ async def generate_response(
     except httpx.HTTPStatusError as exc:
         logger.error(f"HTTP status error: {exc.response.json()}")
         return {"error": f"Error response from machtiani-commit-file-retrieval: {exc.response.json()}"}
+    except Exception as e:
+        logger.exception("Unexpected error occurred")
+        return {"error": f"An unexpected error occurred: {str(e)}"}

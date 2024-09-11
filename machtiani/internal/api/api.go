@@ -35,7 +35,8 @@ func CallOpenAIAPI(apiKey, prompt, project, mode, model, matchStrength string) (
         if err := json.Unmarshal(body, &errorResponse); err != nil {
             return nil, fmt.Errorf("failed to parse error response: %v", err)
         }
-        return nil, fmt.Errorf("API error: %v", errorResponse["detail"])
+        // Include the error field in your error message
+        return nil, fmt.Errorf("API error: %v", errorResponse["error"]) // Changed to access the "error" field
     }
 
     // Parse the successful response
