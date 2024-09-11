@@ -5,7 +5,7 @@ import (
     "strings"
 )
 
-func getProjectName() (string, error) {
+func GetProjectName() (string, error) {
     // Run the git command to get the remote URL
     cmd := exec.Command("git", "config", "--get", "remote.origin.url")
     output, err := cmd.Output()
