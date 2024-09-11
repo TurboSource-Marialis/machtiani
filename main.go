@@ -30,6 +30,7 @@ func main() {
     modelFlag := fs.String("model", defaultModel, "Model to use (options: gpt-4o, gpt-4o-mini)")
     matchStrengthFlag := fs.String("match-strength", defaultMatchStrength, "Match strength (options: high, mid, low)")
     modeFlag := fs.String("mode", defaultMode, "Search mode: content, commit, or super")
+    verboseFlag := fs.Bool("verbose", false, "Enable verbose output.")
 
     // Custom argument parsing
     args := os.Args[1:]
@@ -85,8 +86,6 @@ func main() {
     if mode != "content" && mode != "commit" && mode != "super" {
         log.Fatalf("Error: Invalid mode selected. Choose either 'content', 'commit', or 'super'.")
     }
-    fmt.Printf("Debug: Mode selected: %s\n", mode)
-
     // Determine the prompt source (file or command-line argument)
     if *markdownFlag != "" {
         fileContent, err := ioutil.ReadFile(*markdownFlag)
@@ -98,14 +97,17 @@ func main() {
         log.Fatal("Error: No prompt provided. Please provide either a prompt or a markdown file.")
     }
 
-    // Print the arguments passed
-    fmt.Println("Arguments passed:")
-    fmt.Printf("Markdown file: %s\n", *markdownFlag)
-    fmt.Printf("Project name: %s\n", *projectFlag)
-    fmt.Printf("Model: %s\n", *modelFlag)
-    fmt.Printf("Match strength: %s\n", *matchStrengthFlag)
-    fmt.Printf("Mode: %s\n", *modeFlag)
-    fmt.Printf("Prompt: %s\n", prompt)
+    // Print verbose output if the flag is set
+    if *verboseFlag {
+        // Print the arguments passed
+        fmt.Println("Arguments passed:")
+        fmt.Printf("Markdown file: %s\n", *markdownFlag)
+        fmt.Printf("Project name: %s\n", *projectFlag)
+        fmt.Printf("Model: %s\n", *modelFlag)
+        fmt.Printf("Match strength: %s\n", *matchStrengthFlag)
+        fmt.Printf("Mode: %s\n", *modeFlag)
+        fmt.Printf("Prompt: %s\n", prompt)
+    }
 
     // Ensure the OpenAI API key is set
     openAIAPIKey := os.Getenv("OPENAI_API_KEY")
@@ -117,7 +119,6 @@ func main() {
     encodedPrompt := url.QueryEscape(prompt)
     apiURL := fmt.Sprintf("http://localhost:5071/generate-response?prompt=%s&project=%s&mode=%s&model=%s&api_key=%s&match_strength=%s",
         encodedPrompt, project, mode, model, openAIAPIKey, matchStrength)
-    fmt.Printf("Debug: API URL: %s\n", apiURL)
 
     // Make API request
     resp, err := http.Post(apiURL, "application/json", nil)
@@ -137,7 +138,9 @@ func main() {
     if err := json.Unmarshal(body, &response); err != nil {
         log.Fatalf("Error parsing JSON response: %v", err)
     }
-    fmt.Printf("Debug: Full API response: %+v\n", response)
+    if *verboseFlag {
+        fmt.Printf("Full API response: %+v\n", response)
+    }
 
     openAIResponse, ok := response["openai_response"].(string)
     if !ok {
@@ -179,7 +182,9 @@ func main() {
         markdownContent = fmt.Sprintf("# User\n\n%s\n\n# Assistant\n\n%s", prompt, openAIResponse)
     }
 
-    fmt.Printf("Debug: filePaths: %+v\n", filePaths)
+    if *verboseFlag {
+        fmt.Printf("Debug: filePaths: %+v\n", filePaths)
+    }
 
     if len(filePaths) > 0 {
         markdownContent += "\n\n# Retrieved Files\n\n"
