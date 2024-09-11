@@ -95,7 +95,7 @@ async def generate_response(
         "api_key": api_key,
     }
 
-    # Initialize ignore_files list by reading from .machtiani.ignore
+    # Initialize ignore_files list
     ignore_files = []
     try:
         with open('.machtiani.ignore', 'r') as f:
@@ -105,12 +105,10 @@ async def generate_response(
 
     try:
         async with httpx.AsyncClient() as client:
-            # First, call the infer-file endpoint
             response = await client.get(infer_file_url, params=params)
             response.raise_for_status()
             logger.info(f"Response status code: {response.status_code}")
 
-            # Parse the JSON response into a list of FileSearchResponse objects
             list_file_search_response = [FileSearchResponse(**item) for item in response.json()]
 
             if mode == SearchMode.content:
@@ -140,13 +138,17 @@ async def generate_response(
             # Count tokens in the combined prompt
             token_count = count_tokens(combined_prompt)
             max_tokens = TOKEN_LIMITS[model]
-            logger.info(f"model: {model}")
-            logger.info(f"token count: {token_count}")
-            logger.info(f"max limit: {max_tokens}")
+            logger.info(f"model: {model}, token count: {token_count}, max limit: {max_tokens}")
 
             # Validate token count against model limits
             if token_count > max_tokens:
-                raise HTTPException(status_code=400, detail=f"Token limit exceeded for the selected model. Limit: {max_tokens}, Count: {token_count}")
+                error_message = (
+                    f"Token limit exceeded for the selected model. "
+                    f"Limit: {max_tokens}, Count: {token_count}. "
+                    f"Please reduce the length of your prompt or the number of retrieved contents."
+                )
+                logger.error(error_message)
+                raise HTTPException(status_code=400, detail=error_message)
 
             # Call the OpenAI API
             openai_response = send_prompt_to_openai(combined_prompt, api_key, model)
@@ -154,6 +156,9 @@ async def generate_response(
             return {"openai_response": openai_response, "retrieved_file_paths": retrieved_file_paths}
 
     except httpx.RequestError as exc:
+        logger.error(f"Request error: {exc}")
         raise HTTPException(status_code=500, detail=f"Error connecting to machtiani-commit-file-retrieval: {exc}")
     except httpx.HTTPStatusError as exc:
+        logger.error(f"HTTP status error: {exc.response.json()}")
         raise HTTPException(status_code=exc.response.status_code, detail=f"Error response from machtiani-commit-file-retrieval: {exc.response.json()}")
+
