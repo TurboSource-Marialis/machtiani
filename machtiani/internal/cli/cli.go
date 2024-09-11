@@ -80,7 +80,7 @@ func Execute() {
         log.Fatalf("Error making API call: %v", err)
     }
 
-    handleAPIResponse(apiResponse, *markdownFlag)
+    handleAPIResponse(prompt, apiResponse, *markdownFlag)
 }
 
 func getProjectOrDefault(projectFlag *string) (string, error) {
@@ -121,7 +121,7 @@ func printVerboseInfo(markdown, project, model, matchStrength, mode, prompt stri
 }
 
 
-func handleAPIResponse(apiResponse map[string]interface{}, markdownFlag string) {
+func handleAPIResponse(prompt string, apiResponse map[string]interface{}, markdownFlag string) {
     openAIResponse, ok := apiResponse["openai_response"].(string)
     if !ok {
         log.Fatalf("Error: openai_response key missing")
@@ -139,12 +139,12 @@ func handleAPIResponse(apiResponse map[string]interface{}, markdownFlag string) 
         log.Fatalf("Error: retrieved_file_paths key missing")
     }
 
-    // Create the Markdown content
+    // Create the Markdown content with corrected headers
     var markdownContent string
     if markdownFlag != "" {
-        markdownContent = fmt.Sprintf("%s\n\n# Assistant Response\n\n%s", readMarkdownFile(markdownFlag), openAIResponse)
+        markdownContent = fmt.Sprintf("%s\n\n# Assistant\n\n%s", readMarkdownFile(markdownFlag), openAIResponse)
     } else {
-        markdownContent = fmt.Sprintf("# User Prompt\n\n%s\n\n# Assistant Response\n\n%s", openAIResponse)
+        markdownContent = fmt.Sprintf("# User\n\n%s\n\n# Assistant\n\n%s", prompt, openAIResponse)
     }
 
     if len(retrievedFilePaths) > 0 {
