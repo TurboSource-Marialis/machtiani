@@ -2,12 +2,18 @@ import httpx
 from fastapi import FastAPI, Query, HTTPException
 from typing import Optional, List, Dict, Union
 from contextlib import contextmanager
-from .utils import aggregate_file_paths, remove_duplicate_file_paths, send_prompt_to_openai, FileContentResponse
+from .utils import aggregate_file_paths, remove_duplicate_file_paths, send_prompt_to_openai, FileContentResponse, count_tokens
 import sys
 import os
 import logging
 
 app = FastAPI()
+
+# Define token limits for different models
+TOKEN_LIMITS = {
+    "gpt-4o": 8192,
+    "gpt-4o-mini": 4096,
+}
 
 # Use the logger instead of print
 logger = logging.getLogger("uvicorn")
@@ -70,7 +76,7 @@ async def generate_response(
     match_strength: str = Query("mid", description="The strength of the match")
 ) -> Dict[str, Union[str, List[str]]]:
     # Validate the model
-    if model not in ["gpt-4o", "gpt-4o-mini"]:
+    if model not in TOKEN_LIMITS:
         raise HTTPException(status_code=400, detail="Invalid model selected. Choose either 'gpt-4o' or 'gpt-4o-mini'.")
 
     # Validate the match strength
@@ -103,54 +109,51 @@ async def generate_response(
             response = await client.get(infer_file_url, params=params)
             response.raise_for_status()
             logger.info(f"Response status code: {response.status_code}")
-            logger.info(f"Response headers: {response.headers}")
-            logger.info(f"Response content: {response.text}")
 
             # Parse the JSON response into a list of FileSearchResponse objects
             list_file_search_response = [FileSearchResponse(**item) for item in response.json()]
 
             if mode == SearchMode.content:
-                # Skip file retrieval and appending if mode is 'content'
                 combined_prompt = prompt
                 retrieved_file_paths = []
             else:
-                # Aggregate and deduplicate file paths
                 list_file_path_entry = aggregate_file_paths(list_file_search_response)
                 list_file_path_entry = remove_duplicate_file_paths(list_file_path_entry)
-
-                # Filter out ignored files
                 list_file_path_entry = [entry for entry in list_file_path_entry if entry.path not in ignore_files]
 
-                # Prepare the list of file paths for the retrieve-file-contents endpoint
                 file_paths_payload = [entry.dict() for entry in list_file_path_entry]
-
-                # Log the payload for debugging
                 logger.info(f"Payload for retrieve-file-contents: {file_paths_payload}")
-                # Check if file_paths_payload is empty and return an appropriate response if so
+
                 if not file_paths_payload:
                     return {"machtiani": "no files found"}
 
-                # Call the retrieve-file-contents endpoint with the deduplicated paths
                 content_response = await client.post(retrieve_file_contents_url, json=file_paths_payload)
                 content_response.raise_for_status()
 
-                # Get the file contents and retrieved file paths
                 file_content_response = FileContentResponse(**content_response.json())
                 retrieved_file_paths = file_content_response.retrieved_file_paths
 
-                # Append the file contents to the prompt
                 combined_prompt = f"{prompt}\n\nHere are the relevant files:\n"
                 for path, content in file_content_response.contents.items():
                     combined_prompt += f"\n--- {path} ---\n{content}\n"
 
-            # Use the utility function to send the combined prompt to OpenAI
-            openai_response = send_prompt_to_openai(combined_prompt, api_key)
+            # Count tokens in the combined prompt
+            token_count = count_tokens(combined_prompt)
+            max_tokens = TOKEN_LIMITS[model]
+            logger.info(f"model: {model}")
+            logger.info(f"token count: {token_count}")
+            logger.info(f"max limit: {max_tokens}")
 
-            # Return the OpenAI response along with the list of retrieved file paths
+            # Validate token count against model limits
+            if token_count > max_tokens:
+                raise HTTPException(status_code=400, detail=f"Token limit exceeded for the selected model. Limit: {max_tokens}, Count: {token_count}")
+
+            # Call the OpenAI API
+            openai_response = send_prompt_to_openai(combined_prompt, api_key, model)
+
             return {"openai_response": openai_response, "retrieved_file_paths": retrieved_file_paths}
 
     except httpx.RequestError as exc:
         raise HTTPException(status_code=500, detail=f"Error connecting to machtiani-commit-file-retrieval: {exc}")
     except httpx.HTTPStatusError as exc:
         raise HTTPException(status_code=exc.response.status_code, detail=f"Error response from machtiani-commit-file-retrieval: {exc.response.json()}")
-

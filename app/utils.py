@@ -85,3 +85,8 @@ def send_prompt_to_openai(prompt_text: str, api_key: str, model: str = "gpt-4o-m
     openai_response = openai_chain.invoke({"input_text": prompt_text})
     return openai_response.content
 
+
+def count_tokens(text: str) -> int:
+    # Simple estimation: 1 token is approximately 4 characters (including spaces)
+    return len(text) // 4 + 1
+
