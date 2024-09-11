@@ -10,6 +10,7 @@ import (
     "github.com/7db9a/machtiani/internal/api"
     "github.com/7db9a/machtiani/internal/git"
     "github.com/7db9a/machtiani/internal/utils"
+    "github.com/charmbracelet/glamour"
 )
 
 const (
@@ -152,6 +153,23 @@ func handleAPIResponse(apiResponse map[string]interface{}, markdownFlag string) 
             markdownContent += fmt.Sprintf("- %s\n", path)
         }
     }
+
+    // Render the Markdown content
+    renderer, err := glamour.NewTermRenderer(
+        glamour.WithAutoStyle(),
+        glamour.WithWordWrap(120),
+    )
+    if err != nil {
+        log.Fatalf("Error creating renderer: %v", err)
+    }
+
+    out, err := renderer.Render(markdownContent)
+    if err != nil {
+        log.Fatalf("Error rendering Markdown: %v", err)
+    }
+
+    // Print the rendered content to the terminal
+    fmt.Println(out)
 
     // Save the response to a temporary file
     tempFile, err := utils.CreateTempMarkdownFile(markdownContent)
