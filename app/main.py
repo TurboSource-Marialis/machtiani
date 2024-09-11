@@ -11,8 +11,8 @@ app = FastAPI()
 
 # Define token limits for different models
 TOKEN_LIMITS = {
-    "gpt-4o": 8192,
-    "gpt-4o-mini": 4096,
+    "gpt-4o": 128000,
+    "gpt-4o-mini": 128000
 }
 
 # Use the logger instead of print
@@ -77,11 +77,11 @@ async def generate_response(
 ) -> Dict[str, Union[str, List[str]]]:
     # Validate the model
     if model not in TOKEN_LIMITS:
-        raise HTTPException(status_code=400, detail="Invalid model selected. Choose either 'gpt-4o' or 'gpt-4o-mini'.")
+        return {"error": "Invalid model selected. Choose either 'gpt-4o' or 'gpt-4o-mini'."}
 
     # Validate the match strength
     if match_strength not in ["high", "mid", "low"]:
-        raise HTTPException(status_code=400, detail="Invalid match strength selected. Choose either 'high', 'mid', or 'low'.")
+        return {"error": "Invalid match strength selected. Choose either 'high', 'mid', or 'low'."}
 
     infer_file_url = "http://commit-file-retrieval:5070/infer-file/"
     retrieve_file_contents_url = f"http://commit-file-retrieval:5070/retrieve-file-contents/?project_name={project}"
@@ -148,7 +148,7 @@ async def generate_response(
                     f"Please reduce the length of your prompt or the number of retrieved contents."
                 )
                 logger.error(error_message)
-                raise HTTPException(status_code=400, detail=error_message)
+                return {"error": error_message}
 
             # Call the OpenAI API
             openai_response = send_prompt_to_openai(combined_prompt, api_key, model)
@@ -157,8 +157,7 @@ async def generate_response(
 
     except httpx.RequestError as exc:
         logger.error(f"Request error: {exc}")
-        raise HTTPException(status_code=500, detail=f"Error connecting to machtiani-commit-file-retrieval: {exc}")
+        return {"error": f"Error connecting to machtiani-commit-file-retrieval: {exc}"}
     except httpx.HTTPStatusError as exc:
         logger.error(f"HTTP status error: {exc.response.json()}")
-        raise HTTPException(status_code=exc.response.status_code, detail=f"Error response from machtiani-commit-file-retrieval: {exc.response.json()}")
-
+        return {"error": f"Error response from machtiani-commit-file-retrieval: {exc.response.json()}"}
