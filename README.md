@@ -104,8 +104,11 @@ After launch, try machtiani's only endpoint [generate-response](http://localhost
 - [x] machtiani.ignore
 - [x] Improve style and organization of web UI. Add links to fetch, add, and load on home page.
 - [x] Break up main.go into a well-organized go proj file structure.
+- [ ] commit-file-retrieval can't handle gpt-4o (ie `Unprocessable Entity`).
+- [ ] commit-file-retrieval doesn't say there is no files to retrieve if it's found, but doesn't exist in file.
+- [ ] Cli user should be warned if there is no retrieved files, with suggestion to lower match-strength.
 - [ ] Add as submodule [aicommit](https://chatgpt.com/share/7f3871ea-b125-41fc-8fdc-2d817e70030d).
-- [ ] Calculate and cap token usage.
+- [x] Calculate and cap token usage.
 - [ ] In commit-file-retrieval, get the most recent path (in case of name change) from git of a file and only use that.
 - [ ] Script to rewrite a projects git commit history.
 - [ ] Auto-save results in `.machtiani/chat/`. Should name the same if passing filename as --markdown.
