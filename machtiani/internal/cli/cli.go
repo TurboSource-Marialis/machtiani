@@ -91,19 +91,16 @@ func getProjectOrDefault(projectFlag *string) (string, error) {
 }
 
 func validateFlags(modelFlag, matchStrengthFlag, modeFlag *string) {
-    // Validate model argument
     model := *modelFlag
     if model != "gpt-4o" && model != "gpt-4o-mini" {
         log.Fatalf("Error: Invalid model selected. Choose either 'gpt-4o' or 'gpt-4o-mini'.")
     }
 
-    // Validate match strength argument
     matchStrength := *matchStrengthFlag
     if matchStrength != "high" && matchStrength != "mid" && matchStrength != "low" {
         log.Fatalf("Error: Invalid match strength selected. Choose either 'high', 'mid', or 'low'.")
     }
 
-    // Validate mode argument
     mode := *modeFlag
     if mode != "content" && mode != "commit" && mode != "super" {
         log.Fatalf("Error: Invalid mode selected. Choose either 'content', 'commit', or 'super'.")
@@ -120,14 +117,12 @@ func printVerboseInfo(markdown, project, model, matchStrength, mode, prompt stri
     fmt.Printf("Prompt: %s\n", prompt)
 }
 
-
 func handleAPIResponse(prompt string, apiResponse map[string]interface{}, markdownFlag string) {
     openAIResponse, ok := apiResponse["openai_response"].(string)
     if !ok {
         log.Fatalf("Error: openai_response key missing")
     }
 
-    // Retrieve the file paths from the API response
     var retrievedFilePaths []string
     if paths, exists := apiResponse["retrieved_file_paths"].([]interface{}); exists {
         for _, path := range paths {
@@ -139,7 +134,18 @@ func handleAPIResponse(prompt string, apiResponse map[string]interface{}, markdo
         log.Fatalf("Error: retrieved_file_paths key missing")
     }
 
-    // Create the Markdown content with corrected headers
+    markdownContent := createMarkdownContent(prompt, openAIResponse, retrievedFilePaths, markdownFlag)
+    renderMarkdown(markdownContent)
+
+    tempFile, err := utils.CreateTempMarkdownFile(markdownContent)
+    if err != nil {
+        log.Fatalf("Error creating temporary markdown file: %v", err)
+    }
+
+    fmt.Printf("Response saved to %s\n", tempFile)
+}
+
+func createMarkdownContent(prompt, openAIResponse string, retrievedFilePaths []string, markdownFlag string) string {
     var markdownContent string
     if markdownFlag != "" {
         markdownContent = fmt.Sprintf("%s\n\n# Assistant\n\n%s", readMarkdownFile(markdownFlag), openAIResponse)
@@ -154,7 +160,10 @@ func handleAPIResponse(prompt string, apiResponse map[string]interface{}, markdo
         }
     }
 
-    // Render the Markdown content
+    return markdownContent
+}
+
+func renderMarkdown(content string) {
     renderer, err := glamour.NewTermRenderer(
         glamour.WithAutoStyle(),
         glamour.WithWordWrap(120),
@@ -163,24 +172,14 @@ func handleAPIResponse(prompt string, apiResponse map[string]interface{}, markdo
         log.Fatalf("Error creating renderer: %v", err)
     }
 
-    out, err := renderer.Render(markdownContent)
+    out, err := renderer.Render(content)
     if err != nil {
         log.Fatalf("Error rendering Markdown: %v", err)
     }
 
-    // Print the rendered content to the terminal
     fmt.Println(out)
-
-    // Save the response to a temporary file
-    tempFile, err := utils.CreateTempMarkdownFile(markdownContent)
-    if err != nil {
-        log.Fatalf("Error creating temporary markdown file: %v", err)
-    }
-
-    fmt.Printf("Response saved to %s\n", tempFile)
 }
 
-// Helper function to read the markdown file content
 func readMarkdownFile(path string) string {
     content, err := ioutil.ReadFile(path)
     if err != nil {
