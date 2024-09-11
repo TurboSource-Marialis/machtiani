@@ -123,6 +123,12 @@ func printVerboseInfo(markdown, project, model, matchStrength, mode, prompt stri
 }
 
 func handleAPIResponse(prompt string, apiResponse map[string]interface{}, markdownFlag string) {
+    // Check for the "machtiani" key first
+    if machtianiMsg, ok := apiResponse["machtiani"].(string); ok {
+        log.Printf("Machtiani Message: %s", machtianiMsg)
+        return // Exit early since we do not have further responses to handle
+    }
+
     openAIResponse, ok := apiResponse["openai_response"].(string)
     if !ok {
         log.Fatalf("Error: openai_response key missing")
