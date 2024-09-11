@@ -102,7 +102,12 @@ After launch, try machtiani's only endpoint [generate-response](http://localhost
 - [x] Separate command for sending edited markdown (don't wrap # User) (completed with commit 5a69231d4b48b6cd8c1b1e3b54a1b57c3d295a74).
 - [x] Return list of files used in response with `--mode commit`
 - [x] machtiani.ignore
-- [x] Improve style and organization of web UI. Add links to fetch, add, and load on home page
+- [x] Improve style and organization of web UI. Add links to fetch, add, and load on home page.
+- [ ] Break up main.go into a well-organized go proj file structure.
+- [ ] Add as submodule [aicommit](https://chatgpt.com/share/7f3871ea-b125-41fc-8fdc-2d817e70030d).
+- [ ] Calculate and cap token usage.
+- [ ] In commit-file-retrieval, get the most recent path (in case of name change) from git of a file and only use that.
+- [ ] Script to rewrite a projects git commit history.
 - [ ] Auto-save results in `.machtiani/chat/`. Should name the same if passing filename as --markdown.
 - [ ] Auto-generate an appropriate file name for generated markdown.
 
