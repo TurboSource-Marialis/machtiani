@@ -1,28 +1,30 @@
 # machtiani
 
-Code chat, against retrieved files from commits.
+**Machtiani** is a command-line interface (CLI) tool designed to facilitate code chat and information retrieval from code repositories. It allows users to interact with their codebases by asking questions and retrieving relevant information from files in the project, utilizingl, currently, OpenAI's language models for processing and generating responses. The aim is to support other models, such open-source and self-hosted models.
 
-## Quick launch
+## Purpose
 
-Clone this project.
+The main goal of Machtiani is to enable developers and teams to quickly access information from their code repositories using natural language queries. By leveraging the capabilities of 'off-the-shelf' LLMs, users can generate insights, get code suggestions, and enhance their understanding of the codebase without manually sifting through numerous files.
 
-Add, fetch, and load a repo to be indexed - see the [commit-file-retrieval readme](machtiani-commit-file-retrieval/README.md).
+## Quick Launch
 
-Launch.
+1. Clone this project.
+2. Add, fetch, and load a repository to be indexed—see the [commit-file-retrieval readme](machtiani-commit-file-retrieval/README.md).
+3. Launch the application.
 
 ```bash
 docker-compose up --build
 ```
 
-Build machtiani cli
+4. Build the Machtiani CLI.
 
-```
+```bash
 go build -o machtiani
 ```
 
-Copy to path (or path that works for you).
+5. Copy the CLI to a path that works for you.
 
-```
+```bash
 cp machtiani ~/.local/bin/
 ```
 
@@ -78,8 +80,6 @@ go.sum
 go.mod
 ```
 
-Each line in the `.machtiani.ignore` file should contain the name of a file or directory that you want to ignore. Ensure that there are no leading or trailing spaces in the file names.
-
 ### Environment Variables
 
 Ensure to set the OpenAI API key in your environment:
@@ -93,24 +93,25 @@ The CLI will print the response received from the OpenAI API and save the output
 
 ## API Usage
 
-After launch, try machtiani's only endpoint [generate-response](http://localhost:5071/docs#/default/generate_response_generate_response_post).
+After launch, you can access Machtiani's only endpoint [generate-response](http://localhost:5071/docs#/default/generate_response_generate_response_post) for interacting with the application programmatically.
 
 ## Todo
 
 - [x] Retrieve file content and add to prompt.
-- [x] Fetch on UI is temperamental; if the wrong URL and token are given, it will mess up. Maybe all that should be done strictly on the commit-file-retrieval server side, the URL and token, just pass the project name.
+- [x] Fetch on UI is temperamental; if the wrong URL and token are given, it will mess up. Maybe all that should be done strictly on the commit-file-retrieval server side, the URL and token just pass the project name.
 - [x] Separate command for sending edited markdown (don't wrap # User) (completed with commit 5a69231d4b48b6cd8c1b1e3b54a1b57c3d295a74).
-- [x] Return list of files used in response with `--mode commit`
-- [x] machtiani.ignore
+- [x] Return list of files used in response with `--mode commit`.
+- [x] machtiani.ignore.
 - [x] Improve style and organization of web UI. Add links to fetch, add, and load on home page.
-- [x] Break up main.go into a well-organized go proj file structure.
-- [x] commit-file-retrieval can't handle gpt-4o (ie `Unprocessable Entity`).
-- [ ] commit-file-retrieval doesn't say there is no files to retrieve if it's found, but doesn't exist in file.
-- [ ] Cli user should be warned if there is no retrieved files, with suggestion to lower match-strength.
+- [x] Break up main.go into a well-organized Go project file structure.
+- [x] commit-file-retrieval can't handle gpt-4o (i.e., `Unprocessable Entity`).
+- [ ] commit-file-retrieval doesn't say there are no files to retrieve if it's found, but doesn't exist in the file.
+- [x] CLI user should be warned if there are no retrieved files, with a suggestion to lower match-strength.
 - [ ] Add as submodule [aicommit](https://chatgpt.com/share/7f3871ea-b125-41fc-8fdc-2d817e70030d).
 - [x] Calculate and cap token usage.
 - [ ] In commit-file-retrieval, get the most recent path (in case of name change) from git of a file and only use that.
-- [ ] Script to rewrite a projects git commit history.
+- [ ] Script to rewrite a project's git commit history.
 - [ ] Auto-save results in `.machtiani/chat/`. Should name the same if passing filename as --markdown.
-- [ ] Markdown generated chats should automatically save and have an auto-generate context aware name.
+- [ ] Markdown generated chats should automatically save and have an auto-generate context-aware name.
 
+---
