@@ -112,6 +112,5 @@ After launch, try machtiani's only endpoint [generate-response](http://localhost
 - [ ] In commit-file-retrieval, get the most recent path (in case of name change) from git of a file and only use that.
 - [ ] Script to rewrite a projects git commit history.
 - [ ] Auto-save results in `.machtiani/chat/`. Should name the same if passing filename as --markdown.
-- [ ] Auto-generate an appropriate file name for generated markdown.
 - [ ] Markdown generated chats should automatically save and have an auto-generate context aware name.
 
