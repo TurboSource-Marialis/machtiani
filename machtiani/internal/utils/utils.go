@@ -2,7 +2,7 @@ package utils
 
 import (
     "fmt"
-    "os"
+    "io/ioutil"
 )
 
 func CreateTempMarkdownFile(content string) (string, error) {

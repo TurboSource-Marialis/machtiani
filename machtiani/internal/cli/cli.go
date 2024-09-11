@@ -9,6 +9,7 @@ import (
     "strings"
     "github.com/7db9a/machtiani/internal/api"
     "github.com/7db9a/machtiani/internal/git"
+    "github.com/7db9a/machtiani/internal/utils"
 )
 
 const (
@@ -118,11 +119,54 @@ func printVerboseInfo(markdown, project, model, matchStrength, mode, prompt stri
     fmt.Printf("Prompt: %s\n", prompt)
 }
 
+
 func handleAPIResponse(apiResponse map[string]interface{}, markdownFlag string) {
     openAIResponse, ok := apiResponse["openai_response"].(string)
     if !ok {
         log.Fatalf("Error: openai_response key missing")
     }
 
-    // Additional logic to handle the response and save to file, etc.
+    // Retrieve the file paths from the API response
+    var retrievedFilePaths []string
+    if paths, exists := apiResponse["retrieved_file_paths"].([]interface{}); exists {
+        for _, path := range paths {
+            if filePath, valid := path.(string); valid {
+                retrievedFilePaths = append(retrievedFilePaths, filePath)
+            }
+        }
+    } else {
+        log.Fatalf("Error: retrieved_file_paths key missing")
+    }
+
+    // Create the Markdown content
+    var markdownContent string
+    if markdownFlag != "" {
+        markdownContent = fmt.Sprintf("%s\n\n# Assistant Response\n\n%s", readMarkdownFile(markdownFlag), openAIResponse)
+    } else {
+        markdownContent = fmt.Sprintf("# User Prompt\n\n%s\n\n# Assistant Response\n\n%s", openAIResponse)
+    }
+
+    if len(retrievedFilePaths) > 0 {
+        markdownContent += "\n\n# Retrieved File Paths\n\n"
+        for _, path := range retrievedFilePaths {
+            markdownContent += fmt.Sprintf("- %s\n", path)
+        }
+    }
+
+    // Save the response to a temporary file
+    tempFile, err := utils.CreateTempMarkdownFile(markdownContent)
+    if err != nil {
+        log.Fatalf("Error creating temporary markdown file: %v", err)
+    }
+
+    fmt.Printf("Response saved to %s\n", tempFile)
+}
+
+// Helper function to read the markdown file content
+func readMarkdownFile(path string) string {
+    content, err := ioutil.ReadFile(path)
+    if err != nil {
+        log.Fatalf("Error reading markdown file: %v", err)
+    }
+    return string(content)
 }
