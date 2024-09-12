@@ -109,10 +109,14 @@ After launch, you can access Machtiani's only endpoint [generate-response](http:
 - [x] CLI user should be warned if there are no retrieved files, with a suggestion to lower match-strength.
 - [ ] Add as submodule [aicommit](https://chatgpt.com/share/7f3871ea-b125-41fc-8fdc-2d817e70030d).
 - [x] Calculate and cap token usage.
-- [ ] In commit-file-retrieval, get the most recent path (in case of name change) from git of a file and only use that.
+- [ ] Handle file path changes in vcs.
+     - [x] Get new path, but response acts if original name exists.
+     - [ ] Confirm the above with logging.
+     - [ ] Need to pass a message somehow of the file name change, so the response can clearly say the file path has changed.
 - [ ] Script to rewrite a project's git commit history.
 - [ ] Auto-save results in `.machtiani/chat/`. Should name the same if passing filename as --markdown.
 - [ ] Markdown generated chats should automatically save and have an auto-generate context-aware name.
 - [ ] Content argument for mode flag should be `chat`
 - [ ] Hide excessive stdout behind specific logging mode in commit-file-retrieval
+- [ ] commit flag should be called --commit-files
 ---
