@@ -10,10 +10,11 @@ To fully utilize Machtiani for effective document retrieval, it is essential to 
 
 While I personally find Machtiani to be my go-to tool—over ChatGPT or any other alternatives—I primarily use it with codebases similar in size to this project.
 
-Keep in mind that using OpenAI's API incurs costs, and there is currently no cost estimator available. However, for a few hundred commits, users should find that the indexing of commit messages with OpenAI embeddings remains manageable.
+Keep in mind that uses by default OpenAI's gpt-4o-mini (optionally gpt-4o) API. So it incurs costs, and there is currently no cost estimator available. However, for a few hundred commits, users should find that the indexing of commit messages with OpenAI embeddings remains manageable.
 
 ## Upcoming Features to Look Forward To
 
+- [ ] Support open-source LLMs and other models (self-config)
 - [ ] Add as a submodule `aicommit` to help generate better commit messages, and even rewrite commits to Machtiani standards.
 - [ ] Cost management to how much it will cost to index.
 - [ ] Improve handling of file path changes in version control systems.
@@ -63,6 +64,9 @@ Keep in mind that using OpenAI's API incurs costs, and there is currently no cos
    - ![Adding a Repository](images/add-repo-filled.png)
 
 2. Get the latest changes:
+
+   Click on `Get Repo Info` on the homepage, and it will prefill the values you chose when adding the repo originally.
+
    - ![Getting Repo Info](images/fetch-filled.png)
 
 2. Load the updated repository:
@@ -381,20 +385,31 @@ machtiani [flags] [prompt]
 
 ### Example Usage
 
-1. **Using a markdown file:**
-   ```bash
-   machtiani -markdown path/to/your/file.md
-
-   ```
-   - ![Basic Usage Example](images/editing-markdown-response.png)
-
 2. **Providing a direct prompt:**
+
    ```bash
-   machtiani "Add a new endpoint to get stats."
+   machtiani "Auto-save results in .machtiani/chat/. Should name the same if passing filename as --markdown."
    ```
+   How the output looks like
    - ![Direct Prompt Example](images/default-result.png)
 
+1. **Using an existing markdown chat file:**
+   ```bash
+   machtiani -markdown path/to/your/file.md
+   ```
+
+   Remember, the file has to end with a
+
+   ```
+   # User
+
+   Your new prompt instructions
+   ```
+   - ![Markdown Chat Example](images/editing-markdown-respose)
+
 3. **Specifying additional parameters:**
+
+Just a sample of the options.
 
    ```bash
    machtiani "Add a new endpoint to get stats." --model gpt-4o --mode pure-chat --match-strength high
@@ -406,7 +421,11 @@ machtiani [flags] [prompt]
    machtiani --markdown path/to/your/file.md --mode pure-chat
    ```
 
+   This won't retrieve any files with this flag.
+
 ### Ignoring Files with `.machtiani.ignore`
+
+You'll have to  ignore any binary files, providing the full path, such as images, etc.
 
 To exclude specific files from being processed by the application, you can create a `.machtiani.ignore` file in the root of your project directory. The files listed in this file will be ignored during the retrieval process.
 
