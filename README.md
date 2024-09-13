@@ -53,26 +53,30 @@ Keep in mind that using OpenAI's API incurs costs, and there is currently no cos
    poetry run python web/server.py
    ```
 
+## Go to local homepage localhost:5072
+
+![Home Page](images/web-home.png)
+
 ## Add a repo
 
 1. Add a repo:
-   - ![Adding a Repository](images/add_repo.png)
+   - ![Adding a Repository](images/add-repo.png)
 
 2. Get the latest changes:
-   - ![Getting Repo Info](images/fetch_repo_info.png)
+   - ![Getting Repo Info](images/fetch.png)
 
 2. Load the updated repository:
-   - ![Loading Repo](images/load_repo.png)
+   - ![Loading Repo](images/load.png)
 
 ## Updating the repo and index
 
 After your project has new commits on GitHub, follow these steps to get updated repository information and load it:
 
 1. Get the latest changes:
-   - ![Getting Repo Info](images/fetch_repo_info.png)
+   - ![Getting Repo Info](images/fetch.png)
 
 2. Load the updated repository:
-   - ![Loading Repo](images/load_repo.png)
+   - ![Loading Repo](images/load.png)
 
 ## Example use
 
