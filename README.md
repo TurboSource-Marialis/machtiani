@@ -50,7 +50,7 @@ Keep in mind that uses by default OpenAI's gpt-4o-mini (optionally gpt-4o) API. 
 5. Start the local web server in a new terminal in `machtiani/machtiani-commit-file-retrieval/`
 
    ```bash
-   poetry shell
+   poetry install
    poetry run python web/server.py
    ```
 
