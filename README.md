@@ -204,7 +204,7 @@ This web tool simplifies managing Git repositories through a user-friendly inter
 - [x] commit-file-retrieval can't handle gpt-4o (i.e., `Unprocessable Entity`).
 - [x] commit-file-retrieval doesn't say there are no files to retrieve if it's found, but doesn't exist in the file.
 - [x] CLI user should be warned if there are no retrieved files, with a suggestion to lower match-strength.
-- [ ] Add as submodule [aicommit](https://chatgpt.com/share/7f3871ea-b125-41fc-8fdc-2d817e70030d).
+- [ ] Add as submodule [aicommit](https://github.com/coder/aicommit)
 - [x] Calculate and cap token usage.
 - [ ] In commit-file-retrieval, get the most recent path (in case of name change) from git of a file and only use that.
 - [ ] Script to rewrite a project's git commit history.
