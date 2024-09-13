@@ -29,31 +29,46 @@ Keep in mind that using OpenAI's API incurs costs, and there is currently no cos
 1. Clone this project.
 
    ```bash
-   git clone --recurse-submodules <repository-url>
+   git clone --recurse-submodules <repo-url>.git machtiani
    ```
 
-2. Add, fetch, and load a repository to be indexed—see the [commit-file-retrieval readme](machtiani-commit-file-retrieval/README.md).
-   - ![Adding a Repository](images/add_repo.png)
-3. Launch the application.
+2. Launch the application in `machtiani/machtiani/`.
 
    ```bash
    docker-compose up --build --remove-orphans
    ```
 
-4. Build the Machtiani CLI.
-
+3. Build the Machtiani CLI in `machtiani/machtiani/`.
+   
    ```bash
-    cd machtiani
     go build -o machtiani ./cmd/machtiani
    ```
 
-5. Copy the CLI to a path that works for you.
+4. Copy the CLI to a path that works for you in `machtiani/machtiani/`
 
    ```bash
    cp machtiani ~/.local/bin/
    ```
 
-## Loading New Commits
+5. Start the local web server in a new terminal in `machtiani/machtiani-commit-file-retrieval/`
+
+   ```bash
+   poetry shell
+   poetry run python web/server.py
+   ```
+
+## Add a repo
+
+1. Add a repo:
+   - ![Adding a Repository](images/add_repo.png)
+
+2. Fetch the latest changes:
+   - ![Fetching Repo Info](images/fetch_repo_info.png)
+
+2. Load the updated repository:
+   - ![Loading Repo](images/load_repo.png)
+
+## Updating the repo and index
 
 After your project has new commits on GitHub, follow these steps to get updated repository information and load it:
 
