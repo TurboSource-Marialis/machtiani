@@ -201,7 +201,17 @@ Response saved to /tmp/response2567089509/response.md
 
 The first shot was pretty good, but I'm not entirely satisfied as I want the handler to call a utility to save the file.
 
-So let's continue that chat be referencing the file path to the saved chat. And let's also put it in `chat` mode, so it doesn't look for more files.
+I simply edit /tmp/response2567089509/response.md and append to it
+
+```
+# User
+
+Refactor the above so that the saving functionality is in utils.go
+```
+
+You can see you are `# User` and the model response is `# Assistant`. The nice thing is you can freely edit the chats and version control them, creating forks of conversation in 'native' markdown language.
+
+And now I run the modified file
 
 ```
 machtiani --markdown /tmp/response2567089509/response.md --mode chat
