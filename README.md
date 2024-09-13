@@ -1,12 +1,8 @@
 # machtiani
 
-**Machtiani** is a command-line interface (CLI) tool designed to facilitate code chat and information retrieval from code repositories. It allows users to interact with their codebases by asking questions and retrieving relevant information from files in the project, utilizing OpenAI's language models for processing and generating responses. The aim is to support other models, including open-source and self-hosted options.
+**Machtiani** is a command-line interface (CLI) tool designed to facilitate code chat and information retrieval from code repositories. It allows users to interact with their codebases by asking questions and retrieving relevant information from files in the project, utilizing language models for processing and generating responses. The aim is to support other models other than OpenAI, including open-source and self-hosted options.
 
 It's very usable, but rough around the edges at the moment.
-
-## Purpose
-
-The main goal of Machtiani is to enable developers and teams to quickly access information from their code repositories using natural language queries. By leveraging the capabilities of 'off-the-shelf' LLMs, users can generate insights, get code suggestions, and enhance their understanding of the codebase without manually sifting through numerous files.
 
 ## Limitations
 
@@ -166,7 +162,6 @@ func handleAPIResponse(prompt string, apiResponse map[string]interface{}, markdo
 }
 
 // ... existing code ...
-\`\`\`
 
 #### 2. Update \`CreateTempMarkdownFile\` in \`machtiani/internal/utils/utils.go\`
 You may want to modify this function to ensure that it saves the temporary markdown file in the appropriate location if desired. However, since you primarily want the chat responses saved in a specific folder, this function can remain as is unless you have other needs.
@@ -201,15 +196,22 @@ Response saved to /tmp/response2567089509/response.md
 
 The first shot was pretty good, but I'm not entirely satisfied as I want the handler to call a utility to save the file.
 
-I simply edit /tmp/response2567089509/response.md and append to it
+I simply edit /tmp/response2567089509/response.md a `# User` heading and put my prompt there.
 
 ```
+...(existing chat)...
+
+- machtiani/internal/utils/utils.go
+- .machtiani.ignore
+- .gitignore
+- app/main.py
+
+Response saved to /tmp/response2567089509/response.md
+
 # User
 
 Refactor the above so that the saving functionality is in utils.go
 ```
-
-You can see you are `# User` and the model response is `# Assistant`. The nice thing is you can freely edit the chats and version control them, creating forks of conversation in 'native' markdown language.
 
 And now I run the modified file
 
@@ -418,7 +420,7 @@ export OPENAI_API_KEY="your_openai_api_key"
 
 ### Output
 
-The CLI will print the response received from the OpenAI API and save the output to a temporary markdown file, which will be displayed in the terminal.
+The CLI will print the response received and save the output to a temporary markdown file, which will be displayed in the terminal.
 
 ## API Usage
 
