@@ -170,5 +170,5 @@ This web tool simplifies managing Git repositories through a user-friendly inter
 - [ ] Script to rewrite a project's git commit history.
 - [ ] Auto-save results in `.machtiani/chat/`. Should name the same if passing filename as --markdown.
 - [ ] Markdown generated chats should automatically save and have an auto-generate context-aware name.
-- [ ] Content argument for mode flag should be `chat`
+- [x] Content argument for mode flag should be `chat`
 - [ ] Hide excessive stdout behind specific logging mode in commit-file-retrieval
