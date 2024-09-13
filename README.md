@@ -340,7 +340,7 @@ Response saved to tmp/response3524948614/response.md
 
 ### Different modes
 
-In the last example, you can don't have to select `chat` to have a conversation with a markdown file
+In the last example, you can don't have to select `pure-chat` to have a conversation with a markdown file
 
 You could have ran the command as
 
@@ -354,7 +354,7 @@ without the `--mode pure-chat` as originally.
 machtiani --markdown /tmp/response2567089509/response.md --mode pure-chat
 ```
 
-If you don't select `--mode`, it's the same as `--mode commit`.
+If you don't select `--mode`, it's the same as `--mode commit`, where it searches commits for possible files to help answer the prompt.
 
 ## Go CLI Usage
 
