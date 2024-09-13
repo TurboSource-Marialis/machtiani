@@ -214,7 +214,7 @@ You can see you are `# User` and the model response is `# Assistant`. The nice t
 And now I run the modified file
 
 ```
-machtiani --markdown /tmp/response2567089509/response.md --mode chat
+machtiani --markdown /tmp/response2567089509/response.md --mode pure-chat
 ```
 
 Below is the response with the chat continued, where it does what is asked. I omit the majority of the earlier chat for your readability, but it's all there in reality.
@@ -346,10 +346,10 @@ You could have ran the command as
 machtiani --markdown /tmp/response2567089509/response.md
 ```
 
-without the `--mode chat` as originally.
+without the `--mode pure-chat` as originally.
 
 ```
-machtiani --markdown /tmp/response2567089509/response.md --mode chat
+machtiani --markdown /tmp/response2567089509/response.md --mode pure-chat
 ```
 
 If you don't select `--mode`, it's the same as `--mode commit`.
@@ -371,7 +371,7 @@ machtiani [flags] [prompt]
 - `-project string` (optional): Name of the project. If not set, it will be fetched from git.
 - `-model string` (optional): Model to use. Options include `gpt-4o` or `gpt-4o-mini`. Default is `gpt-4o-mini`.
 - `-match-strength string` (optional): Match strength options are `high`, `mid`, or `low`. Default is `mid`.
-- `-mode string` (optional): Search mode, which can be `chat`, `commit`, or `super`. Default is `commit`.
+- `-mode string` (optional): Search mode, which can be  `pure-chat`, `commit`, or `super`. Default is `commit`.
 
 ### Example Usage
 
@@ -395,7 +395,7 @@ machtiani [flags] [prompt]
 
 4. **Chat mode**
    ```bash
-   machtiani --markdown old_result.md --mode chat
+   machtiani --markdown old_result.md --mode pure-chat
    ```
 
 ### Ignoring Files with `.machtiani.ignore`
@@ -446,6 +446,6 @@ This web tool simplifies managing Git repositories through a user-friendly inter
 - [ ] Script to rewrite a project's git commit history.
 - [ ] Auto-save results in `.machtiani/chat/`. Should name the same if passing filename as --markdown.
 - [ ] Markdown generated chats should automatically save and have an auto-generate context-aware name.
-- [x] Content argument for mode flag should be `chat`
+- [x] Content argument for mode flag should be `pure-chat`
 - [ ] Hide excessive stdout behind specific logging mode in commit-file-retrieval
 

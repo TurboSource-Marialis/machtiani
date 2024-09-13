@@ -111,7 +111,7 @@ async def generate_response(
 
             list_file_search_response = [FileSearchResponse(**item) for item in response.json()]
 
-            if mode == SearchMode.chat:
+            if mode == SearchMode.pure_chat:
                 combined_prompt = prompt
                 retrieved_file_paths = []
             else:
