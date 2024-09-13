@@ -60,23 +60,23 @@ Keep in mind that using OpenAI's API incurs costs, and there is currently no cos
 ## Add a repo
 
 1. Add a repo:
-   - ![Adding a Repository](images/add-repo.png)
+   - ![Adding a Repository](images/add-repo-filled.png)
 
 2. Get the latest changes:
-   - ![Getting Repo Info](images/fetch.png)
+   - ![Getting Repo Info](images/fetch-filled.png)
 
 2. Load the updated repository:
-   - ![Loading Repo](images/load.png)
+   - ![Loading Repo](images/load-filled.png)
 
 ## Updating the repo and index
 
 After your project has new commits on GitHub, follow these steps to get updated repository information and load it:
 
 1. Get the latest changes:
-   - ![Getting Repo Info](images/fetch.png)
+   - ![Getting Repo Info](images/fetch-filled.png)
 
 2. Load the updated repository:
-   - ![Loading Repo](images/load.png)
+   - ![Loading Repo](images/load-filled.png)
 
 ## Example use
 
@@ -384,24 +384,26 @@ machtiani [flags] [prompt]
 1. **Using a markdown file:**
    ```bash
    machtiani -markdown path/to/your/file.md
+
    ```
-   - ![Basic Usage Example](images/basic_usage.png)
+   - ![Basic Usage Example](images/editing-markdown-response.png)
 
 2. **Providing a direct prompt:**
    ```bash
    machtiani "Add a new endpoint to get stats."
    ```
-   - ![Direct Prompt Example](images/direct_prompt.png)
+   - ![Direct Prompt Example](images/default-result.png)
 
 3. **Specifying additional parameters:**
+
    ```bash
-   machtiani -project "your_project_name" -model "gpt-4o" -match-strength "high" -mode "commit" "Add a new endpoint to get stats."
+   machtiani "Add a new endpoint to get stats." --model gpt-4o --mode pure-chat --match-strength high
    ```
-   - ![Advanced Usage Example](images/advanced_usage.png)
 
 4. **Chat mode**
+
    ```bash
-   machtiani --markdown old_result.md --mode pure-chat
+   machtiani --markdown path/to/your/file.md --mode pure-chat
    ```
 
 ### Ignoring Files with `.machtiani.ignore`
