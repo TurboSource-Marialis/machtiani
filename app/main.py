@@ -70,7 +70,7 @@ except ModuleNotFoundError as e:
 async def generate_response(
     prompt: str = Query(..., description="The prompt to search for"),
     project: str = Query(..., description="The project to search"),
-    mode: SearchMode = Query(SearchMode.commit, description="Search mode: content, commit, or super"),
+    mode: SearchMode = Query(SearchMode.commit, description="Search mode: chat, commit, or super"),
     model: str = Query("gpt-4o-mini", description="The embedding model used"),
     api_key: str = Query(..., description="The OpenAI API key."),
     match_strength: str = Query("mid", description="The strength of the match")
@@ -111,7 +111,7 @@ async def generate_response(
 
             list_file_search_response = [FileSearchResponse(**item) for item in response.json()]
 
-            if mode == SearchMode.content:
+            if mode == SearchMode.chat:
                 combined_prompt = prompt
                 retrieved_file_paths = []
             else:

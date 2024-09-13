@@ -25,7 +25,7 @@ func Execute() {
     projectFlag := fs.String("project", "", "Name of the project (if not set, it will be fetched from git)")
     modelFlag := fs.String("model", defaultModel, "Model to use (options: gpt-4o, gpt-4o-mini)")
     matchStrengthFlag := fs.String("match-strength", defaultMatchStrength, "Match strength (options: high, mid, low)")
-    modeFlag := fs.String("mode", defaultMode, "Search mode: content, commit, or super")
+    modeFlag := fs.String("mode", defaultMode, "Search mode: chat, commit, or super")
     verboseFlag := fs.Bool("verbose", false, "Enable verbose output.")
 
     args := os.Args[1:]
@@ -107,8 +107,8 @@ func validateFlags(modelFlag, matchStrengthFlag, modeFlag *string) {
     }
 
     mode := *modeFlag
-    if mode != "content" && mode != "commit" && mode != "super" {
-        log.Fatalf("Error: Invalid mode selected. Choose either 'content', 'commit', or 'super'.")
+    if mode != "chat" && mode != "commit" && mode != "super" {
+        log.Fatalf("Error: Invalid mode selected. Choose either 'chat', 'commit', or 'super'.")
     }
 }
 

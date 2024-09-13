@@ -95,7 +95,7 @@ machtiani [flags] [prompt]
 - `-project string` (optional): Name of the project. If not set, it will be fetched from git.
 - `-model string` (optional): Model to use. Options include `gpt-4o` or `gpt-4o-mini`. Default is `gpt-4o-mini`.
 - `-match-strength string` (optional): Match strength options are `high`, `mid`, or `low`. Default is `mid`.
-- `-mode string` (optional): Search mode, which can be `content`, `commit`, or `super`. Default is `commit`.
+- `-mode string` (optional): Search mode, which can be `chat`, `commit`, or `super`. Default is `commit`.
 
 ### Example Usage
 
@@ -117,9 +117,9 @@ machtiani [flags] [prompt]
    ```
    - ![Advanced Usage Example](images/advanced_usage.png)
 
-4. **Content mode**
+4. **Chat mode**
    ```bash
-   machtiani --markdown old_result.md --mode content
+   machtiani --markdown old_result.md --mode chat
    ```
 
 ### Ignoring Files with `.machtiani.ignore`
@@ -172,4 +172,3 @@ This web tool simplifies managing Git repositories through a user-friendly inter
 - [ ] Markdown generated chats should automatically save and have an auto-generate context-aware name.
 - [ ] Content argument for mode flag should be `chat`
 - [ ] Hide excessive stdout behind specific logging mode in commit-file-retrieval
-
