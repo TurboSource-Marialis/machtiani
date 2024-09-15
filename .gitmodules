@@ -1,3 +1,6 @@
 [submodule "machtiani-commit-file-retrieval"]
 	path = machtiani-commit-file-retrieval
 	url = https://github.com/turboSource-marialis/machtiani-commit-file-retrieval
+[submodule "aicommit"]
+	path = aicommit
+	url = https://github.com/coder/aicommit
