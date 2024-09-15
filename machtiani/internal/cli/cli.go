@@ -21,6 +21,7 @@ const (
 
 func Execute() {
     fs := flag.NewFlagSet("machtiani", flag.ContinueOnError)
+    // Define flags for the main command
     markdownFlag := fs.String("markdown", "", "Path to the markdown file")
     projectFlag := fs.String("project", "", "Name of the project (if not set, it will be fetched from git)")
     modelFlag := fs.String("model", defaultModel, "Model to use (options: gpt-4o, gpt-4o-mini)")
@@ -28,6 +29,13 @@ func Execute() {
     modeFlag := fs.String("mode", defaultMode, "Search mode: pure-chat, commit, or super")
     verboseFlag := fs.Bool("verbose", false, "Enable verbose output.")
 
+    if len(os.Args) >= 2 && os.Args[1] == "aicommit" {
+        // Handle the aicommit subcommand
+        handleAicommit()
+        return
+    }
+
+    // Otherwise, parse flags and arguments as before
     args := os.Args[1:]
     var promptParts []string
     var flagArgs []string
@@ -80,12 +88,14 @@ func Execute() {
         log.Fatalf("Error making API call: %v", err)
     }
 
-    // Check for error in response
-    if errorMsg, ok := apiResponse["error"].(string); ok {
-        log.Fatalf("Error from API: %s", errorMsg)
-    }
-
+    // Handle the API response as before
     handleAPIResponse(prompt, apiResponse, *markdownFlag)
+}
+
+func handleAicommit() {
+    // Implement the logic for what happens when 'aicommit' is called
+    fmt.Println("Aicommit command executed.")
+    // You can implement the actual functionality of aicommit here
 }
 
 func getProjectOrDefault(projectFlag *string) (string, error) {
