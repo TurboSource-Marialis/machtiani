@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from .utils import aggregate_file_paths, remove_duplicate_file_paths, send_prompt_to_openai, FileContentResponse, count_tokens
 import sys
 import os
+import re
 import logging
 
 app = FastAPI()
@@ -65,6 +66,25 @@ try:
 except ModuleNotFoundError as e:
     print(f"ModuleNotFoundError: {e}")
     print("Failed to import the module. Please check the paths and directory structure.")
+
+@app.post("/generate-filename", response_model=str)
+async def generate_filename(
+    api_key: str = Query(..., description="The OpenAI API key."),
+    context: str = Query(..., description="Context to create filename"),
+) -> str:
+    filename_prompt = (
+        f"Generate a unique filename for the following context: {context}. "
+        "The filename should be snake_cased and wrapped in <filename> tags."
+    )
+    response = send_prompt_to_openai(filename_prompt, api_key)
+    # Extract the filename using regex
+    match = re.search(r"<filename>(.*?)</filename>", response, re.DOTALL)
+    if match:
+        filename = match.group(1).strip()
+        return filename
+    else:
+        logger.error("Failed to extract filename from response.")
+        raise HTTPException(status_code=400, detail="Invalid response format from OpenAI API.")
 
 @app.post("/generate-response", response_model=Dict[str, Union[str, List[str]]])
 async def generate_response(
