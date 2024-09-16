@@ -34,6 +34,7 @@ func Execute() {
     if len(os.Args) >= 2 && os.Args[1] == "aicommit" {
         // Handle the aicommit subcommand
         runAicommit(args)
+        return
     }
 
     var promptParts []string
