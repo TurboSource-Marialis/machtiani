@@ -106,8 +106,8 @@ func runAicommit(args []string) {
     // Define optional flags with default values
     amendFlag := fs.Bool("amend", false, "Amend the last commit")
     dryRunFlag := fs.Bool("dry-run", false, "Dry run the command")
-    modelFlag := fs.String("model", "gpt-4", "OpenAI model to use")
-    maxTokensFlag := fs.Int("max-tokens", 2048, "Maximum number of tokens")
+    modelFlag := fs.String("model", "gpt-4o-mini", "OpenAI model to use")
+    maxTokensFlag := fs.Int("max-tokens", 128000, "Maximum number of tokens")
     contextFlag := fs.String("context", "", "Additional context for the commit message")
 
     // Parse the flags
