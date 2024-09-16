@@ -6,6 +6,7 @@ import (
     "io/ioutil"
     "log"
     "os"
+    "os/exec"
     "strings"
     "github.com/7db9a/machtiani/internal/api"
     "github.com/7db9a/machtiani/internal/git"
@@ -21,7 +22,6 @@ const (
 
 func Execute() {
     fs := flag.NewFlagSet("machtiani", flag.ContinueOnError)
-    // Define flags for the main command
     markdownFlag := fs.String("markdown", "", "Path to the markdown file")
     projectFlag := fs.String("project", "", "Name of the project (if not set, it will be fetched from git)")
     modelFlag := fs.String("model", defaultModel, "Model to use (options: gpt-4o, gpt-4o-mini)")
@@ -29,14 +29,13 @@ func Execute() {
     modeFlag := fs.String("mode", defaultMode, "Search mode: pure-chat, commit, or super")
     verboseFlag := fs.Bool("verbose", false, "Enable verbose output.")
 
+    args := os.Args[1:]
+
     if len(os.Args) >= 2 && os.Args[1] == "aicommit" {
         // Handle the aicommit subcommand
-        handleAicommit()
-        return
+        runAicommit(args)
     }
 
-    // Otherwise, parse flags and arguments as before
-    args := os.Args[1:]
     var promptParts []string
     var flagArgs []string
 
@@ -88,14 +87,26 @@ func Execute() {
         log.Fatalf("Error making API call: %v", err)
     }
 
-    // Handle the API response as before
+    // Check for error in response
+    if errorMsg, ok := apiResponse["error"].(string); ok {
+        log.Fatalf("Error from API: %s", errorMsg)
+    }
+
     handleAPIResponse(prompt, apiResponse, *markdownFlag)
 }
 
-func handleAicommit() {
-    // Implement the logic for what happens when 'aicommit' is called
-    fmt.Println("Aicommit command executed.")
-    // You can implement the actual functionality of aicommit here
+func runAicommit(args []string) {
+    // Construct the aicommit command
+    cmd := exec.Command("aicommit", args...)
+
+    // Set the output to the same as the current process
+    cmd.Stdout = os.Stdout
+    cmd.Stderr = os.Stderr
+
+    // Run the command
+    if err := cmd.Run(); err != nil {
+        log.Fatalf("Error running aicommit: %v", err)
+    }
 }
 
 func getProjectOrDefault(projectFlag *string) (string, error) {
