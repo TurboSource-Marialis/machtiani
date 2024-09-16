@@ -285,9 +285,10 @@ func handleAPIResponse(prompt string, apiResponse map[string]interface{}, markdo
     markdownContent := createMarkdownContent(prompt, openAIResponse, retrievedFilePaths, markdownFlag)
     renderMarkdown(markdownContent)
 
+    // Call the modified CreateTempMarkdownFile function
     tempFile, err := utils.CreateTempMarkdownFile(markdownContent)
     if err != nil {
-        log.Fatalf("Error creating temporary markdown file: %v", err)
+        log.Fatalf("Error creating markdown file: %v", err)
     }
 
     fmt.Printf("Response saved to %s\n", tempFile)
