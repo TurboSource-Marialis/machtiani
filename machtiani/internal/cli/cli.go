@@ -142,10 +142,10 @@ func Execute() {
     }
 
     // Handle API response and save it to a markdown file with the generated filename
-    handleAPIResponse(prompt, apiResponse, filename) // Pass filename here
+    handleAPIResponse(prompt, apiResponse, filename, *markdownFlag) // Pass filename here
 }
 
-func handleAPIResponse(prompt string, apiResponse map[string]interface{}, filename string) {
+func handleAPIResponse(prompt string, apiResponse map[string]interface{}, filename string, markdownFlag string) {
     // Check for the "machtiani" key first
     if machtianiMsg, ok := apiResponse["machtiani"].(string); ok {
         log.Printf("Machtiani Message: %s", machtianiMsg)
@@ -168,7 +168,7 @@ func handleAPIResponse(prompt string, apiResponse map[string]interface{}, filena
         log.Fatalf("Error: retrieved_file_paths key missing")
     }
 
-    markdownContent := createMarkdownContent(prompt, openAIResponse, retrievedFilePaths)
+    markdownContent := createMarkdownContent(prompt, openAIResponse, retrievedFilePaths, markdownFlag)
     renderMarkdown(markdownContent)
 
     // Save the response to the markdown file with the provided filename
@@ -341,9 +341,13 @@ func printVerboseInfo(markdown, project, model, matchStrength, mode, prompt stri
 }
 
 
-func createMarkdownContent(prompt, openAIResponse string, retrievedFilePaths []string) string {
+func createMarkdownContent(prompt, openAIResponse string, retrievedFilePaths []string, markdownFlag string) string {
     var markdownContent string
-    markdownContent = fmt.Sprintf("# User\n\n%s\n\n# Assistant\n\n%s", prompt, openAIResponse)
+    if markdownFlag != "" {
+        markdownContent = fmt.Sprintf("%s\n\n# Assistant\n\n%s", readMarkdownFile(markdownFlag), openAIResponse)
+    } else {
+        markdownContent = fmt.Sprintf("# User\n\n%s\n\n# Assistant\n\n%s", prompt, openAIResponse)
+    }
 
     if len(retrievedFilePaths) > 0 {
         markdownContent += "\n\n# Retrieved File Paths\n\n"
