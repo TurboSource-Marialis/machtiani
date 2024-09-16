@@ -67,18 +67,26 @@ except ModuleNotFoundError as e:
     print(f"ModuleNotFoundError: {e}")
     print("Failed to import the module. Please check the paths and directory structure.")
 
-@app.post("/generate-filename", response_model=str)
+@app.get("/generate-filename", response_model=str)
 async def generate_filename(
     api_key: str = Query(..., description="The OpenAI API key."),
     context: str = Query(..., description="Context to create filename"),
 ) -> str:
     filename_prompt = (
-        f"Generate a unique filename for the following context: {context}. "
-        "The filename should be snake_cased and wrapped in <filename> tags."
+        f"Generate a unique filename for the following context: '{context}'.\n"
+        "Respond ONLY with the filename in snake_case, wrapped in <filename> and </filename> tags.\n"
+        "Do not include any other text or explanations.\n"
+        "Example:\n"
+        "<filename>example_filename</filename>"
     )
-    response = send_prompt_to_openai(filename_prompt, api_key)
+    response = send_prompt_to_openai(filename_prompt, api_key, model="gpt-4o-mini")
+    logger.info(f"OpenAI response: {response}")
+
     # Extract the filename using regex
-    match = re.search(r"<filename>(.*?)</filename>", response, re.DOTALL)
+    match = re.search(r"<filename>\s*(.*?)\s*</filename>", response, re.DOTALL | re.IGNORECASE)
+    if not match:
+        # Try to match any text within angle brackets
+        match = re.search(r"<\s*(.*?)\s*>", response)
     if match:
         filename = match.group(1).strip()
         return filename

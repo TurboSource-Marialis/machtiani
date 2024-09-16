@@ -1,13 +1,17 @@
 package cli
 
 import (
+    "encoding/json"
     "flag"
     "fmt"
     "io/ioutil"
     "log"
+    "net/http"
+    "net/url" // Import the net/url package
     "os"
     "os/exec"
     "strings"
+
     "github.com/7db9a/machtiani/internal/api"
     "github.com/7db9a/machtiani/internal/git"
     "github.com/7db9a/machtiani/internal/utils"
@@ -22,6 +26,28 @@ const (
     defaultMatchStrength = "mid"
     defaultMode         = "commit"
 )
+
+// Call the /generate-filename endpoint
+func generateFilename(apiKey, context string) (string, error) {
+    url := fmt.Sprintf("http://localhost:5071/generate-filename?api_key=%s&context=%s", apiKey, url.QueryEscape(context))
+    resp, err := http.Get(url)
+    if err != nil {
+        return "", fmt.Errorf("failed to call generate-filename endpoint: %v", err)
+    }
+    defer resp.Body.Close()
+
+    if resp.StatusCode != http.StatusOK {
+        body, _ := ioutil.ReadAll(resp.Body)
+        return "", fmt.Errorf("generate-filename endpoint returned status %d: %s", resp.StatusCode, string(body))
+    }
+
+    var filename string
+    if err := json.NewDecoder(resp.Body).Decode(&filename); err != nil {
+        return "", fmt.Errorf("failed to decode response from generate-filename endpoint: %v", err)
+    }
+
+    return filename, nil
+}
 
 func Execute() {
     fs := flag.NewFlagSet("machtiani", flag.ContinueOnError)
@@ -86,6 +112,7 @@ func Execute() {
         log.Fatal("Error: OPENAI_API_KEY environment variable is not set.")
     }
 
+    // Call OpenAI API to generate response
     apiResponse, err := api.CallOpenAIAPI(openAIAPIKey, prompt, project, *modeFlag, *modelFlag, *matchStrengthFlag)
     if err != nil {
         log.Fatalf("Error making API call: %v", err)
@@ -96,7 +123,49 @@ func Execute() {
         log.Fatalf("Error from API: %s", errorMsg)
     }
 
-    handleAPIResponse(prompt, apiResponse, *markdownFlag)
+    // Generate filename using the /generate-filename endpoint
+    filename, err := generateFilename(openAIAPIKey, prompt)
+    if err != nil {
+        log.Fatalf("Error generating filename: %v", err)
+    }
+
+    // Handle API response and save it to a markdown file with the generated filename
+    handleAPIResponse(prompt, apiResponse, filename, *markdownFlag)  // Pass markdownFlag here
+}
+
+func handleAPIResponse(prompt string, apiResponse map[string]interface{}, filename string, markdownFlag string) {
+    // Check for the "machtiani" key first
+    if machtianiMsg, ok := apiResponse["machtiani"].(string); ok {
+        log.Printf("Machtiani Message: %s", machtianiMsg)
+        return // Exit early since we do not have further responses to handle
+    }
+
+    openAIResponse, ok := apiResponse["openai_response"].(string)
+    if !ok {
+        log.Fatalf("Error: openai_response key missing")
+    }
+
+    var retrievedFilePaths []string
+    if paths, exists := apiResponse["retrieved_file_paths"].([]interface{}); exists {
+        for _, path := range paths {
+            if filePath, valid := path.(string); valid {
+                retrievedFilePaths = append(retrievedFilePaths, filePath)
+            }
+        }
+    } else {
+        log.Fatalf("Error: retrieved_file_paths key missing")
+    }
+
+    markdownContent := createMarkdownContent(prompt, openAIResponse, retrievedFilePaths, markdownFlag) // Pass the correct number of arguments
+    renderMarkdown(markdownContent)
+
+    // Save the response to the markdown file with the generated filename
+    tempFile, err := utils.CreateTempMarkdownFile(markdownContent, filename) // Pass the filename
+    if err != nil {
+        log.Fatalf("Error creating markdown file: %v", err)
+    }
+
+    fmt.Printf("Response saved to %s\n", tempFile)
 }
 
 func runAicommit(args []string) {
@@ -259,40 +328,6 @@ func printVerboseInfo(markdown, project, model, matchStrength, mode, prompt stri
     fmt.Printf("Prompt: %s\n", prompt)
 }
 
-func handleAPIResponse(prompt string, apiResponse map[string]interface{}, markdownFlag string) {
-    // Check for the "machtiani" key first
-    if machtianiMsg, ok := apiResponse["machtiani"].(string); ok {
-        log.Printf("Machtiani Message: %s", machtianiMsg)
-        return // Exit early since we do not have further responses to handle
-    }
-
-    openAIResponse, ok := apiResponse["openai_response"].(string)
-    if !ok {
-        log.Fatalf("Error: openai_response key missing")
-    }
-
-    var retrievedFilePaths []string
-    if paths, exists := apiResponse["retrieved_file_paths"].([]interface{}); exists {
-        for _, path := range paths {
-            if filePath, valid := path.(string); valid {
-                retrievedFilePaths = append(retrievedFilePaths, filePath)
-            }
-        }
-    } else {
-        log.Fatalf("Error: retrieved_file_paths key missing")
-    }
-
-    markdownContent := createMarkdownContent(prompt, openAIResponse, retrievedFilePaths, markdownFlag)
-    renderMarkdown(markdownContent)
-
-    // Call the modified CreateTempMarkdownFile function
-    tempFile, err := utils.CreateTempMarkdownFile(markdownContent)
-    if err != nil {
-        log.Fatalf("Error creating markdown file: %v", err)
-    }
-
-    fmt.Printf("Response saved to %s\n", tempFile)
-}
 
 func createMarkdownContent(prompt, openAIResponse string, retrievedFilePaths []string, markdownFlag string) string {
     var markdownContent string

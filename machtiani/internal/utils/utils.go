@@ -6,7 +6,7 @@ import (
     "os"
 )
 
-func CreateTempMarkdownFile(content string) (string, error) {
+func CreateTempMarkdownFile(content string, filename string) (string, error) {
     // Define the directory where files will be saved
     chatDir := ".machtiani/chat"
 
@@ -17,8 +17,8 @@ func CreateTempMarkdownFile(content string) (string, error) {
         }
     }
 
-    // Create a unique filename in the chat directory
-    tempFile := fmt.Sprintf("%s/response.md", chatDir)
+    // Create a markdown file with the provided filename
+    tempFile := fmt.Sprintf("%s/%s.md", chatDir, filename)
     if err := ioutil.WriteFile(tempFile, []byte(content), 0644); err != nil {
         return "", err
     }
