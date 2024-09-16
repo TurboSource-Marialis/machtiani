@@ -11,6 +11,7 @@ import (
     "os"
     "os/exec"
     "strings"
+    "path"
 
     "github.com/7db9a/machtiani/internal/api"
     "github.com/7db9a/machtiani/internal/git"
@@ -123,17 +124,33 @@ func Execute() {
         log.Fatalf("Error from API: %s", errorMsg)
     }
 
-    // Generate filename using the /generate-filename endpoint
-    filename, err := generateFilename(openAIAPIKey, prompt)
-    if err != nil {
-        log.Fatalf("Error generating filename: %v", err)
+    // Determine the filename to save the response
+    filename := path.Base(*markdownFlag) // Extract filename with extension
+
+    // Check if the filename is empty or just "."
+    if filename == "" || filename == "." {
+        // If no markdown file provided, generate a filename
+        filename, err = generateFilename(openAIAPIKey, prompt)
+        if err != nil {
+            log.Fatalf("Error generating filename: %v", err)
+        }
     }
 
+    // Extract the extension from the markdownFlag or default to ".md"
+    ext := path.Ext(*markdownFlag)
+    if ext == "" {
+        ext = ".md" // Default extension
+    }
+
+    // If the filename doesn't already have an extension, append one
+    if path.Ext(filename) == "" {
+        filename += ext
+    }
     // Handle API response and save it to a markdown file with the generated filename
-    handleAPIResponse(prompt, apiResponse, filename, *markdownFlag)  // Pass markdownFlag here
+    handleAPIResponse(prompt, apiResponse, filename) // Pass filename here
 }
 
-func handleAPIResponse(prompt string, apiResponse map[string]interface{}, filename string, markdownFlag string) {
+func handleAPIResponse(prompt string, apiResponse map[string]interface{}, filename string) {
     // Check for the "machtiani" key first
     if machtianiMsg, ok := apiResponse["machtiani"].(string); ok {
         log.Printf("Machtiani Message: %s", machtianiMsg)
@@ -156,10 +173,10 @@ func handleAPIResponse(prompt string, apiResponse map[string]interface{}, filena
         log.Fatalf("Error: retrieved_file_paths key missing")
     }
 
-    markdownContent := createMarkdownContent(prompt, openAIResponse, retrievedFilePaths, markdownFlag) // Pass the correct number of arguments
+    markdownContent := createMarkdownContent(prompt, openAIResponse, retrievedFilePaths)
     renderMarkdown(markdownContent)
 
-    // Save the response to the markdown file with the generated filename
+    // Save the response to the markdown file with the provided filename
     tempFile, err := utils.CreateTempMarkdownFile(markdownContent, filename) // Pass the filename
     if err != nil {
         log.Fatalf("Error creating markdown file: %v", err)
@@ -329,13 +346,9 @@ func printVerboseInfo(markdown, project, model, matchStrength, mode, prompt stri
 }
 
 
-func createMarkdownContent(prompt, openAIResponse string, retrievedFilePaths []string, markdownFlag string) string {
+func createMarkdownContent(prompt, openAIResponse string, retrievedFilePaths []string) string {
     var markdownContent string
-    if markdownFlag != "" {
-        markdownContent = fmt.Sprintf("%s\n\n# Assistant\n\n%s", readMarkdownFile(markdownFlag), openAIResponse)
-    } else {
-        markdownContent = fmt.Sprintf("# User\n\n%s\n\n# Assistant\n\n%s", prompt, openAIResponse)
-    }
+    markdownContent = fmt.Sprintf("# User\n\n%s\n\n# Assistant\n\n%s", prompt, openAIResponse)
 
     if len(retrievedFilePaths) > 0 {
         markdownContent += "\n\n# Retrieved File Paths\n\n"
