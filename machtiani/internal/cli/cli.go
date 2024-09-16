@@ -126,7 +126,12 @@ func Execute() {
 
     // Determine the filename to save the response
     filename := path.Base(*markdownFlag) // Extract filename with extension
-
+    
+    // Strip all extensions from the filename
+    for ext := path.Ext(filename); ext != ""; ext = path.Ext(filename) {
+        filename = strings.TrimSuffix(filename, ext)
+    }
+    
     // Check if the filename is empty or just "."
     if filename == "" || filename == "." {
         // If no markdown file provided, generate a filename
@@ -136,16 +141,6 @@ func Execute() {
         }
     }
 
-    // Extract the extension from the markdownFlag or default to ".md"
-    ext := path.Ext(*markdownFlag)
-    if ext == "" {
-        ext = ".md" // Default extension
-    }
-
-    // If the filename doesn't already have an extension, append one
-    if path.Ext(filename) == "" {
-        filename += ext
-    }
     // Handle API response and save it to a markdown file with the generated filename
     handleAPIResponse(prompt, apiResponse, filename) // Pass filename here
 }
