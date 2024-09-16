@@ -12,6 +12,9 @@ import (
     "github.com/7db9a/machtiani/internal/git"
     "github.com/7db9a/machtiani/internal/utils"
     "github.com/charmbracelet/glamour"
+    "context"
+    "github.com/coder/aicommit"
+    "github.com/sashabaranov/go-openai"
 )
 
 const (
@@ -97,8 +100,59 @@ func Execute() {
 }
 
 func runAicommit(args []string) {
-    // Construct the aicommit command
-    cmd := exec.Command("aicommit", args...)
+    // Parse command-line arguments if necessary
+    // For simplicity, we'll assume no additional arguments for now
+
+    // Get the working directory
+    workdir, err := os.Getwd()
+    if err != nil {
+        log.Fatalf("Error getting working directory: %v", err)
+    }
+
+    // Set up options (you might need to adjust these based on your needs)
+    var hash string   // Empty string for current changes
+    var amend bool    // Set to true if you want to amend the last commit
+    var maxTokens = 128000 // Adjust as necessary
+
+    // Build the prompt using aicommit's exported function
+    msgs, err := aicommit.BuildPrompt(os.Stdout, workdir, hash, amend, maxTokens)
+    if err != nil {
+        log.Fatalf("Error building prompt: %v", err)
+    }
+
+    // Get the OpenAI API key
+    openAIAPIKey := os.Getenv("OPENAI_API_KEY")
+    if openAIAPIKey == "" {
+        log.Fatal("Error: OPENAI_API_KEY environment variable is not set.")
+    }
+
+    // Create an OpenAI client
+    client := openai.NewClient(openAIAPIKey)
+
+    // Create a chat completion request
+    resp, err := client.CreateChatCompletion(context.Background(), openai.ChatCompletionRequest{
+        Model:    "gpt-4", // Use the model you prefer
+        Messages: msgs,
+    })
+    if err != nil {
+        log.Fatalf("Error creating chat completion: %v", err)
+    }
+
+    // Get the assistant's reply
+    assistantMsg := resp.Choices[0].Message.Content
+
+    // Clean up the assistant's message (similar to cleanAIMessage function)
+    assistantMsg = strings.TrimSpace(assistantMsg)
+    if strings.HasPrefix(assistantMsg, "```") {
+        assistantMsg = strings.Trim(assistantMsg, "```")
+    }
+
+    // Output the commit message
+    fmt.Println(assistantMsg)
+
+    // Optionally, run the git commit command
+    cmd := exec.Command("git", "commit", "-m", assistantMsg)
+    // cmd.Args = append(cmd.Args, "--amend") // Uncomment if amending
 
     // Set the output to the same as the current process
     cmd.Stdout = os.Stdout
@@ -106,7 +160,7 @@ func runAicommit(args []string) {
 
     // Run the command
     if err := cmd.Run(); err != nil {
-        log.Fatalf("Error running aicommit: %v", err)
+        log.Fatalf("Error running git commit: %v", err)
     }
 }
 
