@@ -208,7 +208,7 @@ This web tool simplifies managing Git repositories through a user-friendly inter
 - [x] Calculate and cap token usage.
 - [ ] In commit-file-retrieval, get the most recent path (in case of name change) from git of a file and only use that.
 - [ ] Script to rewrite a project's git commit history.
-- [ ] Auto-save results in `.machtiani/chat/`. Should name the same if passing filename as --markdown.
+- [x] Auto-save results in `.machtiani/chat/`. Should name the same if passing filename as --markdown.
 - [ ] Markdown generated chats should automatically save and have an auto-generate context-aware name.
 - [x] Content argument for mode flag should be `pure-chat`
 - [ ] Hide excessive stdout behind specific logging mode in commit-file-retrieval
