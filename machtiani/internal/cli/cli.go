@@ -100,25 +100,21 @@ func Execute() {
 }
 
 func runAicommit(args []string) {
-    // Parse command-line arguments if necessary
-    // For simplicity, we'll assume no additional arguments for now
+    // Create a new flag set for aicommit
+    fs := flag.NewFlagSet("aicommit", flag.ExitOnError)
 
-    // Get the working directory
-    workdir, err := os.Getwd()
-    if err != nil {
-        log.Fatalf("Error getting working directory: %v", err)
-    }
+    // Define optional flags with default values
+    amendFlag := fs.Bool("amend", false, "Amend the last commit")
+    dryRunFlag := fs.Bool("dry-run", false, "Dry run the command")
+    modelFlag := fs.String("model", "gpt-4", "OpenAI model to use")
+    maxTokensFlag := fs.Int("max-tokens", 2048, "Maximum number of tokens")
+    contextFlag := fs.String("context", "", "Additional context for the commit message")
 
-    // Set up options (you might need to adjust these based on your needs)
-    var hash string   // Empty string for current changes
-    var amend bool    // Set to true if you want to amend the last commit
-    var maxTokens = 128000 // Adjust as necessary
+    // Parse the flags
+    fs.Parse(args)
 
-    // Build the prompt using aicommit's exported function
-    msgs, err := aicommit.BuildPrompt(os.Stdout, workdir, hash, amend, maxTokens)
-    if err != nil {
-        log.Fatalf("Error building prompt: %v", err)
-    }
+    // Remaining arguments after flags
+    remainingArgs := fs.Args()
 
     // Get the OpenAI API key
     openAIAPIKey := os.Getenv("OPENAI_API_KEY")
@@ -129,9 +125,48 @@ func runAicommit(args []string) {
     // Create an OpenAI client
     client := openai.NewClient(openAIAPIKey)
 
+    // Get the working directory
+    workdir, err := os.Getwd()
+    if err != nil {
+        log.Fatalf("Error getting working directory: %v", err)
+    }
+
+    // Determine the commit hash (if any)
+    var hash string
+    if *amendFlag {
+        hash, err = getLastCommitHash()
+        if err != nil {
+            log.Fatalf("Error getting last commit hash: %v", err)
+        }
+    } else if len(remainingArgs) > 0 {
+        // If a ref is provided
+        hash, err = resolveRef(remainingArgs[0])
+        if err != nil {
+            log.Fatalf("Error resolving ref %q: %v", remainingArgs[0], err)
+        }
+    } else {
+        // No specific hash; use current staged changes
+        hash = ""
+    }
+
+    // Build the prompt using aicommit's exported function
+    msgs, err := aicommit.BuildPrompt(os.Stdout, workdir, hash, *amendFlag, *maxTokensFlag)
+    if err != nil {
+        log.Fatalf("Error building prompt: %v", err)
+    }
+
+    // Add additional context if provided
+    if *contextFlag != "" {
+        msgs = append(msgs, openai.ChatCompletionMessage{
+            Role:    openai.ChatMessageRoleUser,
+            Content: *contextFlag,
+        })
+    }
+
     // Create a chat completion request
-    resp, err := client.CreateChatCompletion(context.Background(), openai.ChatCompletionRequest{
-        Model:    "gpt-4", // Use the model you prefer
+    ctx := context.Background()
+    resp, err := client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
+        Model:    *modelFlag,
         Messages: msgs,
     })
     if err != nil {
@@ -141,27 +176,53 @@ func runAicommit(args []string) {
     // Get the assistant's reply
     assistantMsg := resp.Choices[0].Message.Content
 
-    // Clean up the assistant's message (similar to cleanAIMessage function)
+    // Clean up the assistant's message
     assistantMsg = strings.TrimSpace(assistantMsg)
     if strings.HasPrefix(assistantMsg, "```") {
-        assistantMsg = strings.Trim(assistantMsg, "```")
+        assistantMsg = strings.Trim(assistantMsg, "` \n")
     }
 
     // Output the commit message
+    fmt.Println("Generated commit message:")
     fmt.Println(assistantMsg)
 
-    // Optionally, run the git commit command
-    cmd := exec.Command("git", "commit", "-m", assistantMsg)
-    // cmd.Args = append(cmd.Args, "--amend") // Uncomment if amending
+    if *dryRunFlag {
+        fmt.Println("Dry run enabled; not committing changes.")
+        return
+    }
 
-    // Set the output to the same as the current process
+    // Prepare the git commit command
+    cmdArgs := []string{"commit", "-m", assistantMsg}
+    if *amendFlag {
+        cmdArgs = append(cmdArgs, "--amend")
+    }
+
+    // Execute the git commit command
+    cmd := exec.Command("git", cmdArgs...)
     cmd.Stdout = os.Stdout
     cmd.Stderr = os.Stderr
 
-    // Run the command
     if err := cmd.Run(); err != nil {
         log.Fatalf("Error running git commit: %v", err)
     }
+}
+
+func getLastCommitHash() (string, error) {
+    cmd := exec.Command("git", "rev-parse", "HEAD")
+    output, err := cmd.Output()
+    if err != nil {
+        return "", err
+    }
+    return strings.TrimSpace(string(output)), nil
+}
+
+func resolveRef(ref string) (string, error) {
+    cmd := exec.Command("git", "rev-parse", ref)
+    output, err := cmd.Output()
+    if err != nil {
+        return "", err
+    }
+    return strings.TrimSpace(string(output)), nil
 }
 
 func getProjectOrDefault(projectFlag *string) (string, error) {
