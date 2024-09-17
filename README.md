@@ -222,4 +222,4 @@ This web tool simplifies managing Git repositories through a user-friendly inter
 - [x] Markdown generated chats should automatically save and have an auto-generate context-aware name.
 - [x] Content argument for mode flag should be `pure-chat`
 - [ ] Hide excessive stdout behind specific logging mode in commit-file-retrieval
-- [ ] Modify cli so that it can generate embddings for the original prompt the user creates, then pass it as a paramter to generate-repsonse endpoint.
+- [x] Modify cli so that it can generate embddings for the original prompt the user creates, then pass it as a paramter to generate-repsonse endpoint.
