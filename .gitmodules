@@ -4,3 +4,6 @@
 [submodule "aicommit"]
 	path = aicommit
 	url = https://github.com/coder/aicommit
+[submodule "authenticator"]
+	path = authenticator
+	url = https://github.com/TurboSource-Marialis/authenticator
