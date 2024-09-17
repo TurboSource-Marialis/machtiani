@@ -25,3 +25,16 @@ func CreateTempMarkdownFile(content string, filename string) (string, error) {
 
     return tempFile, nil
 }
+
+var dryRun bool
+
+// SetDryRun sets the dry-run state.
+func SetDryRun(state bool) {
+    dryRun = state
+}
+
+// IsDryRunEnabled returns true if dry-run mode is enabled.
+func IsDryRunEnabled() bool {
+    return dryRun
+}
+
