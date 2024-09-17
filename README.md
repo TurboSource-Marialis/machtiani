@@ -14,6 +14,7 @@ Keep in mind that uses by default OpenAI's gpt-4o-mini (optionally gpt-4o) API. 
 
 ## Upcoming Features to Look Forward To
 
+- [ ] Optional support for 'libre' hosted version.
 - [ ] Support open-source LLMs and other models (self-config)
 - [ ] Add as a submodule `aicommit` to help generate better commit messages, and even rewrite commits to Machtiani standards.
 - [ ] Cost management to how much it will cost to index.
@@ -221,4 +222,4 @@ This web tool simplifies managing Git repositories through a user-friendly inter
 - [x] Markdown generated chats should automatically save and have an auto-generate context-aware name.
 - [x] Content argument for mode flag should be `pure-chat`
 - [ ] Hide excessive stdout behind specific logging mode in commit-file-retrieval
-
+- [ ] Modify cli so that it can generate embddings for the original prompt the user creates, then pass it as a paramter to generate-repsonse endpoint.
