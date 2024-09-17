@@ -25,34 +25,43 @@ Keep in mind that uses by default OpenAI's gpt-4o-mini (optionally gpt-4o) API. 
 
 1. Clone this project.
 
-   ```bash
-   git clone --recurse-submodules <repo-url>.git machtiani
-   ```
+  ```bash
+  git clone --recurse-submodules <repo-url>.git machtiani
+  ```
 
-2. Launch the application in `machtiani/machtiani/`.
+2. Launch the application in  machtiani/machtiani/ .
 
-   ```bash
-   docker-compose up --build --remove-orphans
-   ```
+  ```bash
+  docker-compose up --build --remove-orphans
+  ```
 
-3. Build the Machtiani CLI in `machtiani/machtiani/`.
+3. Build the Machtiani CLI in  machtiani/machtiani/ .
+  ```bash
+  go build -o machtiani ./cmd/machtiani
+  ```
 
-   ```bash
-    go build -o machtiani ./cmd/machtiani
-   ```
+4. Copy the CLI to a path that works for you in  machtiani/machtiani/ .
+  ```bash
+  cp machtiani ~/.local/bin/
+  ```
 
-4. Copy the CLI to a path that works for you in `machtiani/machtiani/`
+5. Build the aicommmit binary in  machtiani/aicommmit/ .
+  ```bash
+  cd aicommmit
+  go mod tidy
+  go build -o machtiani-aicommit-binary ./cmd/aicommit
+  ```
 
-   ```bash
-   cp machtiani ~/.local/bin/
-   ```
+6. Move the binary to a directory in your PATH.
+  ```bash
+  mv machtiani-aicommit-binary ~/.local/bin/
+  ```
 
-5. Start the local web server in a new terminal in `machtiani/machtiani-commit-file-retrieval/`
-
-   ```bash
-   poetry install
-   poetry run python web/server.py
-   ```
+7. Start the local web server in a new terminal in  machtiani/machtiani-commit-file-retrieval/
+  ```bash
+  poetry install
+  poetry run python web/server.py
+  ```
 
 ## Go to local homepage localhost:5072
 
