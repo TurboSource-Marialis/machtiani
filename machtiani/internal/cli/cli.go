@@ -12,11 +12,13 @@ import (
     "os/exec"
     "strings"
     "path"
+    "context"
 
     "github.com/7db9a/machtiani/internal/api"
     "github.com/7db9a/machtiani/internal/git"
     "github.com/7db9a/machtiani/internal/utils"
     "github.com/charmbracelet/glamour"
+    "github.com/sashabaranov/go-openai" // Ensure you import the OpenAI package
 )
 
 const (
@@ -24,6 +26,32 @@ const (
     defaultMatchStrength = "mid"
     defaultMode         = "commit"
 )
+
+func float32ToFloat64(input []float32) []float64 {
+    output := make([]float64, len(input))
+    for i, v := range input {
+        output[i] = float64(v)
+    }
+    return output
+}
+
+
+func generateEmbeddings(apiKey, prompt string) ([]float64, error) {
+    client := openai.NewClient(apiKey)
+    req := openai.EmbeddingRequest{
+        Model: "text-embedding-3-large",
+        Input: []string{prompt},
+    }
+    resp, err := client.CreateEmbeddings(context.Background(), req)
+    if err != nil {
+        return nil, fmt.Errorf("failed to create embeddings: %w", err)
+    }
+
+    if len(resp.Data) > 0 {
+        return float32ToFloat64(resp.Data[0].Embedding), nil
+    }
+    return nil, fmt.Errorf("no embeddings returned")
+}
 
 // Call the /generate-filename endpoint
 func generateFilename(apiKey, context string) (string, error) {
@@ -110,8 +138,14 @@ func Execute() {
         log.Fatal("Error: OPENAI_API_KEY environment variable is not set.")
     }
 
+    // Generate embeddings for the prompt
+    embeddings, err := generateEmbeddings(openAIAPIKey, prompt)
+    if err != nil {
+        log.Fatalf("Error generating embeddings: %v", err)
+    }
+
     // Call OpenAI API to generate response
-    apiResponse, err := api.CallOpenAIAPI(openAIAPIKey, prompt, project, *modeFlag, *modelFlag, *matchStrengthFlag)
+    apiResponse, err := api.CallOpenAIAPI(openAIAPIKey, prompt, project, *modeFlag, *modelFlag, *matchStrengthFlag, embeddings)
     if err != nil {
         log.Fatalf("Error making API call: %v", err)
     }

@@ -1,5 +1,5 @@
 import httpx
-from fastapi import FastAPI, Query, HTTPException
+from fastapi import FastAPI, Body, Query, HTTPException
 from typing import Optional, List, Dict, Union
 from contextlib import contextmanager
 from .utils import aggregate_file_paths, remove_duplicate_file_paths, send_prompt_to_openai, FileContentResponse, count_tokens
@@ -94,15 +94,16 @@ async def generate_filename(
         logger.error("Failed to extract filename from response.")
         raise HTTPException(status_code=400, detail="Invalid response format from OpenAI API.")
 
-@app.post("/generate-response", response_model=Dict[str, Union[str, List[str]]])
+@app.post("/generate-response")
 async def generate_response(
-    prompt: str = Query(..., description="The prompt to search for"),
-    project: str = Query(..., description="The project to search"),
-    mode: SearchMode = Query(SearchMode.commit, description="Search mode: chat, commit, or super"),
-    model: str = Query("gpt-4o-mini", description="The embedding model used"),
-    api_key: str = Query(..., description="The OpenAI API key."),
-    match_strength: str = Query("mid", description="The strength of the match")
-) -> Dict[str, Union[str, List[str]]]:
+    prompt: str = Body(..., description="The prompt to search for"),
+    project: str = Body(..., description="The project to search"),
+    mode: str = Body(..., description="Search mode: chat, commit, or super"),
+    model: str = Body(..., description="The embedding model used"),
+    api_key: str = Body(..., description="The OpenAI API key."),
+    match_strength: str = Body(..., description="The strength of the match"),
+    embeddings: Optional[List[float]] = Body(None, description="Embeddings for the prompt")
+):
     # Validate the model
     if model not in TOKEN_LIMITS:
         return {"error": "Invalid model selected. Choose either 'gpt-4o' or 'gpt-4o-mini'."}
@@ -117,10 +118,11 @@ async def generate_response(
     params = {
         "prompt": prompt,
         "project": project,
-        "mode": mode.value,
+        "mode": mode,
         "model": model,
         "match_strength": match_strength,
         "api_key": api_key,
+        "embeddings": embeddings  # Pass the embeddings here
     }
 
     # Initialize ignore_files list
@@ -133,7 +135,7 @@ async def generate_response(
 
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get(infer_file_url, params=params)
+            response = await client.post(infer_file_url, json=params)
             response.raise_for_status()
             logger.info(f"Response status code: {response.status_code}")
 

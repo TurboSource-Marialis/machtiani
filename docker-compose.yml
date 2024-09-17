@@ -15,6 +15,8 @@ services:
   commit-file-retrieval:
     build:
       context: ./machtiani-commit-file-retrieval
+    env_file:
+      - machtiani-commit-file-retrieval/.env
     container_name: commit-file-retrieval
     ports:
       - "5070:5070"

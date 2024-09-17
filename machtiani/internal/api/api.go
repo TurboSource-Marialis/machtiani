@@ -3,47 +3,41 @@ package api
 import (
     "encoding/json"
     "fmt"
-    "io/ioutil"
+    "bytes"
     "net/http"
-    "net/url"
 )
 
-func CallOpenAIAPI(apiKey, prompt, project, mode, model, matchStrength string) (map[string]interface{}, error) {
-    // URL encode the prompt to safely include it in the URL
-    encodedPrompt := url.QueryEscape(prompt)
+func CallOpenAIAPI(apiKey, prompt, project, mode, model, matchStrength string, embeddings []float64) (map[string]interface{}, error) {
+    // Construct the request payload
+    payload := map[string]interface{}{
+        "prompt":         prompt,
+        "project":        project,
+        "mode":           mode,
+        "model":          model,
+        "api_key":        apiKey,
+        "match_strength": matchStrength,
+        "embeddings":     embeddings,
+    }
 
-    // Construct the API URL with the provided parameters
-    apiURL := fmt.Sprintf("http://localhost:5071/generate-response?prompt=%s&project=%s&mode=%s&model=%s&api_key=%s&match_strength=%s",
-        encodedPrompt, project, mode, model, apiKey, matchStrength)
+    // Convert the payload to JSON
+    payloadBytes, err := json.Marshal(payload)
+    if err != nil {
+        return nil, fmt.Errorf("failed to marshal JSON: %w", err)
+    }
 
     // Make the POST request
-    resp, err := http.Post(apiURL, "application/json", nil)
+    resp, err := http.Post("http://localhost:5071/generate-response", "application/json", bytes.NewBuffer(payloadBytes))
     if err != nil {
-        return nil, fmt.Errorf("failed to make request: %v", err)
+        return nil, fmt.Errorf("failed to make API request: %w", err)
     }
     defer resp.Body.Close()
 
-    // Read the response body
-    body, err := ioutil.ReadAll(resp.Body)
-    if err != nil {
-        return nil, fmt.Errorf("failed to read response body: %v", err)
+    // Handle the response
+    var result map[string]interface{}
+    if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+        return nil, fmt.Errorf("failed to decode JSON response: %w", err)
     }
 
-    // Check if the response status is not OK (200)
-    if resp.StatusCode != http.StatusOK {
-        var errorResponse map[string]interface{}
-        if err := json.Unmarshal(body, &errorResponse); err != nil {
-            return nil, fmt.Errorf("failed to parse error response: %v", err)
-        }
-        // Include the error field in your error message
-        return nil, fmt.Errorf("API error: %v", errorResponse["error"]) // Changed to access the "error" field
-    }
-
-    // Parse the successful response
-    var response map[string]interface{}
-    if err := json.Unmarshal(body, &response); err != nil {
-        return nil, fmt.Errorf("failed to decode response: %v", err)
-    }
-
-    return response, nil
+    return result, nil
 }
+
