@@ -55,7 +55,12 @@ func generateEmbeddings(apiKey, prompt string) ([]float64, error) {
 
 // Call the /generate-filename endpoint
 func generateFilename(apiKey, context string) (string, error) {
-    url := fmt.Sprintf("http://localhost:5071/generate-filename?api_key=%s&context=%s", apiKey, url.QueryEscape(context))
+    endpoint := os.Getenv("MACHTIANI_URL")
+    if endpoint == "" {
+        return "", fmt.Errorf("MACHTIANI_URL environment variable is not set")
+    }
+
+    url := fmt.Sprintf("%s/generate-filename?api_key=%s&context=%s", endpoint, apiKey, url.QueryEscape(context))
     resp, err := http.Get(url)
     if err != nil {
         return "", fmt.Errorf("failed to call generate-filename endpoint: %v", err)

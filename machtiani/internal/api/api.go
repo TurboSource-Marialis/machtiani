@@ -5,6 +5,7 @@ import (
     "fmt"
     "bytes"
     "net/http"
+    "os"
 )
 
 func CallOpenAIAPI(apiKey, prompt, project, mode, model, matchStrength string, embeddings []float64) (map[string]interface{}, error) {
@@ -25,8 +26,14 @@ func CallOpenAIAPI(apiKey, prompt, project, mode, model, matchStrength string, e
         return nil, fmt.Errorf("failed to marshal JSON: %w", err)
     }
 
+    // Retrieve the MACHTIANI_URL from environment variables
+    endpoint := os.Getenv("MACHTIANI_URL")
+    if endpoint == "" {
+        return nil, fmt.Errorf("MACHTIANI_URL environment variable is not set")
+    }
+
     // Make the POST request
-    resp, err := http.Post("http://localhost:5071/generate-response", "application/json", bytes.NewBuffer(payloadBytes))
+    resp, err := http.Post(fmt.Sprintf("%s/generate-response", endpoint), "application/json", bytes.NewBuffer(payloadBytes))
     if err != nil {
         return nil, fmt.Errorf("failed to make API request: %w", err)
     }

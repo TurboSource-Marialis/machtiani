@@ -26,43 +26,63 @@ Keep in mind that uses by default OpenAI's gpt-4o-mini (optionally gpt-4o) API. 
 
 1. Clone this project.
 
-  ```bash
-  git clone --recurse-submodules <repo-url>.git machtiani
-  ```
+   ```bash
+   git clone --recurse-submodules <repo-url>.git machtiani
+   ```
 
-2. Launch the application in  machtiani/machtiani/ .
+2. Create a `.env` file in the root of the `machtiani` directory with the following content:
 
-  ```bash
-  docker-compose up --build --remove-orphans
-  ```
+   ```env
+   OPENAI_API_KEY="your_openai_api_key"
+   MACHTIANI_URL="http://localhost:5071"  # or your desired API URL
+   ```
 
-3. Build the Machtiani CLI in  machtiani/machtiani/ .
-  ```bash
-  go build -o machtiani ./cmd/machtiani
-  ```
+   Replace `your_openai_api_key` with your actual OpenAI API key. You can also set `MACHTIANI_URL` to the appropriate URL of your running service.
 
-4. Copy the CLI to a path that works for you in  machtiani/machtiani/ .
-  ```bash
-  cp machtiani ~/.local/bin/
-  ```
+3. Load the environment variables from the `.env` file:
 
-5. Build the aicommmit binary in  machtiani/aicommmit/ .
-  ```bash
-  cd aicommmit
-  go mod tidy
-  go build -o machtiani-aicommit-binary ./cmd/aicommit
-  ```
+   ```bash
+   source .env
+   ```
 
-6. Move the binary to a directory in your PATH.
-  ```bash
-  mv machtiani-aicommit-binary ~/.local/bin/
-  ```
+4. Launch the application in `machtiani/machtiani/`.
 
-7. Start the local web server in a new terminal in  machtiani/machtiani-commit-file-retrieval/
-  ```bash
-  poetry install
-  poetry run python web/server.py
-  ```
+   ```bash
+   docker-compose up --build --remove-orphans
+   ```
+
+5. Build the Machtiani CLI in `machtiani/machtiani/`.
+
+   ```bash
+   go build -o machtiani ./cmd/machtiani
+   ```
+
+6. Copy the CLI to a path that works for you in `machtiani/machtiani/`.
+
+   ```bash
+   cp machtiani ~/.local/bin/
+   ```
+
+7. Build the aicommmit binary in `machtiani/aicommmit/`.
+
+   ```bash
+   cd aicommmit
+   go mod tidy
+   go build -o machtiani-aicommit-binary ./cmd/aicommit
+   ```
+
+8. Move the binary to a directory in your PATH.
+
+   ```bash
+   mv machtiani-aicommit-binary ~/.local/bin/
+   ```
+
+9. Start the local web server in a new terminal in `machtiani/machtiani-commit-file-retrieval/`.
+
+   ```bash
+   poetry install
+   poetry run python web/server.py
+   ```
 
 ## Go to local homepage localhost:5072
 
@@ -79,7 +99,7 @@ Keep in mind that uses by default OpenAI's gpt-4o-mini (optionally gpt-4o) API. 
 
    - ![Getting Repo Info](images/fetch-filled.png)
 
-2. Load the updated repository:
+3. Load the updated repository:
    - ![Loading Repo](images/load-filled.png)
 
 ## Updating the repo and index
@@ -113,15 +133,16 @@ machtiani [flags] [prompt]
 
 ### Example Usage
 
-2. **Providing a direct prompt:**
+1. **Providing a direct prompt:**
 
    ```bash
    machtiani "Auto-save results in .machtiani/chat/. Should name the same if passing filename as --markdown."
    ```
+
    How the output looks like
    - ![Direct Prompt Example](images/default-result.png)
 
-1. **Using an existing markdown chat file:**
+2. **Using an existing markdown chat file:**
    ```bash
    machtiani -markdown path/to/your/file.md
    ```
@@ -151,7 +172,6 @@ Just a sample of the options.
 
    This won't retrieve any files with this flag.
 
-
 ### Different modes
 
 In the last example, you can don't have to select `pure-chat` to have a conversation with a markdown file
@@ -172,7 +192,7 @@ If you don't select `--mode`, it's the same as `--mode commit`, where it searche
 
 ### Ignoring Files with `.machtiani.ignore`
 
-You'll have to  ignore any binary files, providing the full path, such as images, etc.
+You'll have to ignore any binary files, providing the full path, such as images, etc.
 
 To exclude specific files from being processed by the application, you can create a `.machtiani.ignore` file in the root of your project directory. The files listed in this file will be ignored during the retrieval process.
 
@@ -186,6 +206,7 @@ go.mod
 ### Environment Variables
 
 Ensure to set the OpenAI API key in your environment:
+
 ```bash
 export OPENAI_API_KEY="your_openai_api_key"
 ```
@@ -222,7 +243,7 @@ This web tool simplifies managing Git repositories through a user-friendly inter
 - [x] Markdown generated chats should automatically save and have an auto-generate context-aware name.
 - [x] Content argument for mode flag should be `pure-chat`
 - [ ] Hide excessive stdout behind specific logging mode in commit-file-retrieval
-- [x] Modify cli so that it can generate embddings for the original prompt the user creates, then pass it as a paramter to generate-repsonse endpoint.
+- [x] Modify cli so that it can generate embeddings for the original prompt the user creates, then pass it as a parameter to the generate-response endpoint.
 - [ ] Chunk retrieval response by order of ranking according to token cap.
 - [ ] Widdle down strategy, sub-prompt to ask to only keep the code files possibly related to the prompt?
 - [ ] Implement filebot sum strategy - create a --mode super?
