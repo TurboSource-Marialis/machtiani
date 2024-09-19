@@ -140,8 +140,8 @@ func Execute() {
 
     // Only needed if generating embeddings for the prompt, client side, otherwise, server will do it if allowed.
     openAIAPIKey := os.Getenv("OPENAI_MACHTIANI_API_KEY") // Changed environment variable name
-    if openAIAPIKey == "" {
-        log.Println("Warning: OPENAI_MACHTIANI_API_KEY environment variable is not set.") // Log a warning instead of terminating
+    if openAIAPIKey != "" {
+        log.Println("Warning: Using OPENAI_MACHTIANI_API_KEY. This may incur costs for generating embeddings.") 
     }
     var embeddings []float64
     if openAIAPIKey != "" {

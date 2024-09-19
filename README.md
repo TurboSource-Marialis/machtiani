@@ -33,11 +33,10 @@ Keep in mind that uses by default OpenAI's gpt-4o-mini (optionally gpt-4o) API. 
 2. Create a `.env` file in the root of the `machtiani` directory with the following content:
 
    ```env
-   OPENAI_API_KEY="your_openai_api_key"
+   OPENAI_MACHTIANI_API_KEY="your_openai_api_key"
    MACHTIANI_URL="http://localhost:5071"  # or your desired API URL
    ```
-
-   Replace `your_openai_api_key` with your actual OpenAI API key. You can also set `MACHTIANI_URL` to the appropriate URL of your running service.
+   Warning: If the  OPENAI_API_KEY  is set, please be aware that costs will be incurred for embedding the prompt using the OpenAI API.
 
 3. Load the environment variables from the `.env` file:
 
