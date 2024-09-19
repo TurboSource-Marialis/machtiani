@@ -54,13 +54,13 @@ func generateEmbeddings(apiKey, prompt string) ([]float64, error) {
 }
 
 // Call the /generate-filename endpoint
-func generateFilename(apiKey, context string) (string, error) {
+func generateFilename(context string) (string, error) {
     endpoint := os.Getenv("MACHTIANI_URL")
     if endpoint == "" {
         return "", fmt.Errorf("MACHTIANI_URL environment variable is not set")
     }
 
-    url := fmt.Sprintf("%s/generate-filename?api_key=%s&context=%s", endpoint, apiKey, url.QueryEscape(context))
+    url := fmt.Sprintf("%s/generate-filename?context=%s", endpoint, url.QueryEscape(context))
     resp, err := http.Get(url)
     if err != nil {
         return "", fmt.Errorf("failed to call generate-filename endpoint: %v", err)
@@ -138,19 +138,22 @@ func Execute() {
         printVerboseInfo(*markdownFlag, *projectFlag, *modelFlag, *matchStrengthFlag, *modeFlag, prompt)
     }
 
-    openAIAPIKey := os.Getenv("OPENAI_API_KEY")
+    // Only needed if generating embeddings for the prompt, client side, otherwise, server will do it if allowed.
+    openAIAPIKey := os.Getenv("OPENAI_MACHTIANI_API_KEY") // Changed environment variable name
     if openAIAPIKey == "" {
-        log.Fatal("Error: OPENAI_API_KEY environment variable is not set.")
+        log.Println("Warning: OPENAI_MACHTIANI_API_KEY environment variable is not set.") // Log a warning instead of terminating
     }
-
-    // Generate embeddings for the prompt
-    embeddings, err := generateEmbeddings(openAIAPIKey, prompt)
-    if err != nil {
-        log.Fatalf("Error generating embeddings: %v", err)
+    var embeddings []float64
+    if openAIAPIKey != "" {
+        var err error
+        embeddings, err = generateEmbeddings(openAIAPIKey, prompt)
+        if err != nil {
+            log.Fatalf("Error generating embeddings: %v", err)
+        }
     }
 
     // Call OpenAI API to generate response
-    apiResponse, err := api.CallOpenAIAPI(openAIAPIKey, prompt, project, *modeFlag, *modelFlag, *matchStrengthFlag, embeddings)
+    apiResponse, err := api.CallOpenAIAPI(prompt, project, *modeFlag, *modelFlag, *matchStrengthFlag, embeddings)
     if err != nil {
         log.Fatalf("Error making API call: %v", err)
     }
@@ -171,7 +174,7 @@ func Execute() {
     // Check if the filename is empty or just "."
     if filename == "" || filename == "." {
         // If no markdown file provided, generate a filename
-        filename, err = generateFilename(openAIAPIKey, prompt)
+        filename, err = generateFilename(prompt)
         if err != nil {
             log.Fatalf("Error generating filename: %v", err)
         }

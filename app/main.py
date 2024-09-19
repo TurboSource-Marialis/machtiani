@@ -69,7 +69,6 @@ except ModuleNotFoundError as e:
 
 @app.get("/generate-filename", response_model=str)
 async def generate_filename(
-    api_key: str = Query(..., description="The OpenAI API key."),
     context: str = Query(..., description="Context to create filename"),
 ) -> str:
     filename_prompt = (
@@ -79,7 +78,13 @@ async def generate_filename(
         "Example:\n"
         "<filename>example_filename</filename>"
     )
-    response = send_prompt_to_openai(filename_prompt, api_key, model="gpt-4o-mini")
+
+    openAIAPIKey = os.getenv("OPENAI_MACHTIANI_API_KEY")
+    if not openAIAPIKey:
+        logger.error("OPENAI_API_KEY environment variable is not set")
+        raise EnvironmentError("OPENAI_API_KEY is required")
+
+    response = send_prompt_to_openai(filename_prompt, openAIAPIKey, model="gpt-4o-mini")
     logger.info(f"OpenAI response: {response}")
 
     # Extract the filename using regex
@@ -100,7 +105,6 @@ async def generate_response(
     project: str = Body(..., description="The project to search"),
     mode: str = Body(..., description="Search mode: chat, commit, or super"),
     model: str = Body(..., description="The embedding model used"),
-    api_key: str = Body(..., description="The OpenAI API key."),
     match_strength: str = Body(..., description="The strength of the match"),
     embeddings: Optional[List[float]] = Body(None, description="Embeddings for the prompt")
 ):
@@ -121,7 +125,6 @@ async def generate_response(
         "mode": mode,
         "model": model,
         "match_strength": match_strength,
-        "api_key": api_key,
         "embeddings": embeddings  # Pass the embeddings here
     }
 
@@ -181,7 +184,12 @@ async def generate_response(
                 return {"error": error_message}
 
             # Call the OpenAI API
-            openai_response = send_prompt_to_openai(combined_prompt, api_key, model)
+            openAIAPIKey = os.getenv("OPENAI_MACHTIANI_API_KEY")
+            if not openAIAPIKey:
+                logger.error("OPENAI_API_KEY environment variable is not set")
+                raise EnvironmentError("OPENAI_API_KEY is required")
+
+            openai_response = send_prompt_to_openai(combined_prompt, openAIAPIKey, model)
 
             return {"openai_response": openai_response, "retrieved_file_paths": retrieved_file_paths}
 

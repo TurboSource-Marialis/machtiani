@@ -8,18 +8,20 @@ import (
     "os"
 )
 
-func CallOpenAIAPI(apiKey, prompt, project, mode, model, matchStrength string, embeddings []float64) (map[string]interface{}, error) {
+func CallOpenAIAPI(prompt, project, mode, model, matchStrength string, embeddings []float64) (map[string]interface{}, error) {
     // Construct the request payload
     payload := map[string]interface{}{
         "prompt":         prompt,
         "project":        project,
         "mode":           mode,
         "model":          model,
-        "api_key":        apiKey,
         "match_strength": matchStrength,
-        "embeddings":     embeddings,
     }
 
+    // Only add embeddings to the payload if they are provided
+    if len(embeddings) > 0 {
+        payload["embeddings"] = embeddings
+    }
     // Convert the payload to JSON
     payloadBytes, err := json.Marshal(payload)
     if err != nil {

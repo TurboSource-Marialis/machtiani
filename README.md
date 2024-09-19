@@ -206,10 +206,13 @@ go.mod
 ### Environment Variables
 
 Ensure to set the OpenAI API key in your environment:
-
 ```bash
-export OPENAI_API_KEY="your_openai_api_key"
+export OPENAI_MACHTIANI_API_KEY="your_openai_api_key"
 ```
+
+Set the base URL for the Machtiani service:
+```bash
+export MACHTIANI_URL="http://localhost:5071" # or your desired base URL
 
 ### Output
 
