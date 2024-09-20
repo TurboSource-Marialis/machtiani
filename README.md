@@ -30,7 +30,7 @@ Keep in mind that uses by default OpenAI's gpt-4o-mini (optionally gpt-4o) API. 
    git clone --recurse-submodules <repo-url>.git machtiani
    ```
 
-2. Create a `.env` file in the root of the `machtiani` directory with the following content:
+2. Create a `.env` file in the root of the `machtiani` project directory with the following content:
 
    ```env
    OPENAI_MACHTIANI_API_KEY="your_openai_api_key"
@@ -38,31 +38,45 @@ Keep in mind that uses by default OpenAI's gpt-4o-mini (optionally gpt-4o) API. 
    ```
    Warning: If the  OPENAI_API_KEY  is set, please be aware that costs will be incurred for embedding the prompt using the OpenAI API.
 
-3. Load the environment variables from the `.env` file:
+
+3. Create a `.env` file in the `machtiani/machtiani-commit-file-retrieval` directory with the following content:
+
+   See [Running the FastAPI Application](machtiani-commit-file-retrieval/README.md#running-the-fastapi-application)
+
+   ```
+   OPENAI_API_KEY=skj-proj-...
+   HOST_MODE=local
+   ```
+
+Use `HOST_MODE=production`  you're running this in a production environment - the enables the service to perform the query embedding, if the client does pass it along.
+
+
+
+4. Load the environment variables from the `.env` file in the machtiani project root directory:
 
    ```bash
    source .env
    ```
 
-4. Launch the application in `machtiani/machtiani/`.
+5. Launch the application in `machtiani/machtiani/`.
 
    ```bash
    docker-compose up --build --remove-orphans
    ```
 
-5. Build the Machtiani CLI in `machtiani/machtiani/`.
+6. Build the Machtiani CLI in `machtiani/machtiani/`.
 
    ```bash
    go build -o machtiani ./cmd/machtiani
    ```
 
-6. Copy the CLI to a path that works for you in `machtiani/machtiani/`.
+7. Copy the CLI to a path that works for you in `machtiani/machtiani/`.
 
    ```bash
    cp machtiani ~/.local/bin/
    ```
 
-7. Build the aicommmit binary in `machtiani/aicommmit/`.
+8. Build the aicommmit binary in `machtiani/aicommmit/`.
 
    ```bash
    cd aicommmit
@@ -70,13 +84,13 @@ Keep in mind that uses by default OpenAI's gpt-4o-mini (optionally gpt-4o) API. 
    go build -o machtiani-aicommit-binary ./cmd/aicommit
    ```
 
-8. Move the binary to a directory in your PATH.
+9. Move the binary to a directory in your PATH.
 
    ```bash
    mv machtiani-aicommit-binary ~/.local/bin/
    ```
 
-9. Start the local web server in a new terminal in `machtiani/machtiani-commit-file-retrieval/`.
+10. Start the local web server in a new terminal in `machtiani/machtiani-commit-file-retrieval/`.
 
    ```bash
    poetry install
