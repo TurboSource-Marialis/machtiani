@@ -15,7 +15,7 @@ Keep in mind that uses by default OpenAI's gpt-4o-mini (optionally gpt-4o) API. 
 ## Upcoming Features to Look Forward To
 
 - [ ] Optional support for 'libre' hosted version.
-- [ ] Support open-source LLMs and other models (self-config)
+- [ ] Support open-source LLMs and other models (self-config).
 - [ ] Add as a submodule `aicommit` to help generate better commit messages, and even rewrite commits to Machtiani standards.
 - [ ] Cost management to how much it will cost to index.
 - [ ] Improve handling of file path changes in version control systems.
@@ -30,38 +30,32 @@ Keep in mind that uses by default OpenAI's gpt-4o-mini (optionally gpt-4o) API. 
    git clone --recurse-submodules <repo-url>.git machtiani
    ```
 
-2. Create a `.env` file in the root of the `machtiani` project directory with the following content:
+2. Create a `.env` file in the root of the `machtiani` directory with the following content:
 
    ```env
    OPENAI_MACHTIANI_API_KEY="your_openai_api_key"
    MACHTIANI_URL="http://localhost:5071"  # or your desired API URL
    ```
-   Warning: If the  OPENAI_API_KEY  is set, please be aware that costs will be incurred for embedding the prompt using the OpenAI API.
+   Warning: If the `OPENAI_API_KEY` is set, please be aware that costs will be incurred for embedding the prompt using the OpenAI API.
 
-
-3. Create a `.env` file in the `machtiani/machtiani-commit-file-retrieval` directory with the following content:
-
-   See [Running the FastAPI Application](machtiani-commit-file-retrieval/README.md#running-the-fastapi-application)
-
-   ```
-   OPENAI_API_KEY=skj-proj-...
-   HOST_MODE=local
-   ```
-
-Use `HOST_MODE=production`  you're running this in a production environment - the enables the service to perform the query embedding, if the client does pass it along.
-
-
-
-4. Load the environment variables from the `.env` file in the machtiani project root directory:
+3. Load the environment variables from the `.env` file:
 
    ```bash
    source .env
    ```
 
-5. Launch the application in `machtiani/machtiani/`.
+   Also you'll have to add a .env do in `machtiani-commit-file-retrieval/`. See [Running the FastAPI Application](machtiani-commit-file-retrieval/README.md#running-the-fastapi-application)
+
+4. Launch the application in development (without the API Gateway):
 
    ```bash
    docker-compose up --build --remove-orphans
+   ```
+
+5. If you want to run the application in production (with the API Gateway), use the following command:
+
+   ```bash
+   docker-compose -f docker-compose.yml -f docker-compose.prod.yml up --build --remove-orphans
    ```
 
 6. Build the Machtiani CLI in `machtiani/machtiani/`.
@@ -76,7 +70,7 @@ Use `HOST_MODE=production`  you're running this in a production environment - th
    cp machtiani ~/.local/bin/
    ```
 
-8. Build the aicommmit binary in `machtiani/aicommmit/`.
+8. Build the `aicommit` binary in `machtiani/aicommmit/`.
 
    ```bash
    cd aicommmit
@@ -92,10 +86,10 @@ Use `HOST_MODE=production`  you're running this in a production environment - th
 
 10. Start the local web server in a new terminal in `machtiani/machtiani-commit-file-retrieval/`.
 
-   ```bash
-   poetry install
-   poetry run python web/server.py
-   ```
+    ```bash
+    poetry install
+    poetry run python web/server.py
+    ```
 
 ## Go to local homepage localhost:5072
 
@@ -142,7 +136,7 @@ machtiani [flags] [prompt]
 - `-project string` (optional): Name of the project. If not set, it will be fetched from git.
 - `-model string` (optional): Model to use. Options include `gpt-4o` or `gpt-4o-mini`. Default is `gpt-4o-mini`.
 - `-match-strength string` (optional): Match strength options are `high`, `mid`, or `low`. Default is `mid`.
-- `-mode string` (optional): Search mode, which can be  `pure-chat`, `commit`, or `super`. Default is `commit`.
+- `-mode string` (optional): Search mode, which can be `pure-chat`, `commit`, or `super`. Default is `commit`.
 
 ### Example Usage
 
@@ -189,7 +183,7 @@ Just a sample of the options.
 
 In the last example, you can don't have to select `pure-chat` to have a conversation with a markdown file
 
-You could have ran the command as
+You could have run the command as
 
 ```
 machtiani --markdown /tmp/response2567089509/response.md
@@ -226,6 +220,7 @@ export OPENAI_MACHTIANI_API_KEY="your_openai_api_key"
 Set the base URL for the Machtiani service:
 ```bash
 export MACHTIANI_URL="http://localhost:5071" # or your desired base URL
+```
 
 ### Output
 
@@ -257,8 +252,8 @@ This web tool simplifies managing Git repositories through a user-friendly inter
 - [ ] Script to rewrite a project's git commit history.
 - [x] Auto-save results in `.machtiani/chat/`. Should name the same if passing filename as --markdown.
 - [x] Markdown generated chats should automatically save and have an auto-generate context-aware name.
-- [x] Content argument for mode flag should be `pure-chat`
-- [ ] Hide excessive stdout behind specific logging mode in commit-file-retrieval
+- [x] Content argument for mode flag should be `pure-chat`.
+- [ ] Hide excessive stdout behind specific logging mode in commit-file-retrieval.
 - [x] Modify cli so that it can generate embeddings for the original prompt the user creates, then pass it as a parameter to the generate-response endpoint.
 - [ ] Chunk retrieval response by order of ranking according to token cap.
 - [ ] Widdle down strategy, sub-prompt to ask to only keep the code files possibly related to the prompt?
