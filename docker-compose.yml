@@ -26,11 +26,12 @@ services:
       - ./machtiani-commit-file-retrieval/data:/data
     command: ["poetry", "run", "uvicorn", "app.main:app", "--reload", "--host", "0.0.0.0", "--port", "5070"]
 
-  authenticator:
+  api-gateway:  # Renamed service
     build:
       context: .  # Assuming the Dockerfile is in the same directory
-    container_name: authenticator
+    container_name: api-gateway
     ports:
       - "80:80"
     env_file:
-      - authenticator/.env  # Load environment variables from authenticator/.env file
+      - api-gateway/.env  # Load environment variables from authenticator/.env file
+    command: ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
