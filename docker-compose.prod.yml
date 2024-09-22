@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  api-gateway:
+    build:
+      context: ./api-gateway 
+    container_name: api-gateway
+    ports:
+      - "80:80"
+    env_file:
+      - api-gateway/.env
+    command: ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
