@@ -35,6 +35,7 @@ Keep in mind that uses by default OpenAI's gpt-4o-mini (optionally gpt-4o) API. 
    ```env
    OPENAI_MACHTIANI_API_KEY="your_openai_api_key"
    MACHTIANI_URL="http://localhost:5071"  # or your desired API URL
+   MACHTIANI_REPO_MANAGER_URL="http://localhost:5070"
    ```
    Warning: If the `OPENAI_API_KEY` is set, please be aware that costs will be incurred for embedding the prompt using the OpenAI API.
 
