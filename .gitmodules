@@ -7,3 +7,6 @@
 [submodule "api-gateway"]
 	path = api-gateway
 	url = https://github.com/TurboSource-Marialis/api-gateway
+[submodule "machtiani-releases"]
+	path = machtiani-releases
+	url = https://github.com/TurboSource-Marialis/machtiani-releases
