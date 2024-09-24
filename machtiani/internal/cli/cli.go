@@ -93,6 +93,8 @@ func Execute() {
     codeURL := fs.String("code-url", "", "URL of the code repository")
     name := fs.String("name", "", "Project name")
     codeAPIKey := fs.String("code-api-key", "", "API key for the code repository (e.g., GitHub key)")
+    // New flag for the git-store command
+    branchName := fs.String("branch-name", "", "Branch name")
 
     args := os.Args[1:]
 
@@ -126,6 +128,32 @@ func Execute() {
         fmt.Printf("Full Path: %s\n", responseMessage.FullPath)
         fmt.Printf("API Key Provided: %v\n", responseMessage.ApiKeyProvided)
         return // Exit after handling git-store
+    }
+
+    // Check if the command is git-sync
+    if len(os.Args) >= 2 && os.Args[1] == "git-sync" {
+        err := fs.Parse(args[1:]) // Parse flags after the command
+        if err != nil {
+            log.Fatalf("Error parsing flags: %v", err)
+        }
+
+        // Check if required flags are provided for git-sync
+        if *codeURL == "" || *name == "" || *branchName == "" || *codeAPIKey == "" {
+            log.Fatal("Error: all flags --code-url, --name, --branch-name, and --code-api-key must be provided for git-sync.")
+        }
+
+        // Here, you would call the function to sync the git repository
+        // responseMessage, err := api.SyncGitRepository(*codeURL, *name, *branchName, *codeAPIKey)
+        // if err != nil {
+        //     log.Fatalf("Error syncing repository: %v", err)
+        // }
+
+        // For demonstration, we will just print the provided values
+        fmt.Printf("Code URL: %s\n", *codeURL)
+        fmt.Printf("Project Name: %s\n", *name)
+        fmt.Printf("Branch Name: %s\n", *branchName)
+        fmt.Printf("Code API Key: %s\n", *codeAPIKey)
+        return
     }
 
     var promptParts []string
