@@ -13,6 +13,7 @@ import (
     "strings"
     "path"
     "context"
+    "bytes"
 
     "github.com/7db9a/machtiani/internal/api"
     "github.com/7db9a/machtiani/internal/git"
@@ -105,13 +106,61 @@ func Execute() {
 
     if len(os.Args) >= 2 && os.Args[1] == "git-store" {
         // Handle the git-store command
-        fs.Parse(args[2:]) // Parse flags after the command
+        err := fs.Parse(args[1:]) // Parse flags after the command
+        if err != nil {
+            log.Fatalf("Error parsing flags: %v", err)
+        }
 
-        // Here, you would typically implement the logic to store the code
-        fmt.Printf("Storing code from %s with name '%s' using API key '%s'\n", *codeURL, *name, *codeAPIKey)
+        // Check if required flags are provided
+        if *codeURL == "" || *name == "" || *codeAPIKey == "" {
+            log.Fatal("Error: all flags --code-url, --name, and --code-api-key must be provided.")
+        }
 
-        // Exit after handling git-store
-        return
+        // Debug output for checking values
+        fmt.Printf("Code URL: %s, Project Name: %s, API Key: %s\n", *codeURL, *name, *codeAPIKey)
+
+        // Prepare the data to be sent in the request
+        data := map[string]interface{}{
+            "codehost_url": *codeURL,
+            "project_name": *name,
+            "vcs_type":     "git",  // Default value for VCS type
+            "api_key":      *codeAPIKey,
+        }
+
+        // Convert data to JSON
+        jsonData, err := json.Marshal(data)
+        if err != nil {
+            log.Fatalf("Error marshaling JSON: %v", err)
+        }
+
+        // Get the base URL from the environment variable
+        repoManagerURL := os.Getenv("MACHTIANI_REPO_MANAGER_URL")
+        fmt.Printf("Repository Manager URL: %s\n", repoManagerURL) // Debug output
+        if repoManagerURL == "" {
+            log.Fatal("Error: MACHTIANI_REPO_MANAGER_URL environment variable is not set.")
+        }
+
+        // Send the POST request to the specified endpoint
+        resp, err := http.Post(fmt.Sprintf("%s/add-repository/", repoManagerURL), "application/json", bytes.NewBuffer(jsonData))
+        if err != nil {
+            log.Fatalf("Error sending request to add repository: %v", err)
+        }
+        defer resp.Body.Close()
+
+        // Handle the response
+        if resp.StatusCode != http.StatusOK {
+            body, _ := ioutil.ReadAll(resp.Body)
+            log.Fatalf("Error adding repository: %s", body)
+        }
+
+        // Successfully added the repository, print the response message
+        var responseMessage map[string]string
+        if err := json.NewDecoder(resp.Body).Decode(&responseMessage); err != nil {
+            log.Fatalf("Error decoding response: %v", err)
+        }
+
+        fmt.Printf("Response from server: %s\n", responseMessage["message"])
+        return // Exit after handling git-store
     }
 
     var promptParts []string
