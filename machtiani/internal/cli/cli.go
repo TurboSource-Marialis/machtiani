@@ -22,6 +22,12 @@ import (
     "github.com/sashabaranov/go-openai" // Ensure you import the OpenAI package
 )
 
+type AddRepositoryResponse struct {
+    Message          string `json:"message"`
+    FullPath         string `json:"full_path"`
+    ApiKeyProvided   bool   `json:"api_key_provided"`
+}
+
 const (
     defaultModel        = "gpt-4o-mini"
     defaultMatchStrength = "mid"
@@ -153,13 +159,16 @@ func Execute() {
             log.Fatalf("Error adding repository: %s", body)
         }
 
-        // Successfully added the repository, print the response message
-        var responseMessage map[string]string
+        // Successfully added the repository, decode the response into the defined struct
+        var responseMessage AddRepositoryResponse
         if err := json.NewDecoder(resp.Body).Decode(&responseMessage); err != nil {
             log.Fatalf("Error decoding response: %v", err)
         }
 
-        fmt.Printf("Response from server: %s\n", responseMessage["message"])
+        // Print the response message
+        fmt.Printf("Response from server: %s\n", responseMessage.Message)
+        fmt.Printf("Full Path: %s\n", responseMessage.FullPath)
+        fmt.Printf("API Key Provided: %v\n", responseMessage.ApiKeyProvided)
         return // Exit after handling git-store
     }
 
