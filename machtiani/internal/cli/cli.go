@@ -122,9 +122,6 @@ func Execute() {
             log.Fatal("Error: all flags --code-url, --name, and --code-api-key must be provided.")
         }
 
-        // Debug output for checking values
-        fmt.Printf("Code URL: %s, Project Name: %s, API Key: %s\n", *codeURL, *name, *codeAPIKey)
-
         // Prepare the data to be sent in the request
         data := map[string]interface{}{
             "codehost_url": *codeURL,
@@ -141,7 +138,6 @@ func Execute() {
 
         // Get the base URL from the environment variable
         repoManagerURL := os.Getenv("MACHTIANI_REPO_MANAGER_URL")
-        fmt.Printf("Repository Manager URL: %s\n", repoManagerURL) // Debug output
         if repoManagerURL == "" {
             log.Fatal("Error: MACHTIANI_REPO_MANAGER_URL environment variable is not set.")
         }
