@@ -261,7 +261,7 @@ This web tool simplifies managing Git repositories through a user-friendly inter
 - [ ] A --search-web option
 - [ ] Make serviceable
       - [ ] Add machtiani commands for `add repo`, `fetch and update` and `load`
-            - [ ] `git-sync` code-host-url is sensitive to `/` (must) at end of url.
+            - [ ] `git-sync` code-host-url is sensitive to `/` (must) at end of url. Oddly `git-store` works just fine without.
       - [ ] Keep it simple: each user will be able to add any repo, and we store git key. Fetch and update. And load
       - [ ] See from there, and just get the endpoint up.
 
