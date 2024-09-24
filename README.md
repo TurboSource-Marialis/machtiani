@@ -197,6 +197,44 @@ machtiani --markdown /tmp/response2567089509/response.md --mode pure-chat
 
 If you don't select `--mode`, it's the same as `--mode commit`, where it searches commits for possible files to help answer the prompt.
 
+### Store and sync repos
+
+The `git-store` command allows you to add a repository to the Machtiani system.
+
+**Usage:**
+```bash
+machtiani git-store --code-url <repository-url> --name <project-name> --code-api-key <api-key>
+```
+
+- `--code-url`: URL of the code repository.
+- `--name`: Project name.
+- `--code-api-key`: API key for the code repository (e.g., GitHub key).
+
+**Example:**
+```bash
+machtiani git-store --code-url https://github.com/yourusername/yourrepo.git --name yourproject --code-api-key your_api_key
+```
+
+#### `git-sync`
+
+The `git-sync` command is used to fetch and checkout a specific branch of the repository.
+
+**Usage:**
+```bash
+machtiani git-sync --code-url <repository-url> --name <project-name> --branch-name <branch-name> --code-api-key <api-key>
+```
+
+- `--code-url`: URL of the code repository.
+- `--name`: Project name.
+- `--branch-name`: Branch name to checkout.
+- `--code-api-key`: API key for the code repository (e.g., GitHub key).
+
+**Example:**
+```bash
+machtiani git-sync --code-url https://github.com/yourusername/yourrepo.git --name yourproject --branch-name main --code-api-key your_api_key
+```
+
+
 ### Ignoring Files with `.machtiani.ignore`
 
 You'll have to ignore any binary files, providing the full path, such as images, etc.
