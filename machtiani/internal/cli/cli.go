@@ -89,11 +89,28 @@ func Execute() {
     modeFlag := fs.String("mode", defaultMode, "Search mode: pure-chat, commit, or super")
     verboseFlag := fs.Bool("verbose", false, "Enable verbose output.")
 
+    // New flags for the git-store command
+    codeURL := fs.String("code-url", "", "URL of the code repository")
+    name := fs.String("name", "", "Project name")
+    codeAPIKey := fs.String("code-api-key", "", "API key for the code repository (e.g., GitHub key)")
+
     args := os.Args[1:]
+
 
     if len(os.Args) >= 2 && os.Args[1] == "aicommit" {
         // Handle the aicommit subcommand
         runAicommit(args)
+        return
+    }
+
+    if len(os.Args) >= 2 && os.Args[1] == "git-store" {
+        // Handle the git-store command
+        fs.Parse(args[2:]) // Parse flags after the command
+
+        // Here, you would typically implement the logic to store the code
+        fmt.Printf("Storing code from %s with name '%s' using API key '%s'\n", *codeURL, *name, *codeAPIKey)
+
+        // Exit after handling git-store
         return
     }
 

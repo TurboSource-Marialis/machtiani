@@ -258,3 +258,9 @@ This web tool simplifies managing Git repositories through a user-friendly inter
 - [ ] Chunk retrieval response by order of ranking according to token cap.
 - [ ] Widdle down strategy, sub-prompt to ask to only keep the code files possibly related to the prompt?
 - [ ] Implement filebot sum strategy - create a --mode super?
+- [ ] A --search-web option
+- [ ] Make serviceable
+      - [ ] Add machtiani commands for `add repo`, `fetch and update` and `load`
+      - [ ] Keep it simple: each user will be able to add any repo, and we store git key. Fetch and update. And load
+      - [ ] See from there, and just get the endpoint up.
+
