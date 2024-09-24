@@ -13,6 +13,7 @@ import (
     "strings"
     "path"
     "context"
+    "bytes"
 
     "github.com/7db9a/machtiani/internal/api"
     "github.com/7db9a/machtiani/internal/git"
@@ -93,7 +94,7 @@ func Execute() {
     codeURL := fs.String("code-url", "", "URL of the code repository")
     name := fs.String("name", "", "Project name")
     codeAPIKey := fs.String("code-api-key", "", "API key for the code repository (e.g., GitHub key)")
-    // New flag for the git-store command
+    // New flag for the git-sync command
     branchName := fs.String("branch-name", "", "Branch name")
 
     args := os.Args[1:]
@@ -142,17 +143,42 @@ func Execute() {
             log.Fatal("Error: all flags --code-url, --name, --branch-name, and --code-api-key must be provided for git-sync.")
         }
 
-        // Here, you would call the function to sync the git repository
-        // responseMessage, err := api.SyncGitRepository(*codeURL, *name, *branchName, *codeAPIKey)
-        // if err != nil {
-        //     log.Fatalf("Error syncing repository: %v", err)
-        // }
+        // Prepare the data for the request
+        data := map[string]interface{}{
+            "codehost_url": *codeURL,
+            "project_name": *name,
+            "branch_name":  *branchName,
+            "api_key":     *codeAPIKey,
+        }
 
-        // For demonstration, we will just print the provided values
-        fmt.Printf("Code URL: %s\n", *codeURL)
-        fmt.Printf("Project Name: %s\n", *name)
-        fmt.Printf("Branch Name: %s\n", *branchName)
-        fmt.Printf("Code API Key: %s\n", *codeAPIKey)
+        // Convert data to JSON
+        jsonData, err := json.Marshal(data)
+        if err != nil {
+            log.Fatalf("Error marshaling JSON: %v", err)
+        }
+
+        repoManagerURL := os.Getenv("MACHTIANI_REPO_MANAGER_URL")
+        // Create the POST request
+        req, err := http.NewRequest("POST", fmt.Sprintf("%s/fetch-and-checkout/", repoManagerURL), bytes.NewBuffer(jsonData))
+        if err != nil {
+            log.Fatalf("Error creating request: %v", err)
+        }
+        req.Header.Set("Content-Type", "application/json")
+
+        // Execute the request
+        client := &http.Client{}
+        resp, err := client.Do(req)
+        if err != nil {
+            log.Fatalf("Error making request: %v", err)
+        }
+        defer resp.Body.Close()
+
+        // Check the response status
+        if resp.StatusCode != http.StatusOK {
+            log.Fatalf("Error: Received status code %d from the server.", resp.StatusCode)
+        }
+
+        log.Printf("Successfully synced the repository: %s", *name)
         return
     }
 
