@@ -59,6 +59,50 @@ func AddRepository(codeURL, name, apiKey string) (AddRepositoryResponse, error) 
     return responseMessage, nil
 }
 
+// FetchAndCheckoutBranch sends a request to fetch and checkout a branch.
+func FetchAndCheckoutBranch(codeURL, name, branchName, apiKey string) error {
+    // Prepare the data for the request
+    data := map[string]interface{}{
+        "codehost_url": codeURL,
+        "project_name": name,
+        "branch_name":  branchName,
+        "api_key":     apiKey,
+    }
+
+    // Convert data to JSON
+    jsonData, err := json.Marshal(data)
+    if err != nil {
+        return fmt.Errorf("error marshaling JSON: %w", err)
+    }
+
+    repoManagerURL := os.Getenv("MACHTIANI_REPO_MANAGER_URL")
+    if repoManagerURL == "" {
+        return fmt.Errorf("MACHTIANI_REPO_MANAGER_URL environment variable is not set")
+    }
+
+    // Create the POST request
+    req, err := http.NewRequest("POST", fmt.Sprintf("%s/fetch-and-checkout/", repoManagerURL), bytes.NewBuffer(jsonData))
+    if err != nil {
+        return fmt.Errorf("error creating request: %w", err)
+    }
+    req.Header.Set("Content-Type", "application/json")
+
+    // Execute the request
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    if err != nil {
+        return fmt.Errorf("error making request: %w", err)
+    }
+    defer resp.Body.Close()
+
+    // Check the response status
+    if resp.StatusCode != http.StatusOK {
+        return fmt.Errorf("error: received status code %d from the server.", resp.StatusCode)
+    }
+
+    return nil
+}
+
 func CallOpenAIAPI(prompt, project, mode, model, matchStrength string, embeddings []float64) (map[string]interface{}, error) {
     // Construct the request payload
     payload := map[string]interface{}{

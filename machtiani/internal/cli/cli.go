@@ -13,7 +13,6 @@ import (
     "strings"
     "path"
     "context"
-    "bytes"
 
     "github.com/7db9a/machtiani/internal/api"
     "github.com/7db9a/machtiani/internal/git"
@@ -143,39 +142,10 @@ func Execute() {
             log.Fatal("Error: all flags --code-url, --name, --branch-name, and --code-api-key must be provided for git-sync.")
         }
 
-        // Prepare the data for the request
-        data := map[string]interface{}{
-            "codehost_url": *codeURL,
-            "project_name": *name,
-            "branch_name":  *branchName,
-            "api_key":     *codeAPIKey,
-        }
-
-        // Convert data to JSON
-        jsonData, err := json.Marshal(data)
+        // Call the new function to fetch and checkout the branch
+        err = api.FetchAndCheckoutBranch(*codeURL, *name, *branchName, *codeAPIKey)
         if err != nil {
-            log.Fatalf("Error marshaling JSON: %v", err)
-        }
-
-        repoManagerURL := os.Getenv("MACHTIANI_REPO_MANAGER_URL")
-        // Create the POST request
-        req, err := http.NewRequest("POST", fmt.Sprintf("%s/fetch-and-checkout/", repoManagerURL), bytes.NewBuffer(jsonData))
-        if err != nil {
-            log.Fatalf("Error creating request: %v", err)
-        }
-        req.Header.Set("Content-Type", "application/json")
-
-        // Execute the request
-        client := &http.Client{}
-        resp, err := client.Do(req)
-        if err != nil {
-            log.Fatalf("Error making request: %v", err)
-        }
-        defer resp.Body.Close()
-
-        // Check the response status
-        if resp.StatusCode != http.StatusOK {
-            log.Fatalf("Error: Received status code %d from the server.", resp.StatusCode)
+            log.Fatalf("Error syncing repository: %v", err)
         }
 
         log.Printf("Successfully synced the repository: %s", *name)
