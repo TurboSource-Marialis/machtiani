@@ -13,7 +13,6 @@ import (
     "strings"
     "path"
     "context"
-    "bytes"
 
     "github.com/7db9a/machtiani/internal/api"
     "github.com/7db9a/machtiani/internal/git"
@@ -21,12 +20,6 @@ import (
     "github.com/charmbracelet/glamour"
     "github.com/sashabaranov/go-openai" // Ensure you import the OpenAI package
 )
-
-type AddRepositoryResponse struct {
-    Message          string `json:"message"`
-    FullPath         string `json:"full_path"`
-    ApiKeyProvided   bool   `json:"api_key_provided"`
-}
 
 const (
     defaultModel        = "gpt-4o-mini"
@@ -122,43 +115,10 @@ func Execute() {
             log.Fatal("Error: all flags --code-url, --name, and --code-api-key must be provided.")
         }
 
-        // Prepare the data to be sent in the request
-        data := map[string]interface{}{
-            "codehost_url": *codeURL,
-            "project_name": *name,
-            "vcs_type":     "git",  // Default value for VCS type
-            "api_key":      *codeAPIKey,
-        }
-
-        // Convert data to JSON
-        jsonData, err := json.Marshal(data)
+        // Call the new function to add the repository
+        responseMessage, err := api.AddRepository(*codeURL, *name, *codeAPIKey)
         if err != nil {
-            log.Fatalf("Error marshaling JSON: %v", err)
-        }
-
-        // Get the base URL from the environment variable
-        repoManagerURL := os.Getenv("MACHTIANI_REPO_MANAGER_URL")
-        if repoManagerURL == "" {
-            log.Fatal("Error: MACHTIANI_REPO_MANAGER_URL environment variable is not set.")
-        }
-
-        // Send the POST request to the specified endpoint
-        resp, err := http.Post(fmt.Sprintf("%s/add-repository/", repoManagerURL), "application/json", bytes.NewBuffer(jsonData))
-        if err != nil {
-            log.Fatalf("Error sending request to add repository: %v", err)
-        }
-        defer resp.Body.Close()
-
-        // Handle the response
-        if resp.StatusCode != http.StatusOK {
-            body, _ := ioutil.ReadAll(resp.Body)
-            log.Fatalf("Error adding repository: %s", body)
-        }
-
-        // Successfully added the repository, decode the response into the defined struct
-        var responseMessage AddRepositoryResponse
-        if err := json.NewDecoder(resp.Body).Decode(&responseMessage); err != nil {
-            log.Fatalf("Error decoding response: %v", err)
+            log.Fatalf("Error adding repository: %v", err)
         }
 
         // Print the response message
@@ -212,7 +172,7 @@ func Execute() {
     // Only needed if generating embeddings for the prompt, client side, otherwise, server will do it if allowed.
     openAIAPIKey := os.Getenv("OPENAI_MACHTIANI_API_KEY") // Changed environment variable name
     if openAIAPIKey != "" {
-        log.Println("Warning: Using OPENAI_MACHTIANI_API_KEY. This may incur costs for generating embeddings.") 
+        log.Println("Warning: Using OPENAI_MACHTIANI_API_KEY. This may incur costs for generating embeddings.")
     }
     var embeddings []float64
     if openAIAPIKey != "" {

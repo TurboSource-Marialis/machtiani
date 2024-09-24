@@ -6,7 +6,58 @@ import (
     "bytes"
     "net/http"
     "os"
+    "io/ioutil"
 )
+
+type AddRepositoryResponse struct {
+    Message        string `json:"message"`
+    FullPath       string `json:"full_path"`
+    ApiKeyProvided bool   `json:"api_key_provided"`
+}
+
+// AddRepository sends a request to add a repository.
+func AddRepository(codeURL, name, apiKey string) (AddRepositoryResponse, error) {
+    // Prepare the data to be sent in the request
+    data := map[string]interface{}{
+        "codehost_url": codeURL,
+        "project_name": name,
+        "vcs_type":     "git",  // Default value for VCS type
+        "api_key":      apiKey,
+    }
+
+    // Convert data to JSON
+    jsonData, err := json.Marshal(data)
+    if err != nil {
+        return AddRepositoryResponse{}, fmt.Errorf("error marshaling JSON: %w", err)
+    }
+
+    // Get the base URL from the environment variable
+    repoManagerURL := os.Getenv("MACHTIANI_REPO_MANAGER_URL")
+    if repoManagerURL == "" {
+        return AddRepositoryResponse{}, fmt.Errorf("MACHTIANI_REPO_MANAGER_URL environment variable is not set")
+    }
+
+    // Send the POST request to the specified endpoint
+    resp, err := http.Post(fmt.Sprintf("%s/add-repository/", repoManagerURL), "application/json", bytes.NewBuffer(jsonData))
+    if err != nil {
+        return AddRepositoryResponse{}, fmt.Errorf("error sending request to add repository: %w", err)
+    }
+    defer resp.Body.Close()
+
+    // Handle the response
+    if resp.StatusCode != http.StatusOK {
+        body, _ := ioutil.ReadAll(resp.Body)
+        return AddRepositoryResponse{}, fmt.Errorf("error adding repository: %s", body)
+    }
+
+    // Successfully added the repository, decode the response into the defined struct
+    var responseMessage AddRepositoryResponse
+    if err := json.NewDecoder(resp.Body).Decode(&responseMessage); err != nil {
+        return AddRepositoryResponse{}, fmt.Errorf("error decoding response: %w", err)
+    }
+
+    return responseMessage, nil
+}
 
 func CallOpenAIAPI(prompt, project, mode, model, matchStrength string, embeddings []float64) (map[string]interface{}, error) {
     // Construct the request payload
