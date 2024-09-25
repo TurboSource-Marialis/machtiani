@@ -15,16 +15,17 @@ type AddRepositoryResponse struct {
     Message        string `json:"message"`
     FullPath       string `json:"full_path"`
     ApiKeyProvided bool   `json:"api_key_provided"`
+    OpenAiApiKeyProvided bool   `json:"openai_api_key_provided"`
 }
 
 // AddRepository sends a request to add a repository.
-func AddRepository(codeURL, name, apiKey string, repoManagerURL string) (AddRepositoryResponse, error) {
+func AddRepository(codeURL, name, apiKey, openAIAPIKey string, repoManagerURL string) (AddRepositoryResponse, error) {
     // Prepare the data to be sent in the request
     data := map[string]interface{}{
         "codehost_url": codeURL,
-        "project_name": name,
-        "vcs_type":     "git",  // Default value for VCS type
+        "project_name": name, "vcs_type":     "git",  // Default value for VCS type
         "api_key":      apiKey,
+        "openai_api_key": openAIAPIKey, // Add the OpenAI API key here
     }
 
     // Convert data to JSON

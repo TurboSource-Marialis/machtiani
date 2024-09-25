@@ -120,7 +120,7 @@ func Execute() {
         }
 
         // Call the new function to add the repository
-        responseMessage, err := api.AddRepository(*codeURL, *name, config.Environment.CodeHostAPIKey, config.Environment.RepoManagerURL)
+       responseMessage, err := api.AddRepository(*codeURL, *name, config.Environment.CodeHostAPIKey, config.Environment.OpenAIAPIKey, config.Environment.RepoManagerURL)
         if err != nil {
             log.Fatalf("Error adding repository: %v", err)
         }
@@ -128,6 +128,7 @@ func Execute() {
         fmt.Printf("Response from server: %s\n", responseMessage.Message)
         fmt.Printf("Full Path: %s\n", responseMessage.FullPath)
         fmt.Printf("API Key Provided: %v\n", responseMessage.ApiKeyProvided)
+        fmt.Printf("OpenAI API Key Provided: %v\n", responseMessage.OpenAiApiKeyProvided)
         return // Exit after handling git-store
     }
 
