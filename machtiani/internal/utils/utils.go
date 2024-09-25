@@ -46,6 +46,8 @@ type Config struct {
         OpenAIAPIKey         string `yaml:"OPENAI_MACHTIANI_API_KEY"`
         MachtianiURL         string `yaml:"MACHTIANI_URL"`
         RepoManagerURL       string `yaml:"MACHTIANI_REPO_MANAGER_URL"`
+        CodeHostURL          string `yaml:"CODE_HOST_URL"`
+        CodeHostAPIKey       string `yaml:"CODE_HOST_API_KEY"`
     } `yaml:"environment"`
 }
 

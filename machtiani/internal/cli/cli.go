@@ -99,41 +99,32 @@ func Execute() {
     modeFlag := fs.String("mode", defaultMode, "Search mode: pure-chat, commit, or super")
     verboseFlag := fs.Bool("verbose", false, "Enable verbose output.")
 
-    // New flags for the git-store command
     codeURL := fs.String("code-url", "", "URL of the code repository")
     name := fs.String("name", "", "Project name")
-    codeAPIKey := fs.String("code-api-key", "", "API key for the code repository (e.g., GitHub key)")
-    // New flag for the git-sync command
     branchName := fs.String("branch-name", "", "Branch name")
 
     args := os.Args[1:]
 
-
-    if len(os.Args) >= 2 && os.Args[1] == "aicommit" {
-        // Handle the aicommit subcommand
-        runAicommit(args)
-        return
-    }
-
     if len(os.Args) >= 2 && os.Args[1] == "git-store" {
-        // Handle the git-store command
         err := fs.Parse(args[1:]) // Parse flags after the command
         if err != nil {
             log.Fatalf("Error parsing flags: %v", err)
         }
 
-        // Check if required flags are provided
-        if *codeURL == "" || *name == "" || *codeAPIKey == "" {
-            log.Fatal("Error: all flags --code-url, --name, and --code-api-key must be provided.")
+        // Use the code host URL and API key from config
+        if *codeURL == "" {
+            *codeURL = config.Environment.CodeHostURL // Use the configuration value
+        }
+        if *name == "" || config.Environment.CodeHostAPIKey == "" {
+            log.Fatal("Error: project name must be provided and API key must be set in config.")
         }
 
         // Call the new function to add the repository
-        responseMessage, err := api.AddRepository(*codeURL, *name, *codeAPIKey)
+        responseMessage, err := api.AddRepository(*codeURL, *name, config.Environment.CodeHostAPIKey, config.Environment.RepoManagerURL)
         if err != nil {
             log.Fatalf("Error adding repository: %v", err)
         }
 
-        // Print the response message
         fmt.Printf("Response from server: %s\n", responseMessage.Message)
         fmt.Printf("Full Path: %s\n", responseMessage.FullPath)
         fmt.Printf("API Key Provided: %v\n", responseMessage.ApiKeyProvided)
@@ -147,13 +138,16 @@ func Execute() {
             log.Fatalf("Error parsing flags: %v", err)
         }
 
-        // Check if required flags are provided for git-sync
-        if *codeURL == "" || *name == "" || *branchName == "" || *codeAPIKey == "" {
-            log.Fatal("Error: all flags --code-url, --name, --branch-name, and --code-api-key must be provided for git-sync.")
+        // Use the code host URL and API key from config
+        if *codeURL == "" {
+            *codeURL = config.Environment.CodeHostURL // Use the configuration value
+        }
+        if *name == "" || *branchName == "" || config.Environment.CodeHostAPIKey == "" {
+            log.Fatal("Error: all flags --name, --branch-name must be provided and API key must be set in config.")
         }
 
         // Call the new function to fetch and checkout the branch
-        err = api.FetchAndCheckoutBranch(*codeURL, *name, *branchName, *codeAPIKey)
+        err = api.FetchAndCheckoutBranch(*codeURL, *name, *branchName, config.Environment.CodeHostAPIKey)
         if err != nil {
             log.Fatalf("Error syncing repository: %v", err)
         }
@@ -208,17 +202,9 @@ func Execute() {
     if openAIAPIKey != "" {
         log.Println("Warning: Using OPENAI_MACHTIANI_API_KEY. This may incur costs for generating embeddings.")
     }
-    var embeddings []float64
-    if openAIAPIKey != "" {
-        var err error
-        embeddings, err = generateEmbeddings(openAIAPIKey, prompt)
-        if err != nil {
-            log.Fatalf("Error generating embeddings: %v", err)
-        }
-    }
 
     // Call OpenAI API to generate response
-    apiResponse, err := api.CallOpenAIAPI(prompt, project, *modeFlag, *modelFlag, *matchStrengthFlag, embeddings)
+    apiResponse, err := api.CallOpenAIAPI(prompt, project, *modeFlag, *modelFlag, *matchStrengthFlag)
     if err != nil {
         log.Fatalf("Error making API call: %v", err)
     }

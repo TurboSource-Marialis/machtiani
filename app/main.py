@@ -11,13 +11,6 @@ import logging
 
 app = FastAPI()
 
-# Load configuration from config.yaml
-with open("machtiani-config.yml", 'r') as file:
-    config = yaml.safe_load(file)
-
-# Access environment variables from the config
-OPENAI_API_KEY = config['environment']['OPENAI_MACHTIANI_API_KEY']
-
 # Define token limits for different models
 TOKEN_LIMITS = {
     "gpt-4o": 128000,
@@ -86,6 +79,12 @@ async def generate_filename(
         "Example:\n"
         "<filename>example_filename</filename>"
     )
+    # Load configuration from config.yaml
+    with open("machtiani-config.yml", 'r') as file:
+        config = yaml.safe_load(file)
+
+    # Access environment variables from the config
+    OPENAI_API_KEY = config['environment']['OPENAI_MACHTIANI_API_KEY']
 
     if not OPENAI_API_KEY:
         logger.error("OPENAI_API_KEY environment variable is not set")
@@ -113,8 +112,15 @@ async def generate_response(
     mode: str = Body(..., description="Search mode: chat, commit, or super"),
     model: str = Body(..., description="The embedding model used"),
     match_strength: str = Body(..., description="The strength of the match"),
-    embeddings: Optional[List[float]] = Body(None, description="Embeddings for the prompt")
 ):
+
+    # Load configuration from config.yaml
+    with open("machtiani-config.yml", 'r') as file:
+        config = yaml.safe_load(file)
+
+    # Access environment variables from the config
+    OPENAI_API_KEY = config['environment']['OPENAI_MACHTIANI_API_KEY']
+
     # Validate the model
     if model not in TOKEN_LIMITS:
         return {"error": "Invalid model selected. Choose either 'gpt-4o' or 'gpt-4o-mini'."}
@@ -132,7 +138,7 @@ async def generate_response(
         "mode": mode,
         "model": model,
         "match_strength": match_strength,
-        "embeddings": embeddings  # Pass the embeddings here
+        "api_key": OPENAI_API_KEY
     }
 
     # Initialize ignore_files list

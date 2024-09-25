@@ -18,12 +18,7 @@ type AddRepositoryResponse struct {
 }
 
 // AddRepository sends a request to add a repository.
-func AddRepository(codeURL, name, apiKey string) (AddRepositoryResponse, error) {
-    config, err := utils.LoadConfig()
-    if err != nil {
-        log.Fatalf("Error loading config: %v", err)
-    }
-
+func AddRepository(codeURL, name, apiKey string, repoManagerURL string) (AddRepositoryResponse, error) {
     // Prepare the data to be sent in the request
     data := map[string]interface{}{
         "codehost_url": codeURL,
@@ -36,12 +31,6 @@ func AddRepository(codeURL, name, apiKey string) (AddRepositoryResponse, error) 
     jsonData, err := json.Marshal(data)
     if err != nil {
         return AddRepositoryResponse{}, fmt.Errorf("error marshaling JSON: %w", err)
-    }
-
-    // Get the base URL from the environment variable
-    repoManagerURL := config.Environment.RepoManagerURL
-    if repoManagerURL == "" {
-        return AddRepositoryResponse{}, fmt.Errorf("MACHTIANI_REPO_MANAGER_URL environment variable is not set")
     }
 
     // Send the POST request to the specified endpoint
@@ -114,7 +103,7 @@ func FetchAndCheckoutBranch(codeURL, name, branchName, apiKey string) error {
     return nil
 }
 
-func CallOpenAIAPI(prompt, project, mode, model, matchStrength string, embeddings []float64) (map[string]interface{}, error) {
+func CallOpenAIAPI(prompt, project, mode, model, matchStrength string) (map[string]interface{}, error) {
     config, err := utils.LoadConfig()
     if err != nil {
         log.Fatalf("Error loading config: %v", err)
@@ -129,10 +118,6 @@ func CallOpenAIAPI(prompt, project, mode, model, matchStrength string, embedding
         "match_strength": matchStrength,
     }
 
-    // Only add embeddings to the payload if they are provided
-    if len(embeddings) > 0 {
-        payload["embeddings"] = embeddings
-    }
     // Convert the payload to JSON
     payloadBytes, err := json.Marshal(payload)
     if err != nil {

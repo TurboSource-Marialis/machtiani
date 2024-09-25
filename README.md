@@ -286,4 +286,6 @@ This web tool simplifies managing Git repositories through a user-friendly inter
       - [ ] `git-sync` code-host-url is sensitive to `/` (must) at end of url. Oddly `git-store` works just fine without.
       - [x] Keep it simple: each user will be able to add any repo, and we store git key. Fetch and update. And load
       - [x] See from there, and just get the endpoint up.
-- [ ] Get codehost key and urls from .machtiani.config.
+      - [ ] Get codehost keys for git-store and git-sync commands from machtiani-config.yml. Get rid of passing them as arguments to the commands.
+      - [ ] All openai or other llm keys are passed via the machtiani-config.yml.
+- [x] Get codehost key and urls from .machtiani.config.
