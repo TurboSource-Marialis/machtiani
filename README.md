@@ -10,7 +10,7 @@ To fully utilize Machtiani for effective document retrieval, it is essential to 
 
 While I personally find Machtiani to be my go-to tool—over ChatGPT or any other alternatives—I primarily use it with codebases similar in size to this project.
 
-Keep in mind that uses by default OpenAI's gpt-4o-mini (optionally gpt-4o) API. So it incurs costs, and there is currently no cost estimator available. However, for a few hundred commits, users should find that the indexing of commit messages with OpenAI embeddings remains manageable.
+Keep in mind that Machtiani by default uses OpenAI's gpt-4o-mini (optionally gpt-4o) API. So it incurs costs, and there is currently no cost estimator available. However, for a few hundred commits, users should find that the indexing of commit messages with OpenAI embeddings remains manageable.
 
 ## Upcoming Features to Look Forward To
 
@@ -30,48 +30,44 @@ Keep in mind that uses by default OpenAI's gpt-4o-mini (optionally gpt-4o) API. 
    git clone --recurse-submodules <repo-url>.git machtiani
    ```
 
-2. Create a `.env` file in the root of the `machtiani` directory with the following content:
+2. Update the `machtiani-config.yml` file in the root of the `machtiani` directory with the following content:
 
-   ```env
-   OPENAI_MACHTIANI_API_KEY="your_openai_api_key"
-   MACHTIANI_URL="http://localhost:5071"  # or your desired API URL
-   MACHTIANI_REPO_MANAGER_URL="http://localhost:5070"
+   ```yaml
+   environment:
+     OPENAI_MACHTIANI_API_KEY: "your_openai_api_key"
+     MACHTIANI_URL: "http://localhost:5071"  # or your desired API URL
+     MACHTIANI_REPO_MANAGER_URL: "http://localhost:5070"
    ```
+
    Warning: If the `OPENAI_API_KEY` is set, please be aware that costs will be incurred for embedding the prompt using the OpenAI API.
 
-3. Load the environment variables from the `.env` file:
+   ***Also you'll have to add a .env do in `machtiani-commit-file-retrieval/`. See [Running the FastAPI Application](machtiani-commit-file-retrieval/README.md#running-the-fastapi-application).***
 
-   ```bash
-   source .env
-   ```
-
-   Also you'll have to add a .env do in `machtiani-commit-file-retrieval/`. See [Running the FastAPI Application](machtiani-commit-file-retrieval/README.md#running-the-fastapi-application)
-
-4. Launch the application in development (without the API Gateway):
+3. Launch the application in development (without the API Gateway):
 
    ```bash
    docker-compose up --build --remove-orphans
    ```
 
-5. If you want to run the application in production (with the API Gateway), use the following command:
+4. If you want to run the application in production (with the API Gateway), use the following command:
 
    ```bash
    docker-compose -f docker-compose.yml -f docker-compose.prod.yml up --build --remove-orphans
    ```
 
-6. Build the Machtiani CLI in `machtiani/machtiani/`.
+5. Build the Machtiani CLI in `machtiani/machtiani/`.
 
    ```bash
    go build -o machtiani ./cmd/machtiani
    ```
 
-7. Copy the CLI to a path that works for you in `machtiani/machtiani/`.
+6. Copy the CLI to a path that works for you in `machtiani/machtiani/`.
 
    ```bash
    cp machtiani ~/.local/bin/
    ```
 
-8. Build the `aicommit` binary in `machtiani/aicommmit/`.
+7. Build the `aicommit` binary in `machtiani/aicommmit/`.
 
    ```bash
    cd aicommmit
@@ -79,13 +75,13 @@ Keep in mind that uses by default OpenAI's gpt-4o-mini (optionally gpt-4o) API. 
    go build -o machtiani-aicommit-binary ./cmd/aicommit
    ```
 
-9. Move the binary to a directory in your PATH.
+8. Move the binary to a directory in your PATH.
 
    ```bash
    mv machtiani-aicommit-binary ~/.local/bin/
    ```
 
-10. Start the local web server in a new terminal in `machtiani/machtiani-commit-file-retrieval/`.
+9. Start the local web server in a new terminal in `machtiani/machtiani-commit-file-retrieval/`.
 
     ```bash
     poetry install
@@ -235,7 +231,6 @@ machtiani git-sync --code-url <repository-url> --name <project-name> --branch-na
 machtiani git-sync --code-url https://github.com/yourusername/yourrepo.git --name yourproject --branch-name main --code-api-key your_api_key
 ```
 
-
 ### Ignoring Files with `.machtiani.ignore`
 
 You'll have to ignore any binary files, providing the full path, such as images, etc.
@@ -247,18 +242,6 @@ To exclude specific files from being processed by the application, you can creat
 poetry.lock
 go.sum
 go.mod
-```
-
-### Environment Variables
-
-Ensure to set the OpenAI API key in your environment:
-```bash
-export OPENAI_MACHTIANI_API_KEY="your_openai_api_key"
-```
-
-Set the base URL for the Machtiani service:
-```bash
-export MACHTIANI_URL="http://localhost:5071" # or your desired base URL
 ```
 
 ### Output
@@ -304,5 +287,3 @@ This web tool simplifies managing Git repositories through a user-friendly inter
       - [x] Keep it simple: each user will be able to add any repo, and we store git key. Fetch and update. And load
       - [x] See from there, and just get the endpoint up.
 - [ ] Get codehost key and urls from .machtiani.config.
-
-
