@@ -147,7 +147,7 @@ func Execute() {
         }
 
         // Call the new function to fetch and checkout the branch
-        err = api.FetchAndCheckoutBranch(*codeURL, *name, *branchName, config.Environment.CodeHostAPIKey)
+        err = api.FetchAndCheckoutBranch(*codeURL, *name, *branchName, config.Environment.CodeHostAPIKey, config.Environment.OpenAIAPIKey)
         if err != nil {
             log.Fatalf("Error syncing repository: %v", err)
         }

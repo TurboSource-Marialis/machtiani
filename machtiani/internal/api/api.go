@@ -56,7 +56,7 @@ func AddRepository(codeURL, name, apiKey string, repoManagerURL string) (AddRepo
 }
 
 // FetchAndCheckoutBranch sends a request to fetch and checkout a branch.
-func FetchAndCheckoutBranch(codeURL, name, branchName, apiKey string) error {
+func FetchAndCheckoutBranch(codeURL, name, branchName, apiKey, openAIAPIKey string) error {
     config, err := utils.LoadConfig()
     if err != nil {
         log.Fatalf("Error loading config: %v", err)
@@ -67,6 +67,7 @@ func FetchAndCheckoutBranch(codeURL, name, branchName, apiKey string) error {
         "project_name": name,
         "branch_name":  branchName,
         "api_key":     apiKey,
+        "openai_api_key": openAIAPIKey, // Add the OpenAI API key here
     }
 
     // Convert data to JSON
