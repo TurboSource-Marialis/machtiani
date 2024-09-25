@@ -55,7 +55,12 @@ func generateEmbeddings(apiKey, prompt string) ([]float64, error) {
 
 // Call the /generate-filename endpoint
 func generateFilename(context string) (string, error) {
-    endpoint := os.Getenv("MACHTIANI_URL")
+    config, err := utils.LoadConfig()
+    if err != nil {
+        log.Fatalf("Error loading config: %v", err)
+    }
+
+    endpoint := config.Environment.MachtianiURL
     if endpoint == "" {
         return "", fmt.Errorf("MACHTIANI_URL environment variable is not set")
     }
@@ -81,6 +86,11 @@ func generateFilename(context string) (string, error) {
 }
 
 func Execute() {
+    config, err := utils.LoadConfig()
+    if err != nil {
+        log.Fatalf("Error loading config: %v", err)
+    }
+
     fs := flag.NewFlagSet("machtiani", flag.ContinueOnError)
     markdownFlag := fs.String("markdown", "", "Path to the markdown file")
     projectFlag := fs.String("project", "", "Name of the project (if not set, it will be fetched from git)")
@@ -194,7 +204,7 @@ func Execute() {
     }
 
     // Only needed if generating embeddings for the prompt, client side, otherwise, server will do it if allowed.
-    openAIAPIKey := os.Getenv("OPENAI_MACHTIANI_API_KEY") // Changed environment variable name
+    openAIAPIKey := config.Environment.OpenAIAPIKey
     if openAIAPIKey != "" {
         log.Println("Warning: Using OPENAI_MACHTIANI_API_KEY. This may incur costs for generating embeddings.")
     }
@@ -282,15 +292,20 @@ func handleError(message string) {
 
 // runAicommit generates a commit message using aicommit and lets it perform the git commit.
 func runAicommit(args []string) {
+    config, err := utils.LoadConfig()
+    if err != nil {
+        log.Fatalf("Error loading config: %v", err)
+    }
+
     // Define flags specific to aicommit
     fs := flag.NewFlagSet("aicommit", flag.ExitOnError)
-    openaiKey := fs.String("openai-key", os.Getenv("OPENAI_API_KEY"), "OpenAI API Key")
+    openaiKey := fs.String("openai-key", config.Environment.OpenAIAPIKey, "OpenAI API Key")
     modelFlag := fs.String("model", "gpt-4o-mini", "Model to use for generating messages")
     amend := fs.Bool("amend", false, "Amend the last commit instead of creating a new one")
     context := fs.String("context", "", "Additional context for generating the commit message")
 
     // Parse the provided arguments
-    err := fs.Parse(args)
+    err = fs.Parse(args)
     if err != nil {
         handleError(fmt.Sprintf("Error parsing flags: %v", err))
     }

@@ -4,9 +4,11 @@ import (
     "encoding/json"
     "fmt"
     "bytes"
+    "log"
     "net/http"
-    "os"
     "io/ioutil"
+
+    "github.com/7db9a/machtiani/internal/utils"
 )
 
 type AddRepositoryResponse struct {
@@ -17,6 +19,11 @@ type AddRepositoryResponse struct {
 
 // AddRepository sends a request to add a repository.
 func AddRepository(codeURL, name, apiKey string) (AddRepositoryResponse, error) {
+    config, err := utils.LoadConfig()
+    if err != nil {
+        log.Fatalf("Error loading config: %v", err)
+    }
+
     // Prepare the data to be sent in the request
     data := map[string]interface{}{
         "codehost_url": codeURL,
@@ -32,7 +39,7 @@ func AddRepository(codeURL, name, apiKey string) (AddRepositoryResponse, error) 
     }
 
     // Get the base URL from the environment variable
-    repoManagerURL := os.Getenv("MACHTIANI_REPO_MANAGER_URL")
+    repoManagerURL := config.Environment.RepoManagerURL
     if repoManagerURL == "" {
         return AddRepositoryResponse{}, fmt.Errorf("MACHTIANI_REPO_MANAGER_URL environment variable is not set")
     }
@@ -61,6 +68,10 @@ func AddRepository(codeURL, name, apiKey string) (AddRepositoryResponse, error) 
 
 // FetchAndCheckoutBranch sends a request to fetch and checkout a branch.
 func FetchAndCheckoutBranch(codeURL, name, branchName, apiKey string) error {
+    config, err := utils.LoadConfig()
+    if err != nil {
+        log.Fatalf("Error loading config: %v", err)
+    }
     // Prepare the data for the request
     data := map[string]interface{}{
         "codehost_url": codeURL,
@@ -75,7 +86,7 @@ func FetchAndCheckoutBranch(codeURL, name, branchName, apiKey string) error {
         return fmt.Errorf("error marshaling JSON: %w", err)
     }
 
-    repoManagerURL := os.Getenv("MACHTIANI_REPO_MANAGER_URL")
+    repoManagerURL := config.Environment.RepoManagerURL
     if repoManagerURL == "" {
         return fmt.Errorf("MACHTIANI_REPO_MANAGER_URL environment variable is not set")
     }
@@ -104,6 +115,11 @@ func FetchAndCheckoutBranch(codeURL, name, branchName, apiKey string) error {
 }
 
 func CallOpenAIAPI(prompt, project, mode, model, matchStrength string, embeddings []float64) (map[string]interface{}, error) {
+    config, err := utils.LoadConfig()
+    if err != nil {
+        log.Fatalf("Error loading config: %v", err)
+    }
+
     // Construct the request payload
     payload := map[string]interface{}{
         "prompt":         prompt,
@@ -124,7 +140,7 @@ func CallOpenAIAPI(prompt, project, mode, model, matchStrength string, embedding
     }
 
     // Retrieve the MACHTIANI_URL from environment variables
-    endpoint := os.Getenv("MACHTIANI_URL")
+    endpoint := config.Environment.MachtianiURL
     if endpoint == "" {
         return nil, fmt.Errorf("MACHTIANI_URL environment variable is not set")
     }

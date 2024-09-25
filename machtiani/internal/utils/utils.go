@@ -4,6 +4,8 @@ import (
     "fmt"
     "io/ioutil"
     "os"
+
+    "gopkg.in/yaml.v2"
 )
 
 func CreateTempMarkdownFile(content string, filename string) (string, error) {
@@ -38,3 +40,25 @@ func IsDryRunEnabled() bool {
     return dryRun
 }
 
+
+type Config struct {
+    Environment struct {
+        OpenAIAPIKey         string `yaml:"OPENAI_MACHTIANI_API_KEY"`
+        MachtianiURL         string `yaml:"MACHTIANI_URL"`
+        RepoManagerURL       string `yaml:"MACHTIANI_REPO_MANAGER_URL"`
+    } `yaml:"environment"`
+}
+
+// LoadConfig reads the configuration from the YAML file
+func LoadConfig() (Config, error) {
+    var config Config
+    data, err := ioutil.ReadFile("machtiani-config.yml")
+    if err != nil {
+        return config, fmt.Errorf("failed to read config.yaml: %w", err)
+    }
+    err = yaml.Unmarshal(data, &config)
+    if err != nil {
+        return config, fmt.Errorf("failed to unmarshal config.yaml: %w", err)
+    }
+    return config, nil
+}

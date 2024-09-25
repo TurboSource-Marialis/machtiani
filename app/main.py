@@ -1,4 +1,5 @@
 import httpx
+import yaml
 from fastapi import FastAPI, Body, Query, HTTPException
 from typing import Optional, List, Dict, Union
 from contextlib import contextmanager
@@ -9,6 +10,13 @@ import re
 import logging
 
 app = FastAPI()
+
+# Load configuration from config.yaml
+with open("machtiani-config.yml", 'r') as file:
+    config = yaml.safe_load(file)
+
+# Access environment variables from the config
+OPENAI_API_KEY = config['environment']['OPENAI_MACHTIANI_API_KEY']
 
 # Define token limits for different models
 TOKEN_LIMITS = {
@@ -79,12 +87,11 @@ async def generate_filename(
         "<filename>example_filename</filename>"
     )
 
-    openAIAPIKey = os.getenv("OPENAI_MACHTIANI_API_KEY")
-    if not openAIAPIKey:
+    if not OPENAI_API_KEY:
         logger.error("OPENAI_API_KEY environment variable is not set")
         raise EnvironmentError("OPENAI_API_KEY is required")
 
-    response = send_prompt_to_openai(filename_prompt, openAIAPIKey, model="gpt-4o-mini")
+    response = send_prompt_to_openai(filename_prompt, OPENAI_API_KEY, model="gpt-4o-mini")
     logger.info(f"OpenAI response: {response}")
 
     # Extract the filename using regex
@@ -184,12 +191,11 @@ async def generate_response(
                 return {"error": error_message}
 
             # Call the OpenAI API
-            openAIAPIKey = os.getenv("OPENAI_MACHTIANI_API_KEY")
-            if not openAIAPIKey:
+            if not OPENAI_API_KEY:
                 logger.error("OPENAI_API_KEY environment variable is not set")
                 raise EnvironmentError("OPENAI_API_KEY is required")
 
-            openai_response = send_prompt_to_openai(combined_prompt, openAIAPIKey, model)
+            openai_response = send_prompt_to_openai(combined_prompt, OPENAI_API_KEY, model)
 
             return {"openai_response": openai_response, "retrieved_file_paths": retrieved_file_paths}
 
