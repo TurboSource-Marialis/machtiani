@@ -8,9 +8,12 @@ It's very usable, but rough around the edges at the moment.
 
 To fully utilize Machtiani for effective document retrieval, it is essential to have concise, informative, and atomic git commit messages. If your commit messages do not meet this criterion, we recommend using the CLI tool [aicommit](https://github.com/coder/aicommit), which is designed to assist in generating appropriate commit messages.
 
-While I personally find Machtiani to be my go-to tool—over ChatGPT or any other alternatives—I primarily use it with codebases similar in size to this project.
+Machtiani currently relies on OpenAI's gpt-4o-mini (optionally gpt-4o) API, which incurs costs. There is a cost estimator in the works, but users should be aware that for projects with several hundred commits to be indexed and with large amounts of retrieved files may incure higher OpenAI usage costs.
 
-Keep in mind that Machtiani by default uses OpenAI's gpt-4o-mini (optionally gpt-4o) API. So it incurs costs, and there is currently no cost estimator available. However, for a few hundred commits, users should find that the indexing of commit messages with OpenAI embeddings remains manageable.
+It is important to note that Machtiani may not effectively handle repositories with a large number of commits. This could potentially limit access to the full history of a repository.
+
+Additionally, while Machtiani aims to improve the relevance of retrieved files, there may still be instances where unrelated files are returned, requiring further refinement in the dynamic match-strength algorithm.
+
 
 ## Upcoming Features to Look Forward To
 
@@ -289,3 +292,4 @@ This web tool simplifies managing Git repositories through a user-friendly inter
       - [x] Get codehost keys for git-store and git-sync commands from machtiani-config.yml. Get rid of passing them as arguments to the commands.
       - [x] All openai or other llm keys are passed via the machtiani-config.yml.
 - [x] Get codehost key and urls from .machtiani.config.
+
