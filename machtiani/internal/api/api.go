@@ -19,14 +19,14 @@ type AddRepositoryResponse struct {
 }
 
 // AddRepository sends a request to add a repository.
-func AddRepository(codeURL, name, apiKey, openAIAPIKey string, repoManagerURL string) (AddRepositoryResponse, error) {
+func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey string, repoManagerURL string) (AddRepositoryResponse, error) {
     // Prepare the data to be sent in the request
     data := map[string]interface{}{
-        "codehost_url": codeURL,
-        "project_name": name,
-        "vcs_type":     "git",  // Default value for VCS type
-        "api_key":      apiKey,
-        "openai_api_key": openAIAPIKey, // Add the OpenAI API key here
+        "codehost_url":   codeURL,
+        "project_name":   name,
+        "vcs_type":       "git",  // Default value for VCS type
+        "api_key":        apiKey, // This can be None
+        "openai_api_key": openAIAPIKey, // This can also be None
     }
 
     // Convert data to JSON
@@ -58,18 +58,19 @@ func AddRepository(codeURL, name, apiKey, openAIAPIKey string, repoManagerURL st
 }
 
 // FetchAndCheckoutBranch sends a request to fetch and checkout a branch.
-func FetchAndCheckoutBranch(codeURL, name, branchName, apiKey, openAIAPIKey string) error {
+func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiKey *string, openAIAPIKey string) error {
     config, err := utils.LoadConfig()
     if err != nil {
         log.Fatalf("Error loading config: %v", err)
     }
+
     // Prepare the data for the request
     data := map[string]interface{}{
-        "codehost_url": codeURL,
-        "project_name": name,
-        "branch_name":  branchName,
-        "api_key":     apiKey,
-        "openai_api_key": openAIAPIKey, // Add the OpenAI API key here
+        "codehost_url":   codeURL,
+        "project_name":   name,
+        "branch_name":    branchName,
+        "api_key":       apiKey, // This can be None
+        "openai_api_key": openAIAPIKey, // This can also be None
     }
 
     // Convert data to JSON

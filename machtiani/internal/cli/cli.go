@@ -93,7 +93,6 @@ func Execute() {
 
     fs := flag.NewFlagSet("machtiani", flag.ContinueOnError)
     markdownFlag := fs.String("markdown", "", "Path to the markdown file")
-    //projectFlag := fs.String("project", "", "Name of the project (if not set, it will be fetched from git)")
     modelFlag := fs.String("model", defaultModel, "Model to use (options: gpt-4o, gpt-4o-mini)")
     matchStrengthFlag := fs.String("match-strength", defaultMatchStrength, "Match strength (options: high, mid, low)")
     modeFlag := fs.String("mode", defaultMode, "Search mode: pure-chat, commit, or super")
@@ -105,6 +104,8 @@ func Execute() {
     codeURL := config.Environment.CodeHostURL
     projectName := codeURL
 
+    var apiKey *string
+
     args := os.Args[1:]
 
     if len(os.Args) >= 2 && os.Args[1] == "git-store" {
@@ -113,12 +114,18 @@ func Execute() {
             log.Fatalf("Error parsing flags: %v", err)
         }
 
-        if codeURL == "" || config.Environment.CodeHostAPIKey == "" {
-            log.Fatal("Error: code URL must be provided and API key must be set in config.")
+        if codeURL == "" {
+            log.Fatal("Error: code URL must be provided.")
+        }
+
+        if config.Environment.CodeHostAPIKey != "" {
+            apiKey = &config.Environment.CodeHostAPIKey
+        } else {
+            apiKey = nil
         }
 
         // Call the new function to add the repository
-        responseMessage, err := api.AddRepository(codeURL, projectName, config.Environment.CodeHostAPIKey, config.Environment.OpenAIAPIKey, config.Environment.RepoManagerURL)
+        responseMessage, err := api.AddRepository(codeURL, projectName, apiKey, config.Environment.OpenAIAPIKey, config.Environment.RepoManagerURL)
 
         if err != nil {
             log.Fatalf("Error adding repository: %v", err)
@@ -138,12 +145,18 @@ func Execute() {
             log.Fatalf("Error parsing flags: %v", err)
         }
 
-        if codeURL == "" || *branchName == "" || config.Environment.CodeHostAPIKey == "" {
-            log.Fatal("Error: all flags --code-url, --branch-name must be provided and API key must be set in config.")
+        if codeURL == "" || *branchName == "" {
+            log.Fatal("Error: all flags --code-url, --branch-name must be provided.")
+        }
+
+        if config.Environment.CodeHostAPIKey != "" {
+            apiKey = &config.Environment.CodeHostAPIKey
+        } else {
+            apiKey = nil
         }
 
         // Call the new function to fetch and checkout the branch
-        err = api.FetchAndCheckoutBranch(codeURL, projectName, *branchName, config.Environment.CodeHostAPIKey, config.Environment.OpenAIAPIKey)
+        err = api.FetchAndCheckoutBranch(codeURL, projectName, *branchName, apiKey, config.Environment.OpenAIAPIKey)
         if err != nil {
             log.Fatalf("Error syncing repository: %v", err)
         }
