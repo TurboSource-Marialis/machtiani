@@ -23,7 +23,8 @@ func AddRepository(codeURL, name, apiKey, openAIAPIKey string, repoManagerURL st
     // Prepare the data to be sent in the request
     data := map[string]interface{}{
         "codehost_url": codeURL,
-        "project_name": name, "vcs_type":     "git",  // Default value for VCS type
+        "project_name": name,
+        "vcs_type":     "git",  // Default value for VCS type
         "api_key":      apiKey,
         "openai_api_key": openAIAPIKey, // Add the OpenAI API key here
     }

@@ -292,4 +292,5 @@ This web tool simplifies managing Git repositories through a user-friendly inter
       - [x] Get codehost keys for git-store and git-sync commands from machtiani-config.yml. Get rid of passing them as arguments to the commands.
       - [x] All openai or other llm keys are passed via the machtiani-config.yml.
 - [x] Get codehost key and urls from .machtiani.config.
+- [x] Unique repo names passed for data save.
 

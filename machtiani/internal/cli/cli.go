@@ -93,15 +93,17 @@ func Execute() {
 
     fs := flag.NewFlagSet("machtiani", flag.ContinueOnError)
     markdownFlag := fs.String("markdown", "", "Path to the markdown file")
-    projectFlag := fs.String("project", "", "Name of the project (if not set, it will be fetched from git)")
+    //projectFlag := fs.String("project", "", "Name of the project (if not set, it will be fetched from git)")
     modelFlag := fs.String("model", defaultModel, "Model to use (options: gpt-4o, gpt-4o-mini)")
     matchStrengthFlag := fs.String("match-strength", defaultMatchStrength, "Match strength (options: high, mid, low)")
     modeFlag := fs.String("mode", defaultMode, "Search mode: pure-chat, commit, or super")
     verboseFlag := fs.Bool("verbose", false, "Enable verbose output.")
 
-    codeURL := fs.String("code-url", "", "URL of the code repository")
-    name := fs.String("name", "", "Project name")
     branchName := fs.String("branch-name", "", "Branch name")
+
+    // It will get processed in backend to normalize the project name.
+    codeURL := config.Environment.CodeHostURL
+    projectName := codeURL
 
     args := os.Args[1:]
 
@@ -111,16 +113,13 @@ func Execute() {
             log.Fatalf("Error parsing flags: %v", err)
         }
 
-        // Use the code host URL and API key from config
-        if *codeURL == "" {
-            *codeURL = config.Environment.CodeHostURL // Use the configuration value
-        }
-        if *name == "" || config.Environment.CodeHostAPIKey == "" {
-            log.Fatal("Error: project name must be provided and API key must be set in config.")
+        if codeURL == "" || config.Environment.CodeHostAPIKey == "" {
+            log.Fatal("Error: code URL must be provided and API key must be set in config.")
         }
 
         // Call the new function to add the repository
-       responseMessage, err := api.AddRepository(*codeURL, *name, config.Environment.CodeHostAPIKey, config.Environment.OpenAIAPIKey, config.Environment.RepoManagerURL)
+        responseMessage, err := api.AddRepository(codeURL, projectName, config.Environment.CodeHostAPIKey, config.Environment.OpenAIAPIKey, config.Environment.RepoManagerURL)
+
         if err != nil {
             log.Fatalf("Error adding repository: %v", err)
         }
@@ -139,21 +138,17 @@ func Execute() {
             log.Fatalf("Error parsing flags: %v", err)
         }
 
-        // Use the code host URL and API key from config
-        if *codeURL == "" {
-            *codeURL = config.Environment.CodeHostURL // Use the configuration value
-        }
-        if *name == "" || *branchName == "" || config.Environment.CodeHostAPIKey == "" {
-            log.Fatal("Error: all flags --name, --branch-name must be provided and API key must be set in config.")
+        if codeURL == "" || *branchName == "" || config.Environment.CodeHostAPIKey == "" {
+            log.Fatal("Error: all flags --code-url, --branch-name must be provided and API key must be set in config.")
         }
 
         // Call the new function to fetch and checkout the branch
-        err = api.FetchAndCheckoutBranch(*codeURL, *name, *branchName, config.Environment.CodeHostAPIKey, config.Environment.OpenAIAPIKey)
+        err = api.FetchAndCheckoutBranch(codeURL, projectName, *branchName, config.Environment.CodeHostAPIKey, config.Environment.OpenAIAPIKey)
         if err != nil {
             log.Fatalf("Error syncing repository: %v", err)
         }
 
-        log.Printf("Successfully synced the repository: %s", *name)
+        log.Printf("Successfully synced the repository: %s", projectName)
         return
     }
 
@@ -177,7 +172,6 @@ func Execute() {
     }
 
     prompt := strings.Join(promptParts, " ")
-    project, err := getProjectOrDefault(projectFlag)
     if err != nil {
         log.Fatalf("Error getting project name: %v", err)
     }
@@ -195,7 +189,7 @@ func Execute() {
     }
 
     if *verboseFlag {
-        printVerboseInfo(*markdownFlag, *projectFlag, *modelFlag, *matchStrengthFlag, *modeFlag, prompt)
+        printVerboseInfo(*markdownFlag, *modelFlag, *matchStrengthFlag, *modeFlag, prompt)
     }
 
     // Only needed if generating embeddings for the prompt, client side, otherwise, server will do it if allowed.
@@ -205,7 +199,7 @@ func Execute() {
     }
 
     // Call OpenAI API to generate response
-    apiResponse, err := api.CallOpenAIAPI(prompt, project, *modeFlag, *modelFlag, *matchStrengthFlag)
+    apiResponse, err := api.CallOpenAIAPI(prompt, projectName, *modeFlag, *modelFlag, *matchStrengthFlag)
     if err != nil {
         log.Fatalf("Error making API call: %v", err)
     }
@@ -370,10 +364,9 @@ func validateFlags(modelFlag, matchStrengthFlag, modeFlag *string) {
     }
 }
 
-func printVerboseInfo(markdown, project, model, matchStrength, mode, prompt string) {
+func printVerboseInfo(markdown, model, matchStrength, mode, prompt string) {
     fmt.Println("Arguments passed:")
     fmt.Printf("Markdown file: %s\n", markdown)
-    fmt.Printf("Project name: %s\n", project)
     fmt.Printf("Model: %s\n", model)
     fmt.Printf("Match strength: %s\n", matchStrength)
     fmt.Printf("Mode: %s\n", mode)
