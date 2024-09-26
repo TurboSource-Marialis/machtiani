@@ -156,12 +156,13 @@ func Execute() {
         }
 
         // Call the new function to fetch and checkout the branch
-        err = api.FetchAndCheckoutBranch(codeURL, projectName, *branchName, apiKey, config.Environment.OpenAIAPIKey)
+        message, err := api.FetchAndCheckoutBranch(codeURL, projectName, *branchName, apiKey, config.Environment.OpenAIAPIKey)
         if err != nil {
             log.Fatalf("Error syncing repository: %v", err)
         }
 
-        log.Printf("Successfully synced the repository: %s", projectName)
+        // Print the returned message
+        fmt.Println(message)
         return
     }
 

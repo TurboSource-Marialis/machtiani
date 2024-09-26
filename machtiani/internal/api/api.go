@@ -1,6 +1,7 @@
 package api
 
 import (
+    "strings"
     "encoding/json"
     "fmt"
     "bytes"
@@ -18,15 +19,14 @@ type AddRepositoryResponse struct {
     OpenAiApiKeyProvided bool   `json:"openai_api_key_provided"`
 }
 
-// AddRepository sends a request to add a repository.
 func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey string, repoManagerURL string) (AddRepositoryResponse, error) {
     // Prepare the data to be sent in the request
     data := map[string]interface{}{
         "codehost_url":   codeURL,
         "project_name":   name,
         "vcs_type":       "git",  // Default value for VCS type
-        "api_key":        apiKey, // This can be None
-        "openai_api_key": openAIAPIKey, // This can also be None
+        "api_key":        apiKey, // This can be nil
+        "openai_api_key": openAIAPIKey, // This can also be nil
     }
 
     // Convert data to JSON
@@ -35,76 +35,118 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
         return AddRepositoryResponse{}, fmt.Errorf("error marshaling JSON: %w", err)
     }
 
-    // Send the POST request to the specified endpoint
-    resp, err := http.Post(fmt.Sprintf("%s/add-repository/", repoManagerURL), "application/json", bytes.NewBuffer(jsonData))
+    tokenCount, err := getTokenCount(fmt.Sprintf("%s/add-repository/", repoManagerURL), "Testing one two three")
     if err != nil {
-        return AddRepositoryResponse{}, fmt.Errorf("error sending request to add repository: %w", err)
+        fmt.Printf("Error getting token count: %v\n", err)
+        // Return zero value and error
+        return AddRepositoryResponse{}, err
     }
-    defer resp.Body.Close()
+    fmt.Printf("Estimated token usage: %d\n", tokenCount)
 
-    // Handle the response
-    if resp.StatusCode != http.StatusOK {
-        body, _ := ioutil.ReadAll(resp.Body)
-        return AddRepositoryResponse{}, fmt.Errorf("error adding repository: %s", body)
+    // Check if the user wants to proceed
+    if confirmProceed() {
+        // Proceed with sending the POST request
+        resp, err := http.Post(fmt.Sprintf("%s/add-repository/", repoManagerURL), "application/json", bytes.NewBuffer(jsonData))
+        if err != nil {
+            return AddRepositoryResponse{}, fmt.Errorf("error sending request to add repository: %w", err)
+        }
+        defer resp.Body.Close()
+
+        // Handle the response
+        if resp.StatusCode != http.StatusOK {
+            body, _ := ioutil.ReadAll(resp.Body)
+            return AddRepositoryResponse{}, fmt.Errorf("error adding repository: %s", body)
+        }
+
+        // Successfully added the repository, decode the response into the defined struct
+        var responseMessage AddRepositoryResponse
+        if err := json.NewDecoder(resp.Body).Decode(&responseMessage); err != nil {
+            return AddRepositoryResponse{}, fmt.Errorf("error decoding response: %w", err)
+        }
+
+        return responseMessage, nil
+    } else {
+        // User chose not to proceed, return an AddRepositoryResponse with fields indicating operation aborted
+        abortedResponse := AddRepositoryResponse{
+            Message:              "Operation aborted by user",
+            FullPath:             "Operation aborted",
+            ApiKeyProvided:       false,
+            OpenAiApiKeyProvided: false,
+        }
+        return abortedResponse, nil
     }
-
-    // Successfully added the repository, decode the response into the defined struct
-    var responseMessage AddRepositoryResponse
-    if err := json.NewDecoder(resp.Body).Decode(&responseMessage); err != nil {
-        return AddRepositoryResponse{}, fmt.Errorf("error decoding response: %w", err)
-    }
-
-    return responseMessage, nil
 }
 
 // FetchAndCheckoutBranch sends a request to fetch and checkout a branch.
-func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiKey *string, openAIAPIKey string) error {
+func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiKey *string, openAIAPIKey string) (string, error) {
     config, err := utils.LoadConfig()
     if err != nil {
-        log.Fatalf("Error loading config: %v", err)
+        return "", fmt.Errorf("error loading config: %w", err)
     }
 
     // Prepare the data for the request
     data := map[string]interface{}{
-        "codehost_url":   codeURL,
-        "project_name":   name,
-        "branch_name":    branchName,
-        "api_key":       apiKey, // This can be None
-        "openai_api_key": openAIAPIKey, // This can also be None
+        "codehost_url":    codeURL,
+        "project_name":    name,
+        "branch_name":     branchName,
+        "api_key":         apiKey,          // This can be nil
+        "openai_api_key":  openAIAPIKey,    // This can also be nil
     }
 
     // Convert data to JSON
     jsonData, err := json.Marshal(data)
     if err != nil {
-        return fmt.Errorf("error marshaling JSON: %w", err)
+        return "", fmt.Errorf("error marshaling JSON: %w", err)
     }
 
     repoManagerURL := config.Environment.RepoManagerURL
     if repoManagerURL == "" {
-        return fmt.Errorf("MACHTIANI_REPO_MANAGER_URL environment variable is not set")
+        return "", fmt.Errorf("MACHTIANI_REPO_MANAGER_URL environment variable is not set")
     }
 
-    // Create the POST request
-    req, err := http.NewRequest("POST", fmt.Sprintf("%s/fetch-and-checkout/", repoManagerURL), bytes.NewBuffer(jsonData))
+    tokenCount, err := getTokenCount(fmt.Sprintf("%s/fetch-and-checkout/", repoManagerURL), "Testing one two three")
     if err != nil {
-        return fmt.Errorf("error creating request: %w", err)
+        fmt.Printf("Error getting token count: %v\n", err)
+        // Return the error
+        return "", err
     }
-    req.Header.Set("Content-Type", "application/json")
+    fmt.Printf("Estimated token usage: %d\n", tokenCount)
 
-    // Execute the request
-    client := &http.Client{}
-    resp, err := client.Do(req)
-    if err != nil {
-        return fmt.Errorf("error making request: %w", err)
+    // Check if the user wants to proceed
+    if confirmProceed() {
+        // Proceed with sending the POST request
+        req, err := http.NewRequest("POST", fmt.Sprintf("%s/fetch-and-checkout/", repoManagerURL), bytes.NewBuffer(jsonData))
+        if err != nil {
+            return "", fmt.Errorf("error creating request: %w", err)
+        }
+        req.Header.Set("Content-Type", "application/json")
+
+        // Execute the request
+        client := &http.Client{}
+        resp, err := client.Do(req)
+        if err != nil {
+            return "", fmt.Errorf("error making request: %w", err)
+        }
+        defer resp.Body.Close()
+
+        // Check the response status
+        if resp.StatusCode != http.StatusOK {
+            body, _ := ioutil.ReadAll(resp.Body)
+            return "", fmt.Errorf("error: received status code %d from the server: %s", resp.StatusCode, body)
+        }
+
+        // Optionally, you can read the response body for a message
+        body, err := ioutil.ReadAll(resp.Body)
+        if err != nil {
+            return "", fmt.Errorf("error reading response body: %w", err)
+        }
+
+        // Return a success message
+        return fmt.Sprintf("Successfully synced the repository: %s.\nServer response: %s", name, string(body)), nil
+    } else {
+        // User chose not to proceed
+        return "Operation aborted by user", nil
     }
-    defer resp.Body.Close()
-
-    // Check the response status
-    if resp.StatusCode != http.StatusOK {
-        return fmt.Errorf("error: received status code %d from the server.", resp.StatusCode)
-    }
-
-    return nil
 }
 
 func CallOpenAIAPI(prompt, project, mode, model, matchStrength string) (map[string]interface{}, error) {
@@ -134,6 +176,7 @@ func CallOpenAIAPI(prompt, project, mode, model, matchStrength string) (map[stri
         return nil, fmt.Errorf("MACHTIANI_URL environment variable is not set")
     }
 
+    //getTokenCount(fmt.Sprintf("%s/generate-response", endpoint)), "Testing one two three")
     // Make the POST request
     resp, err := http.Post(fmt.Sprintf("%s/generate-response", endpoint), "application/json", bytes.NewBuffer(payloadBytes))
     if err != nil {
@@ -150,3 +193,42 @@ func CallOpenAIAPI(prompt, project, mode, model, matchStrength string) (map[stri
     return result, nil
 }
 
+// getTokenCount calls the /load/token-count endpoint to get the token count
+func getTokenCount(endpoint, text string) (int, error) {
+    // Create the payload
+    payload := map[string]string{
+        "text": text,
+    }
+
+    jsonData, err := json.Marshal(payload)
+    if err != nil {
+        return 0, fmt.Errorf("error marshaling JSON: %w", err)
+    }
+
+    // Call the token count endpoint
+    response, err := http.Post(fmt.Sprintf("%stoken-count", endpoint), "application/json", bytes.NewBuffer(jsonData))
+    if err != nil {
+        return 0, fmt.Errorf("error sending request to token count endpoint: %w", err)
+    }
+    defer response.Body.Close()
+
+    if response.StatusCode != http.StatusOK {
+        body, _ := ioutil.ReadAll(response.Body)
+        return 0, fmt.Errorf("error getting token count: %s", body)
+    }
+
+    var result map[string]int
+    if err := json.NewDecoder(response.Body).Decode(&result); err != nil {
+        return 0, fmt.Errorf("error decoding response: %w", err)
+    }
+
+    return result["token_count"], nil
+}
+
+// confirmProceed prompts the user for confirmation to proceed
+func confirmProceed() bool {
+    var response string
+    fmt.Print("Do you wish to proceed? (y/n): ")
+    fmt.Scanln(&response)
+    return strings.ToLower(response) == "y"
+}
