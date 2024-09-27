@@ -35,7 +35,7 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
         return AddRepositoryResponse{}, fmt.Errorf("error marshaling JSON: %w", err)
     }
 
-    tokenCount, err := getTokenCount(fmt.Sprintf("%s/add-repository/", repoManagerURL), "Testing one two three")
+    tokenCount, err := getTokenCount(fmt.Sprintf("%s/add-repository/", repoManagerURL), bytes.NewBuffer(jsonData))
     if err != nil {
         fmt.Printf("Error getting token count: %v\n", err)
         // Return zero value and error
@@ -104,7 +104,7 @@ func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiK
         return "", fmt.Errorf("MACHTIANI_REPO_MANAGER_URL environment variable is not set")
     }
 
-    tokenCount, err := getTokenCount(fmt.Sprintf("%s/fetch-and-checkout/", repoManagerURL), "Testing one two three")
+    tokenCount, err := getTokenCount(fmt.Sprintf("%s/fetch-and-checkout/", repoManagerURL, ), bytes.NewBuffer(jsonData))
     if err != nil {
         fmt.Printf("Error getting token count: %v\n", err)
         // Return the error
@@ -194,19 +194,9 @@ func CallOpenAIAPI(prompt, project, mode, model, matchStrength string) (map[stri
 }
 
 // getTokenCount calls the /load/token-count endpoint to get the token count
-func getTokenCount(endpoint, text string) (int, error) {
-    // Create the payload
-    payload := map[string]string{
-        "text": text,
-    }
-
-    jsonData, err := json.Marshal(payload)
-    if err != nil {
-        return 0, fmt.Errorf("error marshaling JSON: %w", err)
-    }
-
+func getTokenCount(endpoint string, buffer *bytes.Buffer) (int, error) {
     // Call the token count endpoint
-    response, err := http.Post(fmt.Sprintf("%stoken-count", endpoint), "application/json", bytes.NewBuffer(jsonData))
+    response, err := http.Post(fmt.Sprintf("%stoken-count", endpoint), "application/json", buffer)
     if err != nil {
         return 0, fmt.Errorf("error sending request to token count endpoint: %w", err)
     }
