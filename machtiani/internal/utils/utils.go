@@ -43,7 +43,7 @@ func IsDryRunEnabled() bool {
 
 type Config struct {
     Environment struct {
-        OpenAIAPIKey         string `yaml:"OPENAI_MACHTIANI_API_KEY"`
+        ModelAPIKey         string `yaml:"MODEL_API_KEY"`
         MachtianiURL         string `yaml:"MACHTIANI_URL"`
         RepoManagerURL       string `yaml:"MACHTIANI_REPO_MANAGER_URL"`
         CodeHostURL          string `yaml:"CODE_HOST_URL"`

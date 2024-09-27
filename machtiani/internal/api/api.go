@@ -26,7 +26,7 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
         "project_name":   name,
         "vcs_type":       "git",  // Default value for VCS type
         "api_key":        apiKey, // This can be nil
-        "openai_api_key": openAIAPIKey, // This can also be nil
+        "model_api_key": openAIAPIKey, // This can also be nil
     }
 
     // Convert data to JSON
@@ -90,7 +90,7 @@ func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiK
         "project_name":    name,
         "branch_name":     branchName,
         "api_key":         apiKey,          // This can be nil
-        "openai_api_key":  openAIAPIKey,    // This can also be nil
+        "model_api_key": openAIAPIKey, // This can also be nil
     }
 
     // Convert data to JSON

@@ -84,13 +84,13 @@ async def generate_filename(
         config = yaml.safe_load(file)
 
     # Access environment variables from the config
-    OPENAI_API_KEY = config['environment']['OPENAI_MACHTIANI_API_KEY']
+    MODEL_API_KEY = config['environment']['MODEL_API_KEY']
 
-    if not OPENAI_API_KEY:
-        logger.error("OPENAI_API_KEY environment variable is not set")
-        raise EnvironmentError("OPENAI_API_KEY is required")
+    if not MODEL_API_KEY:
+        logger.error("MODEL_API_KEY environment variable is not set")
+        raise EnvironmentError("MODEL_API_KEY is required")
 
-    response = send_prompt_to_openai(filename_prompt, OPENAI_API_KEY, model="gpt-4o-mini")
+    response = send_prompt_to_openai(filename_prompt, MODEL_API_KEY, model="gpt-4o-mini")
     logger.info(f"OpenAI response: {response}")
 
     # Extract the filename using regex
@@ -119,7 +119,7 @@ async def generate_response(
         config = yaml.safe_load(file)
 
     # Access environment variables from the config
-    OPENAI_API_KEY = config['environment']['OPENAI_MACHTIANI_API_KEY']
+    MODEL_API_KEY = config['environment']['MODEL_API_KEY']
 
     # Validate the model
     if model not in TOKEN_LIMITS:
@@ -138,7 +138,7 @@ async def generate_response(
         "mode": mode,
         "model": model,
         "match_strength": match_strength,
-        "api_key": OPENAI_API_KEY
+        "api_key": MODEL_API_KEY
     }
 
     # Initialize ignore_files list
@@ -197,11 +197,11 @@ async def generate_response(
                 return {"error": error_message}
 
             # Call the OpenAI API
-            if not OPENAI_API_KEY:
-                logger.error("OPENAI_API_KEY environment variable is not set")
-                raise EnvironmentError("OPENAI_API_KEY is required")
+            if not MODEL_API_KEY:
+                logger.error("MODEL_API_KEY environment variable is not set")
+                raise EnvironmentError("MODEL_API_KEY is required")
 
-            openai_response = send_prompt_to_openai(combined_prompt, OPENAI_API_KEY, model)
+            openai_response = send_prompt_to_openai(combined_prompt, MODEL_API_KEY, model)
 
             return {"openai_response": openai_response, "retrieved_file_paths": retrieved_file_paths}
 

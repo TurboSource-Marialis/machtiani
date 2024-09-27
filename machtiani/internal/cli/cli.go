@@ -125,7 +125,7 @@ func Execute() {
         }
 
         // Call the new function to add the repository
-        _, err = api.AddRepository(codeURL, projectName, apiKey, config.Environment.OpenAIAPIKey, config.Environment.RepoManagerURL)
+        _, err = api.AddRepository(codeURL, projectName, apiKey, config.Environment.ModelAPIKey, config.Environment.RepoManagerURL)
 
         if err != nil {
             log.Fatalf("Error adding repository: %v", err)
@@ -154,7 +154,7 @@ func Execute() {
         }
 
         // Call the new function to fetch and checkout the branch
-        message, err := api.FetchAndCheckoutBranch(codeURL, projectName, *branchName, apiKey, config.Environment.OpenAIAPIKey)
+        message, err := api.FetchAndCheckoutBranch(codeURL, projectName, *branchName, apiKey, config.Environment.ModelAPIKey)
         if err != nil {
             log.Fatalf("Error syncing repository: %v", err)
         }
@@ -286,7 +286,7 @@ func runAicommit(args []string) {
 
     // Define flags specific to aicommit
     fs := flag.NewFlagSet("aicommit", flag.ExitOnError)
-    openaiKey := fs.String("openai-key", config.Environment.OpenAIAPIKey, "OpenAI API Key")
+    openaiKey := fs.String("openai-key", config.Environment.ModelAPIKey, "OpenAI API Key")
     modelFlag := fs.String("model", "gpt-4o-mini", "Model to use for generating messages")
     amend := fs.Bool("amend", false, "Amend the last commit instead of creating a new one")
     context := fs.String("context", "", "Additional context for generating the commit message")
