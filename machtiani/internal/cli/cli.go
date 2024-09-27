@@ -92,7 +92,7 @@ func Execute() {
     }
 
     fs := flag.NewFlagSet("machtiani", flag.ContinueOnError)
-    markdownFlag := fs.String("markdown", "", "Path to the markdown file")
+    fileFlag := fs.String("file", "", "Path to the markdown file") // Changed here
     modelFlag := fs.String("model", defaultModel, "Model to use (options: gpt-4o, gpt-4o-mini)")
     matchStrengthFlag := fs.String("match-strength", defaultMatchStrength, "Match strength (options: high, mid, low)")
     modeFlag := fs.String("mode", defaultMode, "Search mode: pure-chat, commit, or super")
@@ -205,8 +205,8 @@ func Execute() {
 
     validateFlags(modelFlag, matchStrengthFlag, modeFlag)
 
-    if *markdownFlag != "" {
-        content, err := ioutil.ReadFile(*markdownFlag)
+    if *fileFlag != "" {
+        content, err := ioutil.ReadFile(*fileFlag)
         if err != nil {
             log.Fatalf("Error reading markdown file: %v", err)
         }
@@ -216,7 +216,7 @@ func Execute() {
     }
 
     if *verboseFlag {
-        printVerboseInfo(*markdownFlag, *modelFlag, *matchStrengthFlag, *modeFlag, prompt)
+        printVerboseInfo(*fileFlag, *modelFlag, *matchStrengthFlag, *modeFlag, prompt)
     }
 
     // Call OpenAI API to generate response
@@ -231,7 +231,7 @@ func Execute() {
     }
 
     // Determine the filename to save the response
-    filename := path.Base(*markdownFlag) // Extract filename with extension
+    filename := path.Base(*fileFlag) // Extract filename with extension
 
     // Strip all extensions from the filename
     for ext := path.Ext(filename); ext != ""; ext = path.Ext(filename) {
@@ -248,10 +248,10 @@ func Execute() {
     }
 
     // Handle API response and save it to a markdown file with the generated filename
-    handleAPIResponse(prompt, apiResponse, filename, *markdownFlag) // Pass filename here
+    handleAPIResponse(prompt, apiResponse, filename, *fileFlag) // Pass filename here
 }
 
-func handleAPIResponse(prompt string, apiResponse map[string]interface{}, filename string, markdownFlag string) {
+func handleAPIResponse(prompt string, apiResponse map[string]interface{}, filename string, fileFlag string) {
     // Check for the "machtiani" key first
     if machtianiMsg, ok := apiResponse["machtiani"].(string); ok {
         log.Printf("Machtiani Message: %s", machtianiMsg)
@@ -274,7 +274,7 @@ func handleAPIResponse(prompt string, apiResponse map[string]interface{}, filena
         log.Fatalf("Error: retrieved_file_paths key missing")
     }
 
-    markdownContent := createMarkdownContent(prompt, openAIResponse, retrievedFilePaths, markdownFlag)
+    markdownContent := createMarkdownContent(prompt, openAIResponse, retrievedFilePaths, fileFlag)
     renderMarkdown(markdownContent)
 
     // Save the response to the markdown file with the provided filename
@@ -395,10 +395,10 @@ func printVerboseInfo(markdown, model, matchStrength, mode, prompt string) {
 }
 
 
-func createMarkdownContent(prompt, openAIResponse string, retrievedFilePaths []string, markdownFlag string) string {
+func createMarkdownContent(prompt, openAIResponse string, retrievedFilePaths []string, fileFlag string) string {
     var markdownContent string
-    if markdownFlag != "" {
-        markdownContent = fmt.Sprintf("%s\n\n# Assistant\n\n%s", readMarkdownFile(markdownFlag), openAIResponse)
+    if fileFlag != "" {
+        markdownContent = fmt.Sprintf("%s\n\n# Assistant\n\n%s", readMarkdownFile(fileFlag), openAIResponse)
     } else {
         markdownContent = fmt.Sprintf("# User\n\n%s\n\n# Assistant\n\n%s", prompt, openAIResponse)
     }
