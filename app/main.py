@@ -71,6 +71,7 @@ except ModuleNotFoundError as e:
 @app.get("/generate-filename", response_model=str)
 async def generate_filename(
     context: str = Query(..., description="Context to create filename"),
+    api_key: str = Query(..., description="API key for OpenAI model")
 ) -> str:
     filename_prompt = (
         f"Generate a unique filename for the following context: '{context}'.\n"
@@ -79,24 +80,12 @@ async def generate_filename(
         "Example:\n"
         "<filename>example_filename</filename>"
     )
-    # Load configuration from config.yaml
-    with open("machtiani-config.yml", 'r') as file:
-        config = yaml.safe_load(file)
 
-    # Access environment variables from the config
-    MODEL_API_KEY = config['environment']['MODEL_API_KEY']
-
-    if not MODEL_API_KEY:
-        logger.error("MODEL_API_KEY environment variable is not set")
-        raise EnvironmentError("MODEL_API_KEY is required")
-
-    response = send_prompt_to_openai(filename_prompt, MODEL_API_KEY, model="gpt-4o-mini")
+    response = send_prompt_to_openai(filename_prompt, api_key, model="gpt-4o-mini")
     logger.info(f"OpenAI response: {response}")
 
-    # Extract the filename using regex
     match = re.search(r"<filename>\s*(.*?)\s*</filename>", response, re.DOTALL | re.IGNORECASE)
     if not match:
-        # Try to match any text within angle brackets
         match = re.search(r"<\s*(.*?)\s*>", response)
     if match:
         filename = match.group(1).strip()
@@ -112,20 +101,11 @@ async def generate_response(
     mode: str = Body(..., description="Search mode: chat, commit, or super"),
     model: str = Body(..., description="The embedding model used"),
     match_strength: str = Body(..., description="The strength of the match"),
+    api_key: str = Body(..., description="API key for OpenAI model")  # New parameter
 ):
-
-    # Load configuration from config.yaml
-    with open("machtiani-config.yml", 'r') as file:
-        config = yaml.safe_load(file)
-
-    # Access environment variables from the config
-    MODEL_API_KEY = config['environment']['MODEL_API_KEY']
-
-    # Validate the model
     if model not in TOKEN_LIMITS:
         return {"error": "Invalid model selected. Choose either 'gpt-4o' or 'gpt-4o-mini'."}
 
-    # Validate the match strength
     if match_strength not in ["high", "mid", "low"]:
         return {"error": "Invalid match strength selected. Choose either 'high', 'mid', or 'low'."}
 
@@ -138,7 +118,7 @@ async def generate_response(
         "mode": mode,
         "model": model,
         "match_strength": match_strength,
-        "api_key": MODEL_API_KEY
+        "api_key": api_key,
     }
 
     # Initialize ignore_files list
@@ -196,12 +176,7 @@ async def generate_response(
                 logger.error(error_message)
                 return {"error": error_message}
 
-            # Call the OpenAI API
-            if not MODEL_API_KEY:
-                logger.error("MODEL_API_KEY environment variable is not set")
-                raise EnvironmentError("MODEL_API_KEY is required")
-
-            openai_response = send_prompt_to_openai(combined_prompt, MODEL_API_KEY, model)
+            openai_response = send_prompt_to_openai(combined_prompt, api_key, model)
 
             return {"openai_response": openai_response, "retrieved_file_paths": retrieved_file_paths}
 

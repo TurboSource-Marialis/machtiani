@@ -54,7 +54,7 @@ func generateEmbeddings(apiKey, prompt string) ([]float64, error) {
 }
 
 // Call the /generate-filename endpoint
-func generateFilename(context string) (string, error) {
+func generateFilename(context string, apiKey string) (string, error) {
     config, err := utils.LoadConfig()
     if err != nil {
         log.Fatalf("Error loading config: %v", err)
@@ -65,7 +65,7 @@ func generateFilename(context string) (string, error) {
         return "", fmt.Errorf("MACHTIANI_URL environment variable is not set")
     }
 
-    url := fmt.Sprintf("%s/generate-filename?context=%s", endpoint, url.QueryEscape(context))
+    url := fmt.Sprintf("%s/generate-filename?context=%s&api_key=%s", endpoint, url.QueryEscape(context), url.QueryEscape(apiKey))  // Updated
     resp, err := http.Get(url)
     if err != nil {
         return "", fmt.Errorf("failed to call generate-filename endpoint: %v", err)
@@ -240,7 +240,7 @@ func Execute() {
     // Check if the filename is empty or just "."
     if filename == "" || filename == "." {
         // If no markdown file provided, generate a filename
-        filename, err = generateFilename(prompt)
+        filename, err = generateFilename(prompt, config.Environment.ModelAPIKey)
         if err != nil {
             log.Fatalf("Error generating filename: %v", err)
         }

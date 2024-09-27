@@ -162,6 +162,7 @@ func CallOpenAIAPI(prompt, project, mode, model, matchStrength string) (map[stri
         "mode":           mode,
         "model":          model,
         "match_strength": matchStrength,
+        "api_key": config.Environment.ModelAPIKey,
     }
 
     // Convert the payload to JSON
