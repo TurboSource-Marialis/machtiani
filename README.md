@@ -293,7 +293,8 @@ This web tool simplifies managing Git repositories through a user-friendly inter
       - [x] All openai or other llm keys are passed via the machtiani-config.yml.
       - [x] Optionally pass Github key
       - [x] Allow user choice to proceed based on approximated input token usage.
-      - [ ] Improve output of git-store command.
+      - [x] Get codehost url from remote origin, and ability to overide remote name in git repo with --remote <remote>
+      - [ ] git-sync works for individual repos.
 - [x] Get codehost key and urls from .machtiani.config.
 - [x] Unique repo names passed for data save.
 

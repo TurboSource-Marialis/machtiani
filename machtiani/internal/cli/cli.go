@@ -97,12 +97,27 @@ func Execute() {
     matchStrengthFlag := fs.String("match-strength", defaultMatchStrength, "Match strength (options: high, mid, low)")
     modeFlag := fs.String("mode", defaultMode, "Search mode: pure-chat, commit, or super")
     verboseFlag := fs.Bool("verbose", false, "Enable verbose output.")
+    remoteName := fs.String("remote", "origin", "Name of the remote repository") // New remote flag
 
     branchName := fs.String("branch-name", "", "Branch name")
 
     // It will get processed in backend to normalize the project name.
     codeURL := config.Environment.CodeHostURL
     projectName := codeURL
+
+    // Fetch the remote URL
+    remoteURL, err := git.GetRemoteURL(*remoteName)
+    if err != nil {
+        log.Fatalf("Error fetching remote URL: %v", err)
+    }
+
+    // Use the remote URL as needed in your application
+    fmt.Printf("Using remote URL: %s\n", remoteURL)
+
+    // Replace codeURL assignment to use remoteURL if it's not already set
+    if codeURL == "" {
+        codeURL = remoteURL
+    }
 
     var apiKey *string
 

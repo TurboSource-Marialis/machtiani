@@ -3,6 +3,7 @@ package git
 import (
     "os/exec"
     "strings"
+    "fmt"
 )
 
 func GetProjectName() (string, error) {
@@ -20,4 +21,13 @@ func GetProjectName() (string, error) {
     projectName := strings.TrimSuffix(parts[len(parts)-1], ".git")
 
     return projectName, nil
+}
+
+func GetRemoteURL(remoteName string) (string, error) {
+    cmd := exec.Command("git", "remote", "get-url", remoteName)
+    output, err := cmd.Output()
+    if err != nil {
+        return "", fmt.Errorf("failed to get remote URL for %s: %w", remoteName, err)
+    }
+    return strings.TrimSpace(string(output)), nil
 }
