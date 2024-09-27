@@ -101,10 +101,6 @@ func Execute() {
 
     branchName := fs.String("branch-name", "", "Branch name")
 
-    // It will get processed in backend to normalize the project name.
-    codeURL := config.Environment.CodeHostURL
-    projectName := codeURL
-
     // Fetch the remote URL
     remoteURL, err := git.GetRemoteURL(*remoteName)
     if err != nil {
@@ -114,10 +110,13 @@ func Execute() {
     // Use the remote URL as needed in your application
     fmt.Printf("Using remote URL: %s\n", remoteURL)
 
+    var codeURL string
     // Replace codeURL assignment to use remoteURL if it's not already set
     if codeURL == "" {
         codeURL = remoteURL
     }
+
+    projectName := codeURL
 
     var apiKey *string
 
