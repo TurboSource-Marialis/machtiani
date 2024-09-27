@@ -125,13 +125,14 @@ func Execute() {
         }
 
         // Call the new function to add the repository
-        responseMessage, err := api.AddRepository(codeURL, projectName, apiKey, config.Environment.OpenAIAPIKey, config.Environment.RepoManagerURL)
+        _, err = api.AddRepository(codeURL, projectName, apiKey, config.Environment.OpenAIAPIKey, config.Environment.RepoManagerURL)
 
         if err != nil {
             log.Fatalf("Error adding repository: %v", err)
         }
 
         fmt.Println("Repository successfully added.")
+
         return // Exit after handling git-store
     }
 
@@ -201,12 +202,6 @@ func Execute() {
 
     if *verboseFlag {
         printVerboseInfo(*markdownFlag, *modelFlag, *matchStrengthFlag, *modeFlag, prompt)
-    }
-
-    // Only needed if generating embeddings for the prompt, client side, otherwise, server will do it if allowed.
-    openAIAPIKey := config.Environment.OpenAIAPIKey
-    if openAIAPIKey != "" {
-        log.Println("Warning: Using OPENAI_MACHTIANI_API_KEY. This may incur costs for generating embeddings.")
     }
 
     // Call OpenAI API to generate response
