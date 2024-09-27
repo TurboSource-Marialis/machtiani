@@ -41,7 +41,7 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
         // Return zero value and error
         return AddRepositoryResponse{}, err
     }
-    fmt.Printf("Estimated token usage: %d\n", tokenCount)
+    fmt.Printf("Estimated input tokens: %d\n", tokenCount)
 
     // Check if the user wants to proceed
     if confirmProceed() {
@@ -110,7 +110,7 @@ func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiK
         // Return the error
         return "", err
     }
-    fmt.Printf("Estimated token usage: %d\n", tokenCount)
+    fmt.Printf("Estimated input tokens: %d\n", tokenCount)
 
     // Check if the user wants to proceed
     if confirmProceed() {
@@ -176,8 +176,22 @@ func CallOpenAIAPI(prompt, project, mode, model, matchStrength string) (map[stri
         return nil, fmt.Errorf("MACHTIANI_URL environment variable is not set")
     }
 
-    //getTokenCount(fmt.Sprintf("%s/generate-response", endpoint)), "Testing one two three")
-    // Make the POST request
+    repoManagerURL := config.Environment.RepoManagerURL
+
+    // Step 1: Get token count
+    tokenCount, err := getTokenCount(fmt.Sprintf("%s/generate-response/", repoManagerURL), bytes.NewBuffer(payloadBytes))
+    if err != nil {
+        fmt.Printf("Error getting token count: %v\n", err)
+        return nil, err
+    }
+    fmt.Printf("Estimated input tokens: %d\n", tokenCount)
+
+    // Step 2: Confirm to proceed
+    if !confirmProceed() {
+        return nil, fmt.Errorf("operation aborted by user")
+    }
+
+    // Make the POST request to generate the response
     resp, err := http.Post(fmt.Sprintf("%s/generate-response", endpoint), "application/json", bytes.NewBuffer(payloadBytes))
     if err != nil {
         return nil, fmt.Errorf("failed to make API request: %w", err)
