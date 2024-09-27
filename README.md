@@ -36,7 +36,7 @@ Additionally, while Machtiani aims to improve the relevance of retrieved files, 
 
    ```yaml
    environment:
-     OPENAI_MACHTIANI_API_KEY: "your_openai_api_key"
+     MODEL_API_KEY: "your_openai_api_key"
      MACHTIANI_URL: "http://localhost:5071"  # or your desired API URL
      MACHTIANI_REPO_MANAGER_URL: "http://localhost:5070"
    ```
