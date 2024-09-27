@@ -131,10 +131,7 @@ func Execute() {
             log.Fatalf("Error adding repository: %v", err)
         }
 
-        fmt.Printf("Response from server: %s\n", responseMessage.Message)
-        fmt.Printf("Full Path: %s\n", responseMessage.FullPath)
-        fmt.Printf("API Key Provided: %v\n", responseMessage.ApiKeyProvided)
-        fmt.Printf("OpenAI API Key Provided: %v\n", responseMessage.OpenAiApiKeyProvided)
+        fmt.Println("Repository successfully added.")
         return // Exit after handling git-store
     }
 
