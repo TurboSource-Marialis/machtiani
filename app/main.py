@@ -131,16 +131,15 @@ async def generate_response(
 
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.post(infer_file_url, json=params)
-            response.raise_for_status()
-            logger.info(f"Response status code: {response.status_code}")
-
-            list_file_search_response = [FileSearchResponse(**item) for item in response.json()]
-
             if mode == SearchMode.pure_chat:
                 combined_prompt = prompt
                 retrieved_file_paths = []
             else:
+                response = await client.post(infer_file_url, json=params)
+                response.raise_for_status()
+                logger.info(f"Response status code: {response.status_code}")
+                list_file_search_response = [FileSearchResponse(**item) for item in response.json()]
+
                 list_file_path_entry = aggregate_file_paths(list_file_search_response)
                 list_file_path_entry = remove_duplicate_file_paths(list_file_path_entry)
                 list_file_path_entry = [entry for entry in list_file_path_entry if entry.path not in ignore_files]
