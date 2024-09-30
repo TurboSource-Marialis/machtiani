@@ -86,6 +86,31 @@ func LoadConfig() (Config, error) {
         config.Environment.ModelAPIKey = envAPIKey
     }
 
+    // Validate the configuration
+    if err := validateConfig(config); err != nil {
+        return config, err
+    }
+
     return config, nil
 }
 
+func validateConfig(config Config) error {
+    if config.Environment.MachtianiURL == "" {
+        return fmt.Errorf("MACHTIANI_URL must be set")
+    }
+    if config.Environment.RepoManagerURL == "" {
+        return fmt.Errorf("MACHTIANI_REPO_MANAGER_URL must be set")
+    }
+    if config.Environment.CodeHostURL == "" {
+        return fmt.Errorf("CODE_HOST_URL must be set")
+    }
+    if config.Environment.ContentTypeKey == "" {
+        return fmt.Errorf("CONTENT_TYPE_KEY must be set")
+    }
+    if config.Environment.ContentTypeValue == "" {
+        return fmt.Errorf("CONTENT_TYPE_VALUE must be set")
+    }
+    // The following can be empty
+    // ModelAPIKey and API Gateway related keys can be empty
+    return nil
+}
