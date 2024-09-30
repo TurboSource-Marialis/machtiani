@@ -20,6 +20,10 @@ type AddRepositoryResponse struct {
 }
 
 func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey string, repoManagerURL string) (AddRepositoryResponse, error) {
+    config, err := utils.LoadConfig()
+    if err != nil {
+        log.Fatalf("Error loading config: %v", err)
+    }
     // Prepare the data to be sent in the request
     data := map[string]interface{}{
         "codehost_url":   codeURL,
@@ -46,7 +50,19 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
     // Check if the user wants to proceed
     if confirmProceed() {
         // Proceed with sending the POST request
-        resp, err := http.Post(fmt.Sprintf("%s/add-repository/", repoManagerURL), "application/json", bytes.NewBuffer(jsonData))
+        req, err := http.NewRequest("POST", fmt.Sprintf("%s/add-repository/", repoManagerURL), bytes.NewBuffer(jsonData))
+        if err != nil {
+            return AddRepositoryResponse{}, fmt.Errorf("error creating request: %w", err)
+        }
+
+        // Set API Gateway headers if not blank
+        if config.Environment.APIGatewayHostKey != "" && config.Environment.APIGatewayHostValue != "" {
+            req.Header.Set(config.Environment.APIGatewayHostKey, config.Environment.APIGatewayHostValue)
+        }
+        req.Header.Set(config.Environment.ContentTypeKey, config.Environment.ContentTypeValue)
+
+        client := &http.Client{}
+        resp, err := client.Do(req) // Use the client to execute the request
         if err != nil {
             return AddRepositoryResponse{}, fmt.Errorf("error sending request to add repository: %w", err)
         }
@@ -84,16 +100,14 @@ func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiK
         return "", fmt.Errorf("error loading config: %w", err)
     }
 
-    // Prepare the data for the request
     data := map[string]interface{}{
         "codehost_url":    codeURL,
         "project_name":    name,
         "branch_name":     branchName,
-        "api_key":         apiKey,          // This can be nil
-        "model_api_key": openAIAPIKey, // This can also be nil
+        "api_key":         apiKey,
+        "model_api_key": openAIAPIKey,
     }
 
-    // Convert data to JSON
     jsonData, err := json.Marshal(data)
     if err != nil {
         return "", fmt.Errorf("error marshaling JSON: %w", err)
@@ -104,24 +118,25 @@ func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiK
         return "", fmt.Errorf("MACHTIANI_REPO_MANAGER_URL environment variable is not set")
     }
 
-    tokenCount, err := getTokenCount(fmt.Sprintf("%s/fetch-and-checkout/", repoManagerURL, ), bytes.NewBuffer(jsonData))
+    tokenCount, err := getTokenCount(fmt.Sprintf("%s/fetch-and-checkout/", repoManagerURL), bytes.NewBuffer(jsonData))
     if err != nil {
         fmt.Printf("Error getting token count: %v\n", err)
-        // Return the error
         return "", err
     }
     fmt.Printf("Estimated input tokens: %d\n", tokenCount)
 
-    // Check if the user wants to proceed
     if confirmProceed() {
-        // Proceed with sending the POST request
         req, err := http.NewRequest("POST", fmt.Sprintf("%s/fetch-and-checkout/", repoManagerURL), bytes.NewBuffer(jsonData))
         if err != nil {
             return "", fmt.Errorf("error creating request: %w", err)
         }
-        req.Header.Set("Content-Type", "application/json")
 
-        // Execute the request
+        // Set API Gateway headers if not blank
+        if config.Environment.APIGatewayHostKey != "" && config.Environment.APIGatewayHostValue != "" {
+            req.Header.Set(config.Environment.APIGatewayHostKey, config.Environment.APIGatewayHostValue)
+        }
+        req.Header.Set(config.Environment.ContentTypeKey, config.Environment.ContentTypeValue)
+
         client := &http.Client{}
         resp, err := client.Do(req)
         if err != nil {
@@ -129,22 +144,18 @@ func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiK
         }
         defer resp.Body.Close()
 
-        // Check the response status
         if resp.StatusCode != http.StatusOK {
             body, _ := ioutil.ReadAll(resp.Body)
             return "", fmt.Errorf("error: received status code %d from the server: %s", resp.StatusCode, body)
         }
 
-        // Optionally, you can read the response body for a message
         body, err := ioutil.ReadAll(resp.Body)
         if err != nil {
             return "", fmt.Errorf("error reading response body: %w", err)
         }
 
-        // Return a success message
         return fmt.Sprintf("Successfully synced the repository: %s.\nServer response: %s", name, string(body)), nil
     } else {
-        // User chose not to proceed
         return "Operation aborted by user", nil
     }
 }
@@ -155,7 +166,6 @@ func CallOpenAIAPI(prompt, project, mode, model, matchStrength string) (map[stri
         log.Fatalf("Error loading config: %v", err)
     }
 
-    // Construct the request payload
     payload := map[string]interface{}{
         "prompt":         prompt,
         "project":        project,
@@ -165,13 +175,11 @@ func CallOpenAIAPI(prompt, project, mode, model, matchStrength string) (map[stri
         "api_key": config.Environment.ModelAPIKey,
     }
 
-    // Convert the payload to JSON
     payloadBytes, err := json.Marshal(payload)
     if err != nil {
         return nil, fmt.Errorf("failed to marshal JSON: %w", err)
     }
 
-    // Retrieve the MACHTIANI_URL from environment variables
     endpoint := config.Environment.MachtianiURL
     if endpoint == "" {
         return nil, fmt.Errorf("MACHTIANI_URL environment variable is not set")
@@ -179,12 +187,16 @@ func CallOpenAIAPI(prompt, project, mode, model, matchStrength string) (map[stri
 
     repoManagerURL := config.Environment.RepoManagerURL
 
-    // Step 1: Get token count
+    // Get token count
     tokenCount, err := getTokenCount(fmt.Sprintf("%s/generate-response/", repoManagerURL), bytes.NewBuffer(payloadBytes))
+
+    req, err := http.NewRequest("POST", fmt.Sprintf("%s/generate-response", endpoint), bytes.NewBuffer(payloadBytes))
+
     if err != nil {
         fmt.Printf("Error getting token count: %v\n", err)
         return nil, err
     }
+
     fmt.Printf("Estimated input tokens: %d\n", tokenCount)
 
     // Step 2: Confirm to proceed
@@ -192,14 +204,19 @@ func CallOpenAIAPI(prompt, project, mode, model, matchStrength string) (map[stri
         return nil, fmt.Errorf("operation aborted by user")
     }
 
-    // Make the POST request to generate the response
-    resp, err := http.Post(fmt.Sprintf("%s/generate-response", endpoint), "application/json", bytes.NewBuffer(payloadBytes))
+    // Set API Gateway headers if not blank
+    if config.Environment.APIGatewayHostKey != "" && config.Environment.APIGatewayHostValue != "" {
+        req.Header.Set(config.Environment.APIGatewayHostKey, config.Environment.APIGatewayHostValue)
+    }
+    req.Header.Set(config.Environment.ContentTypeKey, config.Environment.ContentTypeValue)
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
     if err != nil {
         return nil, fmt.Errorf("failed to make API request: %w", err)
     }
     defer resp.Body.Close()
 
-    // Handle the response
     var result map[string]interface{}
     if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
         return nil, fmt.Errorf("failed to decode JSON response: %w", err)

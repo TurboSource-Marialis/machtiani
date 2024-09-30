@@ -65,8 +65,21 @@ func generateFilename(context string, apiKey string) (string, error) {
         return "", fmt.Errorf("MACHTIANI_URL environment variable is not set")
     }
 
-    url := fmt.Sprintf("%s/generate-filename?context=%s&api_key=%s", endpoint, url.QueryEscape(context), url.QueryEscape(apiKey))  // Updated
-    resp, err := http.Get(url)
+    url := fmt.Sprintf("%s/generate-filename?context=%s&api_key=%s", endpoint, url.QueryEscape(context), url.QueryEscape(apiKey)) 
+
+    req, err := http.NewRequest("GET", url, nil)
+    if err != nil {
+        return "", fmt.Errorf("failed to create request: %v", err)
+    }
+
+    // Set API Gateway headers if not blank
+    if config.Environment.APIGatewayHostKey != "" && config.Environment.APIGatewayHostValue != "" {
+        req.Header.Set(config.Environment.APIGatewayHostKey, config.Environment.APIGatewayHostValue)
+    }
+    req.Header.Set(config.Environment.ContentTypeKey, config.Environment.ContentTypeValue)
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
     if err != nil {
         return "", fmt.Errorf("failed to call generate-filename endpoint: %v", err)
     }

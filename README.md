@@ -39,6 +39,10 @@ Additionally, while Machtiani aims to improve the relevance of retrieved files, 
      MODEL_API_KEY: "your_openai_api_key"
      MACHTIANI_URL: "http://localhost:5071"  # or your desired API URL
      MACHTIANI_REPO_MANAGER_URL: "http://localhost:5070"
+     API_GATEWAY_HOST_KEY: "x-api-gateway-host"      # Header key for API gateway host (e.g. "x-rapidapi-host")
+     API_GATEWAY_HOST_VALUE: "your-api-gateway-host.com" # Header value for API gateway host (e.g. ""your-rapidapi-host.com")
+     CONTENT_TYPE_KEY: "Content-Type"                  # Header key for Content-Type
+     CONTENT_TYPE_VALUE: "application/json"             # Header value for Content-Type
    ```
 
    Warning: If the `OPENAI_API_KEY` is set, please be aware that costs will be incurred for embedding the prompt using the OpenAI API.
@@ -288,6 +292,9 @@ This web tool simplifies managing Git repositories through a user-friendly inter
       - [x] Optionally pass Github key
       - [x] Allow user choice to proceed based on approximated input token usage.
       - [x] Get codehost url from remote origin, and ability to override remote name in git repo with --remote <remote>
-      - [ ] git-sync works for individual repos.
+      - [x] git-sync works for individual repos.
+      - [x] Add header with token, unhardcoded with config.
+      - [ ] Refactor to compile with variable setting flags for osEnv.
 - [x] Get codehost key and urls from .machtiani.config.
 - [x] Unique repo names passed for data save.
+
