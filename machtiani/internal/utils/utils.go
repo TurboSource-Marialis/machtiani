@@ -61,7 +61,7 @@ func LoadConfig() (Config, error) {
     var config Config
 
     // First, try to load from the current directory
-    configPath := "machtiani-config.yml"
+    configPath := ".machtiani-config.yml"
     data, err := ioutil.ReadFile(configPath)
     if err != nil {
         // If it doesn't exist, try to load from the home directory
@@ -100,9 +100,6 @@ func validateConfig(config Config) error {
     }
     if config.Environment.RepoManagerURL == "" {
         return fmt.Errorf("MACHTIANI_REPO_MANAGER_URL must be set")
-    }
-    if config.Environment.CodeHostURL == "" {
-        return fmt.Errorf("CODE_HOST_URL must be set")
     }
     if config.Environment.ContentTypeKey == "" {
         return fmt.Errorf("CONTENT_TYPE_KEY must be set")
