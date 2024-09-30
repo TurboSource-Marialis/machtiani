@@ -4,6 +4,7 @@ import (
     "fmt"
     "io/ioutil"
     "os"
+    "path/filepath"
 
     "gopkg.in/yaml.v2"
 )
@@ -58,13 +59,26 @@ type Config struct {
 // LoadConfig reads the configuration from the YAML file
 func LoadConfig() (Config, error) {
     var config Config
-    data, err := ioutil.ReadFile("machtiani-config.yml")
+
+    // First, try to load from the current directory
+    configPath := "machtiani-config.yml"
+    data, err := ioutil.ReadFile(configPath)
     if err != nil {
-        return config, fmt.Errorf("failed to read config.yaml: %w", err)
+        // If it doesn't exist, try to load from the home directory
+        homeDir, homeErr := os.UserHomeDir()
+        if homeErr != nil {
+            return config, fmt.Errorf("failed to get home directory: %w", homeErr)
+        }
+        configPath = filepath.Join(homeDir, ".machtiani-config.yml")
+        data, err = ioutil.ReadFile(configPath)
+        if err != nil {
+            return config, fmt.Errorf("failed to read config from both locations: %w", err)
+        }
     }
+
     err = yaml.Unmarshal(data, &config)
     if err != nil {
-        return config, fmt.Errorf("failed to unmarshal config.yaml: %w", err)
+        return config, fmt.Errorf("failed to unmarshal config: %w", err)
     }
     return config, nil
 }
