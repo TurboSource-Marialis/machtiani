@@ -56,7 +56,7 @@ type Config struct {
     } `yaml:"environment"`
 }
 
-// LoadConfig reads the configuration from the YAML file
+// LoadConfig reads the configuration from the YAML file and prioritizes the environment variable
 func LoadConfig() (Config, error) {
     var config Config
 
@@ -80,6 +80,12 @@ func LoadConfig() (Config, error) {
     if err != nil {
         return config, fmt.Errorf("failed to unmarshal config: %w", err)
     }
+
+    // Check for the environment variable and prioritize it
+    if envAPIKey := os.Getenv("MODEL_API_KEY"); envAPIKey != "" {
+        config.Environment.ModelAPIKey = envAPIKey
+    }
+
     return config, nil
 }
 
