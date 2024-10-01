@@ -227,23 +227,46 @@ func CallOpenAIAPI(prompt, project, mode, model, matchStrength string) (map[stri
 
 // getTokenCount calls the /load/token-count endpoint to get the token count
 func getTokenCount(endpoint string, buffer *bytes.Buffer) (int, error) {
-    // Call the token count endpoint
-    response, err := http.Post(fmt.Sprintf("%stoken-count", endpoint), "application/json", buffer)
+    config, err := utils.LoadConfig()
+    if err != nil {
+        log.Fatalf("Error loading config: %v", err)
+    }
+    // Create a new request instead of using http.Post
+    req, err := http.NewRequest("POST", fmt.Sprintf("%stoken-count", endpoint), buffer)
+    if err != nil {
+        return 0, fmt.Errorf("error creating request: %w", err)
+    }
+
+    // Set Content-Type header
+    req.Header.Set(config.Environment.ContentTypeKey, config.Environment.ContentTypeValue)
+
+    // Optionally set the RapidAPI headers if configured
+    if config.Environment.APIGatewayHostKey != "" && config.Environment.APIGatewayHostValue != "" {
+        req.Header.Set(config.Environment.APIGatewayHostKey, config.Environment.APIGatewayHostValue)
+    }
+    req.Header.Set(config.Environment.ContentTypeKey, config.Environment.ContentTypeValue)
+
+    // Create a new HTTP client and send the request
+    client := &http.Client{}
+    response, err := client.Do(req)
     if err != nil {
         return 0, fmt.Errorf("error sending request to token count endpoint: %w", err)
     }
     defer response.Body.Close()
 
+    // Check the status code of the response
     if response.StatusCode != http.StatusOK {
         body, _ := ioutil.ReadAll(response.Body)
         return 0, fmt.Errorf("error getting token count: %s", body)
     }
 
+    // Decode the JSON response into a map
     var result map[string]int
     if err := json.NewDecoder(response.Body).Decode(&result); err != nil {
         return 0, fmt.Errorf("error decoding response: %w", err)
     }
 
+    // Return the token count from the result map
     return result["token_count"], nil
 }
 
