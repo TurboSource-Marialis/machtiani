@@ -40,7 +40,7 @@ Additionally, while Machtiani aims to improve the relevance of retrieved files, 
      MACHTIANI_URL: "http://localhost:5071"  # or your desired API URL
      MACHTIANI_REPO_MANAGER_URL: "http://localhost:5070"
      API_GATEWAY_HOST_KEY: "x-api-gateway-host"      # Header key for API gateway host (e.g. "x-rapidapi-host")
-     API_GATEWAY_HOST_VALUE: "your-api-gateway-host.com" # Header value for API gateway host (e.g. ""your-rapidapi-host.com")
+     API_GATEWAY_HOST_VALUE: "your-api-gateway-value" # Header value for API gateway host (e.g. "rapidapi-api-key")
      CONTENT_TYPE_KEY: "Content-Type"                  # Header key for Content-Type
      CONTENT_TYPE_VALUE: "application/json"             # Header value for Content-Type
    ```
@@ -294,7 +294,7 @@ This web tool simplifies managing Git repositories through a user-friendly inter
       - [x] Get codehost url from remote origin, and ability to override remote name in git repo with --remote <remote>
       - [x] git-sync works for individual repos.
       - [x] Add header with token, unhardcoded with config.
-      - [ ] Refactor to compile with variable setting flags for osEnv.
+      - [x] Refactor to compile with variable setting flags for osEnv.
 - [x] Get codehost key and urls from .machtiani.config.
 - [x] Unique repo names passed for data save.
 
