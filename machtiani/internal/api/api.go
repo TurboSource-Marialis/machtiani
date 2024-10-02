@@ -19,7 +19,20 @@ type AddRepositoryResponse struct {
     OpenAiApiKeyProvided bool   `json:"openai_api_key_provided"`
 }
 
+
+
 func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey string, repoManagerURL string) (AddRepositoryResponse, error) {
+	ignoreFilePath := ".machtiani.ignore"
+	ignoreFiles, err := utils.ReadIgnoreFile(ignoreFilePath)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+	}
+
+	// Print the file paths
+	fmt.Println("Parsed file paths from machtiani.ignore:")
+	for _, path := range ignoreFiles {
+		fmt.Println(path)
+	}
     config, err := utils.LoadConfig()
     if err != nil {
         log.Fatalf("Error loading config: %v", err)
@@ -31,6 +44,7 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
         "vcs_type":       "git",  // Default value for VCS type
         "api_key":        apiKey, // This can be nil
         "model_api_key": openAIAPIKey, // This can also be nil
+        "ignore_files": ignoreFiles,
     }
 
     // Convert data to JSON
@@ -95,6 +109,17 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
 
 // FetchAndCheckoutBranch sends a request to fetch and checkout a branch.
 func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiKey *string, openAIAPIKey string) (string, error) {
+	ignoreFilePath := ".machtiani.ignore"
+	ignoreFiles, err := utils.ReadIgnoreFile(ignoreFilePath)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+	}
+
+	// Print the file paths
+	fmt.Println("Parsed file paths from machtiani.ignore:")
+	for _, path := range ignoreFiles {
+		fmt.Println(path)
+	}
     config, err := utils.LoadConfig()
     if err != nil {
         return "", fmt.Errorf("error loading config: %w", err)
@@ -106,6 +131,7 @@ func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiK
         "branch_name":     branchName,
         "api_key":         apiKey,
         "model_api_key": openAIAPIKey,
+        "ignore_files": ignoreFiles,
     }
 
     jsonData, err := json.Marshal(data)
