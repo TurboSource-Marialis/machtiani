@@ -101,7 +101,7 @@ async def generate_response(
     mode: str = Body(..., description="Search mode: chat, commit, or super"),
     model: str = Body(..., description="The embedding model used"),
     match_strength: str = Body(..., description="The strength of the match"),
-    api_key: str = Body(..., description="API key for OpenAI model")  # New parameter
+    api_key: str = Body(..., description="API key for OpenAI model")
 ):
     if model not in TOKEN_LIMITS:
         return {"error": "Invalid model selected. Choose either 'gpt-4o' or 'gpt-4o-mini'."}
@@ -111,6 +111,7 @@ async def generate_response(
 
     infer_file_url = "http://commit-file-retrieval:5070/infer-file/"
     retrieve_file_contents_url = f"http://commit-file-retrieval:5070/retrieve-file-contents/?project_name={project}"
+    get_file_summary_url = f"http://commit-file-retrieval:5070/get-file-summary/?project_name={project}"
 
     params = {
         "prompt": prompt,
@@ -121,7 +122,6 @@ async def generate_response(
         "api_key": api_key,
     }
 
-    # Initialize ignore_files list
     ignore_files = []
     try:
         with open('.machtiani.ignore', 'r') as f:
@@ -165,7 +165,6 @@ async def generate_response(
             max_tokens = TOKEN_LIMITS[model]
             logger.info(f"model: {model}, token count: {token_count}, max limit: {max_tokens}")
 
-            # Validate token count against model limits
             if token_count > max_tokens:
                 error_message = (
                     f"Token limit exceeded for the selected model. "
@@ -174,6 +173,14 @@ async def generate_response(
                 )
                 logger.error(error_message)
                 return {"error": error_message}
+
+            # Get file summaries for each retrieved file path
+            for file_path in retrieved_file_paths:
+                file_summary_response = await client.get(get_file_summary_url, params={"file_path": file_path})
+                file_summary_response.raise_for_status()
+                summary_data = file_summary_response.json()
+                logger.info(f"File Summary for {file_path}: {summary_data['summary']}")
+                print(f"File Summary for {file_path}: {summary_data['summary']}")
 
             openai_response = send_prompt_to_openai(combined_prompt, api_key, model)
 
@@ -188,3 +195,4 @@ async def generate_response(
     except Exception as e:
         logger.exception("Unexpected error occurred")
         return {"error": f"An unexpected error occurred: {str(e)}"}
+
