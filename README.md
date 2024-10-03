@@ -1,14 +1,27 @@
 # machtiani
 
-**Machtiani** is a command-line interface (CLI) tool designed to facilitate code chat and information retrieval from code repositories. It allows users to interact with their codebases by asking questions and retrieving relevant information from files in the project, utilizing language models for processing and generating responses. The aim is to support other models other than OpenAI, including open-source and self-hosted options.
+**Machtiani** is a command-line interface (CLI) tool designed to facilitate code chat and information retrieval from code repositories. It allows users to interact with their codebases by asking questions and retrieving relevant information from files in the project, utilizing language models for processing and generating responses. The aim is to support other models aside from OpenAI, including open-source and self-hosted options.
 
 It's very usable, but rough around the edges at the moment.
 
+## How it works
+
+Machtiani employs a clever document retrieval algorithm that reduces the total code file search to improve efficiency:
+
+1. Find files related to indexed commit messages that are similar to the user prompt.
+2. Find files related to indexed file summaries that are similar to the user prompt.
+3. Eliminate unrelated files to the prompt via inference.
+
+This method has successfully yielded accurate and concise answers for an open-source project with over 1400 files checked into version control systems (VCS). However, users may experience long wait times, particularly when executing the `git-store` command. There have been instances where the match strength needed to be increased due to the prolonged processing time for all files.
+
 ## Limitations
+
+- The current implementation does not accurately account for input token usage, primarily due to the recent additions in steps 2 and 3 above.
+- The application may appear to hang if it needs to process hundreds of files.
 
 To fully utilize Machtiani for effective document retrieval, it is essential to have concise, informative, and atomic git commit messages. If your commit messages do not meet this criterion, we recommend using the CLI tool [aicommit](https://github.com/coder/aicommit), which is designed to assist in generating appropriate commit messages.
 
-Machtiani currently relies on OpenAI's gpt-4o-mini (optionally gpt-4o) API, which incurs costs. There is a cost estimator in the works, but users should be aware that for projects with several hundred commits to be indexed and with large amounts of retrieved files may incur higher OpenAI usage costs.
+Machtiani currently relies on OpenAI's gpt-4o-mini (optionally gpt-4o) API, which incurs costs. There is a cost estimator in the works, but users should be aware that for projects with several hundred commits to be indexed and a large number of retrieved files may incur higher OpenAI usage costs.
 
 It is important to note that Machtiani may not effectively handle repositories with a large number of commits. This could potentially limit access to the full history of a repository.
 
@@ -19,7 +32,7 @@ Additionally, while Machtiani aims to improve the relevance of retrieved files, 
 - [ ] Optional support for 'libre' hosted version.
 - [ ] Support open-source LLMs and other models (self-config).
 - [ ] Add as a submodule `aicommit` to help generate better commit messages, and even rewrite commits to Machtiani standards.
-- [ ] Cost management to how much it will cost to index.
+- [ ] Cost management to assess indexing costs.
 - [ ] Improve handling of file path changes in version control systems.
 - [ ] Auto-save results in `.machtiani/chat/` with context-aware naming.
 - [ ] Enhance the user interface and experience.
@@ -45,9 +58,9 @@ Additionally, while Machtiani aims to improve the relevance of retrieved files, 
      CONTENT_TYPE_VALUE: "application/json"             # Header value for Content-Type
    ```
 
-   Warning: If the `OPENAI_API_KEY` is set, please be aware that costs will be incurred for embedding the prompt using the OpenAI API.
+   **Warning:** If the `OPENAI_API_KEY` is set, please be aware that costs will be incurred for embedding the prompt using the OpenAI API.
 
-   ***Also you'll have to add a .env do in `machtiani-commit-file-retrieval/`. See [Running the FastAPI Application](machtiani-commit-file-retrieval/README.md#running-the-fastapi-application).***
+   ***Also, you'll have to add a .env file in `machtiani-commit-file-retrieval/`. See [Running the FastAPI Application](machtiani-commit-file-retrieval/README.md#running-the-fastapi-application).***
 
 3. Launch the application in development (without the API Gateway):
 
@@ -76,7 +89,7 @@ Additionally, while Machtiani aims to improve the relevance of retrieved files, 
 7. Build the `aicommit` binary in `machtiani/aicommit/`.
 
    ```bash
-   cd aicommmit
+   cd aicommit
    go mod tidy
    go build -o machtiani-aicommit-binary ./cmd/aicommit
    ```
@@ -89,12 +102,12 @@ Additionally, while Machtiani aims to improve the relevance of retrieved files, 
 
 9. Start the local web server in a new terminal in `machtiani/machtiani-commit-file-retrieval/`.
 
-    ```bash
-    poetry install
-    poetry run python web/server.py
-    ```
+   ```bash
+   poetry install
+   poetry run python web/server.py
+   ```
 
-## Go to local homepage localhost:5072
+## Go to local homepage at localhost:5072
 
 ![Home Page](images/web-home.png)
 
@@ -149,14 +162,13 @@ machtiani [flags] [prompt]
    machtiani "Add a new endpoint to get stats."
    ```
 
-   How the output looks like
+   - Output Example:
    - ![Direct Prompt Example](images/default-result.png)
 
 2. **Using an existing markdown chat file:**
    ```bash
    machtiani --file .machtiani/chat/add_state_endpoint.md
    ```
-
 
    ```
    ...(previous conversion above)...
@@ -166,11 +178,12 @@ machtiani [flags] [prompt]
    <Your new prompt instructions>
    ```
 
+   - Output Example:
    - ![Markdown Chat Example](images/editing-markdown-response.png)
 
 3. **Specifying additional parameters:**
 
-Just a sample of the options.
+   Just a sample of the options.
 
    ```bash
    machtiani "Add a new endpoint to get stats." --model gpt-4o --mode pure-chat --match-strength high
@@ -182,15 +195,15 @@ Just a sample of the options.
    machtiani --file .machtiani/chat/add_state_endpoint.md --mode pure-chat
    ```
 
-   This won't retrieve any files with this flag.
+   *Note: This won't retrieve any files with this flag.*
 
 ### Different modes
 
 In the last example, you don't have to select `pure-chat` to have a conversation with a markdown file.
 
-You could have run the command as
+You could run the command as
 
-```
+```bash
 machtiani --file .machtiani/chat/add_state_endpoint.md
 ```
 
@@ -207,7 +220,7 @@ The `git-store` command allows you to add a repository to the Machtiani system.
 machtiani git-store --branch <default branch> --remote <remote name>
 ```
 
-- `--remote`: Optionally pass a remote name, otherwise it will choose 'origin' from the git project dir you run this in.
+- `--remote`: Optionally pass a remote name; otherwise, it will choose 'origin' from the git project directory you run this in.
 - `--branch`: Mandatory branch name of the default branch.
 
 **Example:**
@@ -221,20 +234,20 @@ The `git-sync` command is used to fetch and checkout a specific branch of the re
 
 **Usage:**
 ```bash
-machtiani git-store --branch <default branch> --remote <remote name>
+machtiani git-sync --branch <default branch> --remote <remote name>
 ```
 
-- `--remote`: Optionally pass a remote name, otherwise it will choose 'origin' from the git project dir you run this in.
+- `--remote`: Optionally pass a remote name; otherwise, it will choose 'origin' from the git project directory you run this in.
 - `--branch`: Mandatory branch name of the default branch.
 
 **Example:**
 ```bash
-machtiani git-store --branch main
+machtiani git-sync --branch main
 ```
 
 ### Ignoring Files with `.machtiani.ignore`
 
-You'll have to ignore any binary files, providing the full path, such as images, etc.
+You can ignore any binary files by providing the full path, such as images, etc.
 
 To exclude specific files from being processed by the application, you can create a `.machtiani.ignore` file in the root of your project directory. The files listed in this file will be ignored during the retrieval process.
 
@@ -260,41 +273,39 @@ This web tool simplifies managing Git repositories through a user-friendly inter
 ## Todo
 
 - [x] Retrieve file content and add to prompt.
-- [x] Get on UI is temperamental; if the wrong URL and token are given, it will mess up. Maybe all that should be done strictly on the commit-file-retrieval server side, the URL and token just pass the project name.
+- [x] Improve UI; if the wrong URL and token are given, it will mess up. Consider handling these strictly on the commit-file-retrieval server side.
 - [x] Separate command for sending edited markdown (don't wrap # User) (completed with commit 5a69231d4b48b6cd8c1b1e3b54a1b57c3d295a74).
 - [x] Return list of files used in response with `--mode commit`.
-- [x] machtiani.ignore.
-- [x] Improve style and organization of web UI. Add links to fetch, add, and load on home page.
+- [x] Implement `.machtiani.ignore`.
+- [x] Improve style and organization of web UI. Add links to fetch, add, and load on the homepage.
 - [x] Break up main.go into a well-organized Go project file structure.
-- [x] commit-file-retrieval can't handle gpt-4o (i.e., `Unprocessable Entity`).
-- [x] commit-file-retrieval doesn't say there are no files to retrieve if it's found, but doesn't exist in the file.
-- [x] CLI user should be warned if there are no retrieved files, with a suggestion to lower match-strength.
-- [x] Add as a submodule [aicommit](https://github.com/coder/aicommit)
+- [x] Fix commit-file-retrieval issue with gpt-4o (i.e., `Unprocessable Entity`).
+- [x] Improve messaging when no files are retrieved but found.
+- [x] Warn CLI user if there are no retrieved files, suggesting to lower match-strength.
+- [x] Add as a submodule [aicommit](https://github.com/coder/aicommit).
 - [x] Calculate and cap token usage.
 - [ ] In commit-file-retrieval, get the most recent path (in case of name change) from git of a file and only use that.
 - [ ] Script to rewrite a project's git commit history.
-- [x] Auto-save results in `.machtiani/chat/`. Should name the same if passing filename as --file.
+- [x] Auto-save results in `.machtiani/chat/`. Should name the same if passing filename as `--file`.
 - [x] Markdown generated chats should automatically save and have an auto-generate context-aware name.
 - [x] Content argument for mode flag should be `pure-chat`.
 - [ ] Hide excessive stdout behind specific logging mode in commit-file-retrieval.
-- [x] Modify cli so that it can generate embeddings for the original prompt the user creates, then pass it as a parameter to the generate-response endpoint.
+- [x] Modify CLI to generate embeddings for the original prompt created by the user, then pass it as a parameter to the generate-response endpoint.
 - [ ] Chunk retrieval response by order of ranking according to token cap.
-- [ ] Widdle down strategy, sub-prompt to ask to only keep the code files possibly related to the prompt?
-- [ ] Implement filebot sum strategy - create a --mode super?
-- [ ] A --search-web option
-- [ ] Make serviceable
-      - [x] Add machtiani commands for `add repo`, `fetch and update` and `load`
-      - [x] `git-sync` code-host-url is sensitive to `/` (must) at end of url. Oddly `git-store` works just fine without.
-      - [x] Keep it simple: each user will be able to add any repo, and we store git key. Fetch and update. And load
-      - [x] See from there, and just get the endpoint up.
-      - [x] Get codehost keys for git-store and git-sync commands from machtiani-config.yml. Get rid of passing them as arguments to the commands.
-      - [x] All openai or other llm keys are passed via the machtiani-config.yml.
-      - [x] Optionally pass Github key
-      - [x] Allow user choice to proceed based on approximated input token usage.
-      - [x] Get codehost url from remote origin, and ability to override remote name in git repo with --remote <remote>
-      - [x] git-sync works for individual repos.
-      - [x] Add header with token, unhardcoded with config.
-      - [x] Refactor to compile with variable setting flags for osEnv.
-- [x] Get codehost key and urls from .machtiani.config.
-- [x] Unique repo names passed for data save.
-
+- [ ] Implement a strategy to filter code files possibly related to the prompt.
+- [ ] Introduce a `--mode super` option.
+- [ ] A `--search-web` option.
+- [ ] Make the application serviceable:
+    - [x] Add Machtiani commands for `add repo`, `fetch and update`, and `load`.
+    - [x] Ensure `git-sync` code-host URL is sensitive to `/` (must) at end of the URL.
+    - [x] Simplify user process for adding any repo, storing git keys, fetching and updating.
+    - [x] Retrieve code host keys for git-store and git-sync commands from `machtiani-config.yml`.
+    - [x] Pass all OpenAI or other LLM keys via the `machtiani-config.yml`.
+    - [x] Optionally pass GitHub key.
+    - [x] Allow user choice to proceed based on approximated input token usage.
+    - [x] Retrieve code host URL from remote origin, allowing override of remote name in git repo with `--remote <remote>`.
+    - [x] Ensure `git-sync` works for individual repos.
+    - [x] Add header with token, unhardcoded with config.
+    - [x] Refactor to compile with variable setting flags for `osEnv`.
+- [x] Retrieve code host key and URLs from `.machtiani.config`.
+- [x] Ensure unique repo names are passed for data save.
