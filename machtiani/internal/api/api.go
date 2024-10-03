@@ -8,6 +8,7 @@ import (
     "log"
     "net/http"
     "io/ioutil"
+    "time"
 
     "github.com/7db9a/machtiani/internal/utils"
 )
@@ -217,7 +218,6 @@ func CallOpenAIAPI(prompt, project, mode, model, matchStrength string) (map[stri
     tokenCount, err := getTokenCount(fmt.Sprintf("%s/generate-response/", repoManagerURL), bytes.NewBuffer(payloadBytes))
 
     req, err := http.NewRequest("POST", fmt.Sprintf("%s/generate-response", endpoint), bytes.NewBuffer(payloadBytes))
-
     if err != nil {
         fmt.Printf("Error getting token count: %v\n", err)
         return nil, err
@@ -236,7 +236,11 @@ func CallOpenAIAPI(prompt, project, mode, model, matchStrength string) (map[stri
     }
     req.Header.Set(config.Environment.ContentTypeKey, config.Environment.ContentTypeValue)
 
-    client := &http.Client{}
+    // Create a new HTTP client with a timeout
+    client := &http.Client{
+        Timeout: 120 * time.Second, // Set timeout to 120 seconds
+    }
+
     resp, err := client.Do(req)
     if err != nil {
         return nil, fmt.Errorf("failed to make API request: %w", err)

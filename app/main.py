@@ -141,7 +141,7 @@ async def generate_response(
         logger.warning("No .machtiani.ignore file found, proceeding without ignoring any files.")
 
     try:
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(1200, read=1200.0)) as client:  # Set timeout to 10 seconds
             if mode == SearchMode.pure_chat:
                 combined_prompt = prompt
                 retrieved_file_paths = []
