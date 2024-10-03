@@ -203,23 +203,39 @@ async def generate_response(
 
                 # Parse the JSON string inside openai_response_file_summary
                 match = re.search(r"---\s*(\{.*?\})\s*---", openai_response_file_summary, re.DOTALL)
+
+                # Debug: Log the entire response from OpenAI to verify its format
+                logger.debug(f"OpenAI response: {openai_response_file_summary}")
+
                 if match:
                     json_str = match.group(1)
-                    # Parse JSON string
+
+                    # Debug: Log the extracted JSON string to see if there’s extra data
+                    logger.debug(f"Extracted JSON string: {json_str}")
+
                     try:
+                        # Parse JSON string and handle potential formatting issues
                         parsed_json = json.loads(json_str)
+
+                        # Debug: Log parsed JSON object to verify structure
+                        logger.debug(f"Parsed JSON: {parsed_json}")
+
                         # Get file paths from parsed_json
                         file_paths_in_response = list(parsed_json.keys())
+
                         # Remove entries from file_paths_payload that are not in file_paths_in_response
                         file_paths_payload = [
                             entry for entry in file_paths_payload if entry["path"] in file_paths_in_response
                         ]
                     except json.JSONDecodeError as e:
-                        logger.error(f"JSON decode error: {e}")
-                        raise HTTPException(status_code=400, detail="Invalid JSON format in OpenAI response.")
+                        # Debug: Log the faulty JSON string for further investigation
+                        logger.error(f"JSON decode error: {e} - Faulty JSON: {json_str}")
+                        raise HTTPException(status_code=400, detail=f"Invalid JSON format in OpenAI response: {str(e)}")
                 else:
-                    logger.error("Failed to extract JSON from OpenAI response.")
+                    # Log the OpenAI response if we cannot find the correct JSON format
+                    logger.error(f"Failed to extract JSON from OpenAI response: {openai_response_file_summary}")
                     raise HTTPException(status_code=400, detail="Invalid response format from OpenAI API.")
+
 
                 # Now the updated file_paths_payload will be used to get content_response
                 content_response = await client.post(retrieve_file_contents_url, json=file_paths_payload)

@@ -76,7 +76,9 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
         }
         req.Header.Set(config.Environment.ContentTypeKey, config.Environment.ContentTypeValue)
 
-        client := &http.Client{}
+        client := &http.Client{
+            Timeout: 20 * time.Minute,
+        }
         resp, err := client.Do(req) // Use the client to execute the request
         if err != nil {
             return AddRepositoryResponse{}, fmt.Errorf("error sending request to add repository: %w", err)
@@ -164,7 +166,9 @@ func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiK
         }
         req.Header.Set(config.Environment.ContentTypeKey, config.Environment.ContentTypeValue)
 
-        client := &http.Client{}
+        client := &http.Client{
+            Timeout: 20 * time.Minute,
+        }
         resp, err := client.Do(req)
         if err != nil {
             return "", fmt.Errorf("error making request: %w", err)
@@ -238,7 +242,7 @@ func CallOpenAIAPI(prompt, project, mode, model, matchStrength string) (map[stri
 
     // Create a new HTTP client with a timeout
     client := &http.Client{
-        Timeout: 120 * time.Second, // Set timeout to 120 seconds
+        Timeout: 20 * time.Minute, // Set timeout to 120 seconds
     }
 
     resp, err := client.Do(req)
@@ -277,7 +281,9 @@ func getTokenCount(endpoint string, buffer *bytes.Buffer) (int, error) {
     req.Header.Set(config.Environment.ContentTypeKey, config.Environment.ContentTypeValue)
 
     // Create a new HTTP client and send the request
-    client := &http.Client{}
+    client := &http.Client{
+        Timeout: 20 * time.Minute,
+    }
     response, err := client.Do(req)
     if err != nil {
         return 0, fmt.Errorf("error sending request to token count endpoint: %w", err)

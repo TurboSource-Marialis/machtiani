@@ -63,20 +63,24 @@ def remove_duplicate_file_paths(file_paths: List[FilePathEntry]) -> List[FilePat
             unique_paths[entry.path] = entry
     return list(unique_paths.values())
 
-def send_prompt_to_openai(prompt_text: str, api_key: str, model: str = "gpt-4o-mini") -> str:
+def send_prompt_to_openai(prompt_text: str, api_key: str, model: str = "gpt-4o-mini", timeout: int = 3600, max_retries: int = 5) -> str:
     """
-    Sends a prompt to OpenAI and returns the response.
+    Sends a prompt to OpenAI using LangChain's ChatOpenAI class with the correct parameters.
 
     :param prompt_text: The text prompt to send to OpenAI.
     :param api_key: The API key for authentication with OpenAI.
     :param model: The model to use (default is "gpt-4o-mini").
+    :param timeout: Timeout in seconds for the request.
+    :param max_retries: Number of retry attempts in case of failure.
     :return: The response from OpenAI as a string.
     """
     # Define the prompt template
     prompt = PromptTemplate(input_variables=["input_text"], template="{input_text}")
 
-    # Initialize OpenAI LLM with the provided API key
-    openai_llm = ChatOpenAI(api_key=api_key, model=model)
+    # Initialize OpenAI LLM with proper configuration
+    openai_llm = ChatOpenAI(
+        openai_api_key=api_key, model=model, request_timeout=timeout, max_retries=max_retries
+    )
 
     # Chain the prompt and the LLM
     openai_chain = prompt | openai_llm
@@ -84,7 +88,6 @@ def send_prompt_to_openai(prompt_text: str, api_key: str, model: str = "gpt-4o-m
     # Execute the chain with the invoke method and return the response
     openai_response = openai_chain.invoke({"input_text": prompt_text})
     return openai_response.content
-
 
 def count_tokens(text: str) -> int:
     # Simple estimation: 1 token is approximately 4 characters (including spaces)
