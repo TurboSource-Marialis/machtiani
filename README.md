@@ -31,10 +31,10 @@ Additionally, while Machtiani aims to improve the relevance of retrieved files, 
 
 - [ ] Optional support for 'libre' hosted version.
 - [ ] Support open-source LLMs and other models (self-config).
-- [ ] Add as a submodule `aicommit` to help generate better commit messages, and even rewrite commits to Machtiani standards.
-- [ ] Cost management to assess indexing costs.
+- [x] Add as a submodule `aicommit` to help generate better commit messages, and even rewrite commits to Machtiani standards.
+- [x] Cost management to assess indexing costs.
 - [ ] Improve handling of file path changes in version control systems.
-- [ ] Auto-save results in `.machtiani/chat/` with context-aware naming.
+- [x] Auto-save results in `.machtiani/chat/` with context-aware naming.
 - [ ] Enhance the user interface and experience.
 
 ## Quick Launch
@@ -45,7 +45,7 @@ Additionally, while Machtiani aims to improve the relevance of retrieved files, 
    git clone --recurse-submodules <repo-url>.git machtiani
    ```
 
-2. Update the `machtiani-config.yml` file in the root of the `machtiani` directory with the following content:
+2. Place a `.machtiani-config.yml` file in the project root directory you're chatting with.
 
    ```yaml
    environment:
@@ -57,6 +57,8 @@ Additionally, while Machtiani aims to improve the relevance of retrieved files, 
      CONTENT_TYPE_KEY: "Content-Type"                  # Header key for Content-Type
      CONTENT_TYPE_VALUE: "application/json"             # Header value for Content-Type
    ```
+
+   Or place it in ~/.machtiani-config.yml aka $HOME, but any `.machtiani-config.yml` placed in your git project directory will override the one in $HOME.
 
    **Warning:** If the `OPENAI_API_KEY` is set, please be aware that costs will be incurred for embedding the prompt using the OpenAI API.
 
