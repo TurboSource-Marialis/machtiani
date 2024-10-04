@@ -39,8 +39,8 @@ def parse_repo_url(repo_url):
     """Return the repository URL as is for authentication."""
     return repo_url  # Simply return the repo_url without modification
 
-def force_push(repo_url, branch_name, username, token, git_dir):
-    """Force push changes to the specified branch of the remote repository."""
+def force_push(repo_url, from_branch, to_branch, username, token, git_dir):
+    """Force push changes from the specified branch to a target branch on the remote repository."""
     # Construct the repo_url_with_auth correctly
     if repo_url.startswith("https://"):
         repo_url_with_auth = f"{repo_url.replace('https://', '')}"
@@ -51,16 +51,17 @@ def force_push(repo_url, branch_name, username, token, git_dir):
 
     try:
         # Change to the specified Git directory before pushing
-        command = ['git', '-C', git_dir, 'push', repo_url_with_auth, branch_name, '--force']
+        command = ['git', '-C', git_dir, 'push', repo_url_with_auth, f"{from_branch}:{to_branch}", '--force']
         print(f"Running command: {' '.join(command)}")  # Debugging output
         subprocess.run(command, check=True)
-        print(f"Successfully force pushed to {repo_url} on branch {branch_name}.")
+        print(f"Successfully force pushed from {from_branch} to {to_branch} on {repo_url}.")
     except subprocess.CalledProcessError as e:
         print(f"An error occurred while pushing to the remote repository: {e}")
 
 def main():
-    parser = argparse.ArgumentParser(description='Force push changes to a remote git repository.')
-    parser.add_argument('branch_name', type=str, help='The name of the branch to push changes to.')
+    parser = argparse.ArgumentParser(description='Force push changes from a specified branch to a target branch in a remote git repository.')
+    parser.add_argument('--from', dest='from_branch', type=str, required=True, help='The name of the source branch to push from.')
+    parser.add_argument('--to', dest='to_branch', type=str, required=True, help='The name of the target branch to push to.')
     parser.add_argument('--remote', type=str, default='origin', help='The name of the remote repository (default: origin).')
     parser.add_argument('--git-dir', type=str, required=True, help='Path to the Git repository directory.')
     parser.add_argument('--username', type=str, required=True, help='Your Git username.')
@@ -88,23 +89,30 @@ def main():
     parsed_repo_url = parse_repo_url(remote_url)
 
     # Execute the force push operation
-    force_push(parsed_repo_url, args.branch_name, args.username, code_host_api_key, args.git_dir)
+    force_push(parsed_repo_url, args.from_branch, args.to_branch, args.username, code_host_api_key, args.git_dir)
 
 if __name__ == "__main__":
     main()
 
 #### Usage Instructions
 #
-#You can now run the script with the username passed as an argument:
+#You can now run the script with the new arguments:
 #
 #```bash
-#poetry run python scripts/force_push.py main --remote origin --git-dir data/git-projects/SWE-agent --username your_username
+#poetry run python scripts/force_push.py --from <source-branch> --to <target-branch> --remote origin --git-dir data/git-projects/SWE-agent --username 7db9a
+#```
+#
+#### Example
+#
+#If you want to force push from the `feature` branch to the `main` branch, you would use:
+#
+#```bash
+#poetry run python scripts/force_push.py --from feature --to main --remote origin --git-dir data/git-projects/SWE-agent --username 7db9a
 #```
 #
 #### Important Notes
 #
-#- **Username**: Ensure to replace `your_username` with your actual Git username when running the script.
-#- **Configuration**: The `machtiani-config.yml` file must still contain the `CODE_HOST_API_KEY` for authentication with the remote repository.
-#- **Debugging**: The command being executed to fetch the remote URL is printed to the console for easier debugging if issues arise.
+#- Ensure that both the source branch (`from_branch`) and the target branch (`to_branch`) exist in your local repository before running the script.
+#- Be cautious when using `--force`, as this can overwrite changes in the target branch on the remote repository.
 #
-#With these changes, the script should now work correctly while allowing you to specify the username dynamically. If you encounter any further issues, please let me know!
+#This should give you the flexibility you need to push changes between branches effectively. If you have any further questions or need additional modifications, feel free to ask!
