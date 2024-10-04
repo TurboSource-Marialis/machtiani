@@ -315,3 +315,6 @@ This web tool simplifies managing Git repositories through a user-friendly inter
     - [x] In app/main.py prompt engineer so each just returns a list of files rather than representing the entire json, less irrelevant entries. This should speed things up to get a response from model.
 - [x] Retrieve code host key and URLs from `.machtiani.config`.
 - [x] Ensure unique repo names are passed for data save.
+- [ ] End-to-end test coverage (strategic, not full).
+      - [ ] Test git-store
+      - [ ] Test git-sync
