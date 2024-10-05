@@ -22,7 +22,7 @@ type AddRepositoryResponse struct {
 
 
 
-func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey string, repoManagerURL string) (AddRepositoryResponse, error) {
+func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey string, repoManagerURL string, force bool) (AddRepositoryResponse, error) {
 	ignoreFilePath := ".machtiani.ignore"
 	ignoreFiles, err := utils.ReadIgnoreFile(ignoreFilePath)
 	if err != nil {
@@ -63,7 +63,8 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
     fmt.Printf("Estimated input tokens: %d\n", tokenCount)
 
     // Check if the user wants to proceed
-    if confirmProceed() {
+    // Check if the user wants to proceed or if force is enabled
+    if force || confirmProceed() {
         // Proceed with sending the POST request
         req, err := http.NewRequest("POST", fmt.Sprintf("%s/add-repository/", repoManagerURL), bytes.NewBuffer(jsonData))
         if err != nil {
@@ -111,7 +112,7 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
 }
 
 // FetchAndCheckoutBranch sends a request to fetch and checkout a branch.
-func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiKey *string, openAIAPIKey string) (string, error) {
+func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiKey *string, openAIAPIKey string, force bool) (string, error) {
 	ignoreFilePath := ".machtiani.ignore"
 	ignoreFiles, err := utils.ReadIgnoreFile(ignoreFilePath)
 	if err != nil {
@@ -154,7 +155,8 @@ func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiK
     }
     fmt.Printf("Estimated input tokens: %d\n", tokenCount)
 
-    if confirmProceed() {
+    // Check if the user wants to proceed or if force is enabled
+    if force || confirmProceed() {
         req, err := http.NewRequest("POST", fmt.Sprintf("%s/fetch-and-checkout/", repoManagerURL), bytes.NewBuffer(jsonData))
         if err != nil {
             return "", fmt.Errorf("error creating request: %w", err)

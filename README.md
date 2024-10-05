@@ -155,6 +155,7 @@ machtiani [flags] [prompt]
 - `-model string` (optional): Model to use. Options include `gpt-4o` or `gpt-4o-mini`. Default is `gpt-4o-mini`.
 - `-match-strength string` (optional): Match strength options are `high`, `mid`, or `low`. Default is `mid`.
 - `-mode string` (optional): Search mode, which can be `pure-chat`, `commit`, or `super`. Default is `commit`.
+- `--force` (optional): Skip confirmation prompt and proceed with the operation.
 
 ### Example Usage
 
@@ -191,7 +192,13 @@ machtiani [flags] [prompt]
    machtiani "Add a new endpoint to get stats." --model gpt-4o --mode pure-chat --match-strength high
    ```
 
-4. **Chat mode**
+4. **Using the `--force` flag to skip confirmation:**
+
+   ```bash
+   machtiani git-store --branch master --force
+   ```
+
+5. **Chat mode**
 
    ```bash
    machtiani --file .machtiani/chat/add_state_endpoint.md --mode pure-chat
@@ -219,15 +226,16 @@ The `git-store` command allows you to add a repository to the Machtiani system.
 
 **Usage:**
 ```bash
-machtiani git-store --branch <default branch> --remote <remote name>
+machtiani git-store --branch <default branch> --remote <remote name> [--force]
 ```
 
 - `--remote`: Optionally pass a remote name; otherwise, it will choose 'origin' from the git project directory you run this in.
 - `--branch`: Mandatory branch name of the default branch.
+- `--force`: Skip confirmation prompt and proceed with the operation.
 
 **Example:**
 ```bash
-machtiani git-store --branch master
+machtiani git-store --branch master --force
 ```
 
 #### `git-sync`
@@ -236,15 +244,16 @@ The `git-sync` command is used to fetch and checkout a specific branch of the re
 
 **Usage:**
 ```bash
-machtiani git-sync --branch <default branch> --remote <remote name>
+machtiani git-sync --branch <default branch> --remote <remote name> [--force]
 ```
 
 - `--remote`: Optionally pass a remote name; otherwise, it will choose 'origin' from the git project directory you run this in.
 - `--branch`: Mandatory branch name of the default branch.
+- `--force`: Skip confirmation prompt and proceed with the operation.
 
 **Example:**
 ```bash
-machtiani git-sync --branch main
+machtiani git-sync --branch main --force
 ```
 
 ### Ignoring Files with `.machtiani.ignore`

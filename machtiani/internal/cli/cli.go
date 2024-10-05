@@ -111,8 +111,8 @@ func Execute() {
     modeFlag := fs.String("mode", defaultMode, "Search mode: pure-chat, commit, or super")
     verboseFlag := fs.Bool("verbose", false, "Enable verbose output.")
     remoteName := fs.String("remote", "origin", "Name of the remote repository") // New remote flag
-
     branchName := fs.String("branch-name", "", "Branch name")
+    forceFlag := fs.Bool("force", false, "Skip confirmation prompt and proceed with the operation.")
 
     // Fetch the remote URL
     remoteURL, err := git.GetRemoteURL(*remoteName)
@@ -152,13 +152,13 @@ func Execute() {
         }
 
         // Call the new function to add the repository
-        _, err = api.AddRepository(codeURL, projectName, apiKey, config.Environment.ModelAPIKey, config.Environment.RepoManagerURL)
+        response, err := api.AddRepository(codeURL, projectName, apiKey, config.Environment.ModelAPIKey, config.Environment.RepoManagerURL, *forceFlag)
 
         if err != nil {
             log.Fatalf("Error adding repository: %v", err)
         }
 
-        fmt.Println("Repository successfully added.")
+        fmt.Println(response.Message)
 
         return // Exit after handling git-store
     }
@@ -181,7 +181,7 @@ func Execute() {
         }
 
         // Call the new function to fetch and checkout the branch
-        message, err := api.FetchAndCheckoutBranch(codeURL, projectName, *branchName, apiKey, config.Environment.ModelAPIKey)
+        message, err := api.FetchAndCheckoutBranch(codeURL, projectName, *branchName, apiKey, config.Environment.ModelAPIKey, *forceFlag)
         if err != nil {
             log.Fatalf("Error syncing repository: %v", err)
         }
