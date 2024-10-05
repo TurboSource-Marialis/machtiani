@@ -7,8 +7,11 @@ import (
     "path/filepath"
 	"bufio"
 	"strings"
+    "log"
+    "flag"
 
     "gopkg.in/yaml.v2"
+    "github.com/7db9a/machtiani/internal/git"
 )
 
 func CreateTempMarkdownFile(content string, filename string) (string, error) {
@@ -96,6 +99,21 @@ func LoadConfig() (Config, error) {
     return config, nil
 }
 
+func LoadConfigAndIgnoreFiles() (Config, []string, error) {
+    config, err := LoadConfig()
+    if err != nil {
+        return config, nil, fmt.Errorf("error loading config: %w", err)
+    }
+
+    ignoreFilePath := ".machtiani.ignore"
+    ignoreFiles, err := ReadIgnoreFile(ignoreFilePath)
+    if err != nil {
+        return config, nil, fmt.Errorf("error reading ignore file: %w", err)
+    }
+
+    return config, ignoreFiles, nil
+}
+
 func validateConfig(config Config) error {
     if config.Environment.MachtianiURL == "" {
         return fmt.Errorf("MACHTIANI_URL must be set")
@@ -147,3 +165,47 @@ func ReadIgnoreFile(fileName string) ([]string, error) {
 	return filePaths, nil
 }
 
+
+func GetAPIKey(config Config) *string {
+    if config.Environment.CodeHostAPIKey != "" {
+        return &config.Environment.CodeHostAPIKey
+    }
+    return nil
+}
+
+func GetRemoteURL(remoteName *string) (string, error) {
+    remoteURL, err := git.GetRemoteURL(*remoteName)
+    if err != nil {
+        return "", fmt.Errorf("Error fetching remote URL: %v", err)
+    }
+    return remoteURL, nil
+}
+
+func ParseFlags(fs *flag.FlagSet, args []string) error {
+    return fs.Parse(args)
+}
+
+func GetProjectOrDefault(projectFlag *string) (string, error) {
+    if *projectFlag == "" {
+
+        return git.GetProjectName()
+    }
+    return *projectFlag, nil
+}
+
+func ValidateFlags(modelFlag, matchStrengthFlag, modeFlag *string) {
+    model := *modelFlag
+    if model != "gpt-4o" && model != "gpt-4o-mini" {
+        log.Fatalf("Error: Invalid model selected. Choose either 'gpt-4o' or 'gpt-4o-mini'.")
+    }
+
+    matchStrength := *matchStrengthFlag
+    if matchStrength != "high" && matchStrength != "mid" && matchStrength != "low" {
+        log.Fatalf("Error: Invalid match strength selected. Choose either 'high', 'mid', or 'low'.")
+    }
+
+    mode := *modeFlag
+    if mode != "pure-chat" && mode != "commit" && mode != "super" {
+        log.Fatalf("Error: Invalid mode selected. Choose either 'chat', 'commit', or 'super'.")
+    }
+}

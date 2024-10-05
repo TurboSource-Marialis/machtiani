@@ -15,7 +15,6 @@ import (
     "context"
 
     "github.com/7db9a/machtiani/internal/api"
-    "github.com/7db9a/machtiani/internal/git"
     "github.com/7db9a/machtiani/internal/utils"
     "github.com/charmbracelet/glamour"
     "github.com/sashabaranov/go-openai" // Ensure you import the OpenAI package
@@ -105,83 +104,57 @@ func Execute() {
     }
 
     fs := flag.NewFlagSet("machtiani", flag.ContinueOnError)
-    fileFlag := fs.String("file", "", "Path to the markdown file") // Changed here
+    fileFlag := fs.String("file", "", "Path to the markdown file")
     modelFlag := fs.String("model", defaultModel, "Model to use (options: gpt-4o, gpt-4o-mini)")
     matchStrengthFlag := fs.String("match-strength", defaultMatchStrength, "Match strength (options: high, mid, low)")
     modeFlag := fs.String("mode", defaultMode, "Search mode: pure-chat, commit, or super")
     verboseFlag := fs.Bool("verbose", false, "Enable verbose output.")
-    remoteName := fs.String("remote", "origin", "Name of the remote repository") // New remote flag
+    remoteName := fs.String("remote", "origin", "Name of the remote repository")
     branchName := fs.String("branch-name", "", "Branch name")
     forceFlag := fs.Bool("force", false, "Skip confirmation prompt and proceed with the operation.")
 
-    // Fetch the remote URL
-    remoteURL, err := git.GetRemoteURL(*remoteName)
+    // Use the new remote URL function
+    remoteURL, err := utils.GetRemoteURL(remoteName)
     if err != nil {
-        log.Fatalf("Error fetching remote URL: %v", err)
+        log.Fatalf(err.Error())
     }
-
-    // Use the remote URL as needed in your application
     fmt.Printf("Using remote URL: %s\n", remoteURL)
+    projectName :=  remoteURL
 
-    var codeURL string
-    // Replace codeURL assignment to use remoteURL if it's not already set
-    if codeURL == "" {
-        codeURL = remoteURL
-    }
+    var apiKey *string = utils.GetAPIKey(config)
 
-    projectName := codeURL
-
-    var apiKey *string
 
     args := os.Args[1:]
 
     if len(os.Args) >= 2 && os.Args[1] == "git-store" {
-        err := fs.Parse(args[1:]) // Parse flags after the command
+        err := utils.ParseFlags(fs, args[1:]) // Parse flags after the command
         if err != nil {
             log.Fatalf("Error parsing flags: %v", err)
         }
 
-        if codeURL == "" {
-            log.Fatal("Error: code URL must be provided.")
-        }
-
-        if config.Environment.CodeHostAPIKey != "" {
-            apiKey = &config.Environment.CodeHostAPIKey
-        } else {
-            apiKey = nil
-        }
-
         // Call the new function to add the repository
-        response, err := api.AddRepository(codeURL, projectName, apiKey, config.Environment.ModelAPIKey, config.Environment.RepoManagerURL, *forceFlag)
-
+        response, err := api.AddRepository(remoteURL, remoteURL, apiKey, config.Environment.ModelAPIKey, config.Environment.RepoManagerURL, *forceFlag)
         if err != nil {
             log.Fatalf("Error adding repository: %v", err)
         }
 
         fmt.Println(response.Message)
-
         return // Exit after handling git-store
     }
 
     // Check if the command is git-sync
     if len(os.Args) >= 2 && os.Args[1] == "git-sync" {
-        err := fs.Parse(args[1:]) // Parse flags after the command
+        err := utils.ParseFlags(fs, args[1:]) // Parse flags after the command
         if err != nil {
             log.Fatalf("Error parsing flags: %v", err)
         }
 
-        if codeURL == "" || *branchName == "" {
+        if remoteURL == "" || *branchName == "" {
             log.Fatal("Error: all flags --code-url, --branch-name must be provided.")
         }
 
-        if config.Environment.CodeHostAPIKey != "" {
-            apiKey = &config.Environment.CodeHostAPIKey
-        } else {
-            apiKey = nil
-        }
-
         // Call the new function to fetch and checkout the branch
-        message, err := api.FetchAndCheckoutBranch(codeURL, projectName, *branchName, apiKey, config.Environment.ModelAPIKey, *forceFlag)
+        message, err := api.FetchAndCheckoutBranch(remoteURL, remoteURL, *branchName, apiKey, config.Environment.ModelAPIKey, *forceFlag)
         if err != nil {
             log.Fatalf("Error syncing repository: %v", err)
         }
@@ -215,7 +188,7 @@ func Execute() {
         log.Fatalf("Error getting project name: %v", err)
     }
 
-    validateFlags(modelFlag, matchStrengthFlag, modeFlag)
+    utils.ValidateFlags(modelFlag, matchStrengthFlag, modeFlag)
 
     if *fileFlag != "" {
         content, err := ioutil.ReadFile(*fileFlag)
@@ -371,30 +344,6 @@ func runAicommit(args []string) {
     }
 
     // No need to perform git commit manually; aicommit handles it
-}
-
-func getProjectOrDefault(projectFlag *string) (string, error) {
-    if *projectFlag == "" {
-        return git.GetProjectName()
-    }
-    return *projectFlag, nil
-}
-
-func validateFlags(modelFlag, matchStrengthFlag, modeFlag *string) {
-    model := *modelFlag
-    if model != "gpt-4o" && model != "gpt-4o-mini" {
-        log.Fatalf("Error: Invalid model selected. Choose either 'gpt-4o' or 'gpt-4o-mini'.")
-    }
-
-    matchStrength := *matchStrengthFlag
-    if matchStrength != "high" && matchStrength != "mid" && matchStrength != "low" {
-        log.Fatalf("Error: Invalid match strength selected. Choose either 'high', 'mid', or 'low'.")
-    }
-
-    mode := *modeFlag
-    if mode != "pure-chat" && mode != "commit" && mode != "super" {
-        log.Fatalf("Error: Invalid mode selected. Choose either 'chat', 'commit', or 'super'.")
-    }
 }
 
 func printVerboseInfo(markdown, model, matchStrength, mode, prompt string) {

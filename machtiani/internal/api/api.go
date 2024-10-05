@@ -23,29 +23,28 @@ type AddRepositoryResponse struct {
 
 
 func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey string, repoManagerURL string, force bool) (AddRepositoryResponse, error) {
-	ignoreFilePath := ".machtiani.ignore"
-	ignoreFiles, err := utils.ReadIgnoreFile(ignoreFilePath)
-	if err != nil {
-		fmt.Printf("Error: %v\n", err)
-	}
-
-	// Print the file paths
-	fmt.Println("Parsed file paths from machtiani.ignore:")
-	for _, path := range ignoreFiles {
-		fmt.Println(path)
-	}
-    config, err := utils.LoadConfig()
+    config, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
     if err != nil {
-        log.Fatalf("Error loading config: %v", err)
+        return AddRepositoryResponse{}, err
     }
+
+    // Print the file paths
+    fmt.Println() // Prints a new line
+    fmt.Println("Ignoring files based on .machtiani.ignore:")
+    fmt.Println() // Prints another new line
+
+    for _, path := range ignoreFiles {
+        fmt.Println(path)
+    }
+
     // Prepare the data to be sent in the request
     data := map[string]interface{}{
         "codehost_url":   codeURL,
         "project_name":   name,
-        "vcs_type":       "git",  // Default value for VCS type
-        "api_key":        apiKey, // This can be nil
-        "model_api_key": openAIAPIKey, // This can also be nil
-        "ignore_files": ignoreFiles,
+        "vcs_type":       "git",
+        "api_key":        apiKey,
+        "model_api_key":  openAIAPIKey,
+        "ignore_files":   ignoreFiles,
     }
 
     // Convert data to JSON
@@ -113,29 +112,25 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
 
 // FetchAndCheckoutBranch sends a request to fetch and checkout a branch.
 func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiKey *string, openAIAPIKey string, force bool) (string, error) {
-	ignoreFilePath := ".machtiani.ignore"
-	ignoreFiles, err := utils.ReadIgnoreFile(ignoreFilePath)
-	if err != nil {
-		fmt.Printf("Error: %v\n", err)
-	}
-
-	// Print the file paths
-	fmt.Println("Parsed file paths from machtiani.ignore:")
-	for _, path := range ignoreFiles {
-		fmt.Println(path)
-	}
-    config, err := utils.LoadConfig()
+    config, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
     if err != nil {
-        return "", fmt.Errorf("error loading config: %w", err)
+        return "", err
     }
 
+    // Print the file paths
+    fmt.Println("Parsed file paths from machtiani.ignore:")
+    for _, path := range ignoreFiles {
+        fmt.Println(path)
+    }
+
+    // Prepare the data to be sent in the request
     data := map[string]interface{}{
-        "codehost_url":    codeURL,
-        "project_name":    name,
-        "branch_name":     branchName,
-        "api_key":         apiKey,
+        "codehost_url":   codeURL,
+        "project_name":   name,
+        "branch_name":    branchName,
+        "api_key":       apiKey,
         "model_api_key": openAIAPIKey,
-        "ignore_files": ignoreFiles,
+        "ignore_files":  ignoreFiles,
     }
 
     jsonData, err := json.Marshal(data)
