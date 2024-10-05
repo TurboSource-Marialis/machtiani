@@ -232,7 +232,7 @@ func Execute() {
     }
 
     // Call OpenAI API to generate response
-    apiResponse, err := api.CallOpenAIAPI(prompt, projectName, *modeFlag, *modelFlag, *matchStrengthFlag)
+apiResponse, err := api.CallOpenAIAPI(prompt, projectName, *modeFlag, *modelFlag, *matchStrengthFlag, *forceFlag)
     if err != nil {
         log.Fatalf("Error making API call: %v", err)
     }

@@ -193,7 +193,7 @@ func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiK
     }
 }
 
-func CallOpenAIAPI(prompt, project, mode, model, matchStrength string) (map[string]interface{}, error) {
+func CallOpenAIAPI(prompt, project, mode, model, matchStrength string, force bool) (map[string]interface{}, error) {
     config, err := utils.LoadConfig()
     if err != nil {
         log.Fatalf("Error loading config: %v", err)
@@ -232,7 +232,7 @@ func CallOpenAIAPI(prompt, project, mode, model, matchStrength string) (map[stri
     fmt.Printf("Estimated input tokens: %d\n", tokenCount)
 
     // Step 2: Confirm to proceed
-    if !confirmProceed() {
+    if !force && !confirmProceed() {
         return nil, fmt.Errorf("operation aborted by user")
     }
 
