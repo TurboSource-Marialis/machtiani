@@ -162,22 +162,28 @@ async def generate_response(
 
                 # Step 2: Get file summaries for each retrieved file path
                 file_summaries = {}
-                for entry in file_paths_payload:
-                    file_path = entry["path"]
-                    try:
-                        file_summary_response = await client.get(
-                            get_file_summary_url, params={"file_path": file_path}
-                        )
-                        file_summary_response.raise_for_status()
-                        summary_data = file_summary_response.json()
-                        file_summaries[file_path] = summary_data["summary"]  # Store the summary in the dictionary
-                    except httpx.HTTPStatusError as exc:
-                        if exc.response.status_code == 404:
-                            logger.warning(f"No summary found for file path: {file_path}")
-                            continue
-                        else:
-                            logger.error(f"HTTP status error: {exc.response.json()}")
-                            raise
+                file_paths_to_summarize = [entry["path"] for entry in file_paths_payload]  # Extract file paths
+
+                try:
+                    # Make a single request to get summaries for all file paths at once
+                    file_summary_response = await client.get(
+                        get_file_summary_url,
+                        params={"file_paths": file_paths_to_summarize, "project_name": project}
+                    )
+                    file_summary_response.raise_for_status()
+
+                    summary_data = file_summary_response.json()
+
+                    for summary in summary_data:
+                        file_path = summary["file_path"]
+                        file_summaries[file_path] = summary["summary"]  # Store the summary in the dictionary
+
+                except httpx.HTTPStatusError as exc:
+                    if exc.response.status_code == 404:
+                        logger.warning(f"No summary found for one or more file paths.")
+                    else:
+                        logger.error(f"HTTP status error: {exc.response.json()}")
+                        raise
 
                 if not file_summaries:
                     logger.error("No summaries found for any of the files.")
