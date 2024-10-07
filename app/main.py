@@ -2,13 +2,14 @@ import httpx
 import yaml
 from fastapi import FastAPI, Body, Query, HTTPException
 from typing import Optional, List, Dict, Union
-from contextlib import contextmanager
+from contextlib import asynccontextmanager
 from .utils import (
     aggregate_file_paths,
     remove_duplicate_file_paths,
     send_prompt_to_openai,
     FileContentResponse,
     count_tokens,
+    add_sys_path
 )
 import sys
 import os
@@ -28,38 +29,9 @@ TOKEN_LIMITS = {
 logger = logging.getLogger("uvicorn")
 logger.info("Application is starting up...")
 
+path_to_add = os.path.abspath('/app/machtiani-commit-file-retrieval/lib')
+logger.info("Adding to sys.path: %s", path_to_add)
 
-@contextmanager
-def add_sys_path(path):
-    original_sys_path = sys.path.copy()
-    sys.path.append(path)
-    try:
-        yield
-    finally:
-        sys.path = original_sys_path
-
-
-# Update the path to correctly point to machtiani-commit-file-retrieval/lib
-path_to_add = os.path.abspath("/app/machtiani-commit-file-retrieval/lib")
-print("Adding to sys.path:", path_to_add)
-sys.path.append(path_to_add)
-
-print("Current sys.path:", sys.path)
-
-# Check if the path is correct
-if os.path.exists(path_to_add):
-    print("Path exists:", path_to_add)
-    print("Contents of the path:", os.listdir(path_to_add))
-else:
-    print("Path does not exist:", path_to_add)
-
-# Attempt to list directories where 'lib' should be
-if os.path.exists(os.path.join(path_to_add, "utils")):
-    print("Contents of 'utils' directory:", os.listdir(os.path.join(path_to_add, "utils")))
-else:
-    print("No 'utils' directory found at", os.path.join(path_to_add, "utils"))
-
-# Import statements
 try:
     with add_sys_path(path_to_add):
         from utils.enums import (
@@ -71,11 +43,13 @@ try:
             VCSType,
             AddRepositoryRequest,
             FetchAndCheckoutBranchRequest,
+            FileContentResponse
         )
-    print("Imports successful.")
+    logger.info("Imports successful.")
 except ModuleNotFoundError as e:
-    print(f"ModuleNotFoundError: {e}")
-    print("Failed to import the module. Please check the paths and directory structure.")
+    logger.error(f"ModuleNotFoundError: {e}")
+    logger.error("Failed to import the module. Please check the paths and directory structure.")
+
 
 
 @app.get("/generate-filename", response_model=str)
@@ -91,7 +65,7 @@ async def generate_filename(
         "<filename>example_filename</filename>"
     )
 
-    response = send_prompt_to_openai(filename_prompt, api_key, model="gpt-4o-mini")
+    response = await send_prompt_to_openai(filename_prompt, api_key, model="gpt-4o-mini")
     logger.info(f"OpenAI response: {response}")
 
     match = re.search(r"<filename>\s*(.*?)\s*</filename>", response, re.DOTALL | re.IGNORECASE)
@@ -150,8 +124,8 @@ async def generate_response(
                 response.raise_for_status()
                 list_file_search_response = [FileSearchResponse(**item) for item in response.json()]
 
-                list_file_path_entry = aggregate_file_paths(list_file_search_response)
-                list_file_path_entry = remove_duplicate_file_paths(list_file_path_entry)
+                list_file_path_entry = await aggregate_file_paths(list_file_search_response)
+                list_file_path_entry = await remove_duplicate_file_paths(list_file_path_entry)
                 list_file_path_entry = [entry for entry in list_file_path_entry if entry.path not in ignore_files]
 
                 file_paths_payload = [entry.dict() for entry in list_file_path_entry]
@@ -199,7 +173,7 @@ async def generate_response(
                 )
 
                 # Send the summaries prompt to OpenAI
-                openai_response = send_prompt_to_openai(summary_prompt, api_key, model)
+                openai_response = await send_prompt_to_openai(summary_prompt, api_key, model)
 
                 # Step 4: Parse the OpenAI response for paths encapsulated between `---`
                 match = re.search(r"---\s*(.*?)\s*---", openai_response, re.DOTALL)
@@ -236,7 +210,7 @@ async def generate_response(
                     combined_prompt += f"\n--- {path} ---\n{content}\n"
 
             # Count tokens in the combined prompt
-            token_count = count_tokens(combined_prompt)
+            token_count = await count_tokens(combined_prompt)
             max_tokens = TOKEN_LIMITS[model]
             logger.info(f"model: {model}, token count: {token_count}, max limit: {max_tokens}")
 
@@ -249,7 +223,7 @@ async def generate_response(
                 logger.error(error_message)
                 return {"error": error_message}
 
-            openai_response = send_prompt_to_openai(combined_prompt, api_key, model)
+            openai_response = await send_prompt_to_openai(combined_prompt, api_key, model)
 
             return {"openai_response": openai_response, "retrieved_file_paths": retrieved_file_paths}
 
@@ -262,4 +236,3 @@ async def generate_response(
     except Exception as e:
         logger.exception("Unexpected error occurred")
         return {"error": f"An unexpected error occurred: {str(e)}"}
-
