@@ -52,8 +52,11 @@ async def send_prompt_to_openai(prompt_text: str, api_key: str, model: str = "gp
     prompt = PromptTemplate(input_variables=["input_text"], template="{input_text}")
     openai_llm = ChatOpenAI(openai_api_key=api_key, model=model, request_timeout=timeout, max_retries=max_retries)
     openai_chain = prompt | openai_llm
-    openai_response = openai_chain.invoke({"input_text": prompt_text})
-    return openai_response.content
+
+    # Use apredict instead of arun for async execution
+    openai_response = await openai_llm.apredict(prompt.format(input_text=prompt_text))
+    return openai_response
 
 async def count_tokens(text: str) -> int:
     return len(text) // 4 + 1
+
