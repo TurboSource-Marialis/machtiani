@@ -10,4 +10,4 @@ services:
       - "443:443"
     env_file:
       - api-gateway/.env
-    command: ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
+    command: ["sh", "-c", "caddy fmt --overwrite /etc/caddy/Caddyfile && caddy run --config /etc/caddy/Caddyfile --adapter caddyfile"]
