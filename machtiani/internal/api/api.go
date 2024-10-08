@@ -201,6 +201,7 @@ func CallOpenAIAPI(prompt, project, mode, model, matchStrength string, force boo
         "model":          model,
         "match_strength": matchStrength,
         "api_key": config.Environment.ModelAPIKey,
+        "codehost_api_key": config.Environment.CodeHostAPIKey, // Include codehost_api_key
     }
 
     payloadBytes, err := json.Marshal(payload)
@@ -215,7 +216,7 @@ func CallOpenAIAPI(prompt, project, mode, model, matchStrength string, force boo
 
     repoManagerURL := config.Environment.RepoManagerURL
 
-    // Get token count
+    // Check token count
     tokenCount, err := getTokenCount(fmt.Sprintf("%s/generate-response/", repoManagerURL), bytes.NewBuffer(payloadBytes))
 
     req, err := http.NewRequest("POST", fmt.Sprintf("%s/generate-response", endpoint), bytes.NewBuffer(payloadBytes))
@@ -226,7 +227,7 @@ func CallOpenAIAPI(prompt, project, mode, model, matchStrength string, force boo
 
     fmt.Printf("Estimated input tokens: %d\n", tokenCount)
 
-    // Step 2: Confirm to proceed
+    // Confirm to proceed
     if !force && !confirmProceed() {
         return nil, fmt.Errorf("operation aborted by user")
     }
@@ -239,7 +240,7 @@ func CallOpenAIAPI(prompt, project, mode, model, matchStrength string, force boo
 
     // Create a new HTTP client with a timeout
     client := &http.Client{
-        Timeout: 20 * time.Minute, // Set timeout to 120 seconds
+        Timeout: 20 * time.Minute,
     }
 
     resp, err := client.Do(req)

@@ -64,7 +64,8 @@ func generateFilename(context string, apiKey string) (string, error) {
         return "", fmt.Errorf("MACHTIANI_URL environment variable is not set")
     }
 
-    url := fmt.Sprintf("%s/generate-filename?context=%s&api_key=%s", endpoint, url.QueryEscape(context), url.QueryEscape(apiKey)) 
+
+    url := fmt.Sprintf("%s/generate-filename?context=%s&api_key=%s", endpoint, url.QueryEscape(context), url.QueryEscape(apiKey))
 
     req, err := http.NewRequest("GET", url, nil)
     if err != nil {

@@ -1,6 +1,7 @@
 import httpx
 import yaml
 from fastapi import FastAPI, Body, Query, HTTPException
+from pydantic import SecretStr
 from typing import Optional, List, Dict, Union
 from contextlib import asynccontextmanager
 from .utils import (
@@ -51,7 +52,6 @@ except ModuleNotFoundError as e:
     logger.error("Failed to import the module. Please check the paths and directory structure.")
 
 
-
 @app.get("/generate-filename", response_model=str)
 async def generate_filename(
     context: str = Query(..., description="Context to create filename"),
@@ -86,25 +86,22 @@ async def generate_response(
     model: str = Body(..., description="The embedding model used"),
     match_strength: str = Body(..., description="The strength of the match"),
     api_key: str = Body(..., description="API key for OpenAI model"),
+    codehost_api_key: SecretStr = Body(..., description="Code host API key for authentication"),
 ):
+    # Existing logic remains unchanged
     if model not in TOKEN_LIMITS:
         return {"error": "Invalid model selected. Choose either 'gpt-4o' or 'gpt-4o-mini'."}
 
     if match_strength not in ["high", "mid", "low"]:
         return {"error": "Invalid match strength selected. Choose either 'high', 'mid', or 'low'."}
 
-    infer_file_url = "http://commit-file-retrieval:5070/infer-file/"
-    retrieve_file_contents_url = f"http://commit-file-retrieval:5070/retrieve-file-contents/?project_name={project}"
-    get_file_summary_url = f"http://commit-file-retrieval:5070/get-file-summary/?project_name={project}"
+    # Define base URL for the commit-file-retrieval service
+    base_url = "http://commit-file-retrieval:5070"
 
-    params = {
-        "prompt": prompt,
-        "project": project,
-        "mode": mode,
-        "model": model,
-        "match_strength": match_strength,
-        "api_key": api_key,
-    }
+    infer_file_url = f"{base_url}/infer-file/"
+    retrieve_file_contents_url = f"{base_url}/retrieve-file-contents/?project_name={project}"
+    get_file_summary_url = f"{base_url}/get-file-summary/?project_name={project}"
+    test_pull_access_url = f"{base_url}/test-pull-access/"
 
     ignore_files = []
     try:
@@ -115,11 +112,30 @@ async def generate_response(
 
     try:
         async with httpx.AsyncClient(timeout=httpx.Timeout(1200, read=1200.0)) as client:
+            # Check for pull access before proceeding
+            params = {
+                'project_name': project,
+                'codehost_api_key': codehost_api_key.get_secret_value()
+            }
+            pull_access_response = await client.post(test_pull_access_url, params=params)
+            pull_access_response.raise_for_status()
+            pull_access_data = pull_access_response.json()
+            if not pull_access_data.get('pull_access', False):
+                raise HTTPException(status_code=403, detail="Pull access denied.")
+
             if mode == SearchMode.pure_chat:
                 combined_prompt = prompt
                 retrieved_file_paths = []
             else:
                 # Step 1: Retrieve file paths from the service
+                params = {
+                    "prompt": prompt,
+                    "project": project,
+                    "mode": mode,
+                    "model": model,
+                    "match_strength": match_strength,
+                    "api_key": api_key,
+                }
                 response = await client.post(infer_file_url, json=params)
                 response.raise_for_status()
                 list_file_search_response = [FileSearchResponse(**item) for item in response.json()]
@@ -229,10 +245,11 @@ async def generate_response(
 
     except httpx.RequestError as exc:
         logger.error(f"Request error: {exc}")
-        return {"error": f"Error connecting to machtiani-commit-file-retrieval: {exc}"}
+        return {"error": f"Error connecting to commit-file-retrieval service: {exc}"}
     except httpx.HTTPStatusError as exc:
         logger.error(f"HTTP status error: {exc.response.json()}")
-        return {"error": f"Error response from machtiani-commit-file-retrieval: {exc.response.json()}"}
+        return {"error": f"Error response from commit-file-retrieval service: {exc.response.json()}"}
     except Exception as e:
         logger.exception("Unexpected error occurred")
         return {"error": f"An unexpected error occurred: {str(e)}"}
+
