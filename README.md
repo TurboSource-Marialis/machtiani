@@ -322,6 +322,7 @@ This web tool simplifies managing Git repositories through a user-friendly inter
     - [ ] Round robin several instances when behind api-gateway.
     - [ ] In `commit-file-retrieval`, fetching of summaries once list of files found could be done async and simultaneously.
     - [x] In app/main.py prompt engineer so each just returns a list of files rather than representing the entire json, less irrelevant entries. This should speed things up to get a response from model.
+    - [x] Cannot sync unless you have push access, but you can store a repo without (so long as its public).
 - [x] Retrieve code host key and URLs from `.machtiani.config`.
 - [x] Ensure unique repo names are passed for data save.
 - [ ] End-to-end test coverage (strategic, not full).
