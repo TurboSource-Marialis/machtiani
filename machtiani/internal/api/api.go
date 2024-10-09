@@ -21,6 +21,10 @@ type AddRepositoryResponse struct {
 }
 
 
+type DeleteStoreResponse struct {
+    Message string `json:"message"`
+}
+
 
 func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey string, repoManagerURL string, force bool) (AddRepositoryResponse, error) {
     config, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
@@ -204,6 +208,76 @@ func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiK
         return fmt.Sprintf("Successfully synced the repository: %s.\nServer response: %s", name, string(body)), nil
     } else {
         return "Operation aborted by user", nil
+    }
+}
+
+func DeleteStore(projectName string, apiKey *string, repoManagerURL string, force bool) (DeleteStoreResponse, error) {
+    config, _, err := utils.LoadConfigAndIgnoreFiles()
+    if err != nil {
+        return DeleteStoreResponse{}, err
+    }
+
+    if force || confirmProceed() {
+        // Start the spinner
+        done := make(chan bool)
+        go utils.Spinner(done)
+
+        // Prepare the data to be sent in the request
+        data := map[string]interface{}{
+            "project_name": projectName,
+            "api_key":      apiKey,
+        }
+
+        // Convert data to JSON
+        jsonData, err := json.Marshal(data)
+        if err != nil {
+            return DeleteStoreResponse{}, fmt.Errorf("error marshaling JSON: %w", err)
+        }
+
+        // Create the HTTP request
+        req, err := http.NewRequest("POST", fmt.Sprintf("%s/delete-store/", repoManagerURL), bytes.NewBuffer(jsonData))
+        if err != nil {
+            return DeleteStoreResponse{}, fmt.Errorf("error creating request: %w", err)
+        }
+
+        // Set API Gateway headers if not blank
+        if config.Environment.APIGatewayHostKey != "" && config.Environment.APIGatewayHostValue != "" {
+            req.Header.Set(config.Environment.APIGatewayHostKey, config.Environment.APIGatewayHostValue)
+        }
+        req.Header.Set(config.Environment.ContentTypeKey, config.Environment.ContentTypeValue)
+
+        client := &http.Client{
+            Timeout: 20 * time.Minute,
+        }
+        resp, err := client.Do(req)
+        if err != nil {
+            return DeleteStoreResponse{}, fmt.Errorf("error sending request to delete store: %w", err)
+        }
+        defer resp.Body.Close()
+
+        // Handle the response
+        if resp.StatusCode != http.StatusOK {
+            body, _ := ioutil.ReadAll(resp.Body)
+            return DeleteStoreResponse{}, fmt.Errorf("error deleting store: %s", body)
+        }
+
+        // Stop the spinner
+        done <- true
+
+        // Successfully deleted the repository, decode the response into the defined struct
+        var responseMessage DeleteStoreResponse
+        if err := json.NewDecoder(resp.Body).Decode(&responseMessage); err != nil {
+            return DeleteStoreResponse{}, fmt.Errorf("error decoding response: %w", err)
+        }
+
+        return responseMessage, nil
+
+    } else {
+        abortedResponse := DeleteStoreResponse{
+            Message:              "Operation aborted by user",
+        }
+
+        return abortedResponse, nil
     }
 }
 

@@ -165,6 +165,27 @@ func Execute() {
         return
     }
 
+    if len(os.Args) >= 2 && os.Args[1] == "git-delete" {
+        err := utils.ParseFlags(fs, args[1:]) // Parse flags after the command
+        if err != nil {
+            log.Fatalf("Error parsing flags: %v", err)
+        }
+
+        // Check if project name is provided
+        if remoteURL == "" {
+            log.Fatal("Error: --remote must be provided.")
+        }
+
+        // Call the new function to delete the repository
+        response, err := api.DeleteStore(remoteURL, apiKey, config.Environment.RepoManagerURL,  *forceFlag)
+        if err != nil {
+            log.Fatalf("Error deleting store: %v", err)
+        }
+
+        fmt.Println(response.Message)
+        return // Exit after handling git-delete
+    }
+
     var promptParts []string
     var flagArgs []string
 

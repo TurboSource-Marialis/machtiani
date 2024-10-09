@@ -225,3 +225,4 @@ func Spinner(done chan bool) {
         }
     }
 }
+
