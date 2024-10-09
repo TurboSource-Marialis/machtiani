@@ -171,13 +171,16 @@ func Execute() {
             log.Fatalf("Error parsing flags: %v", err)
         }
 
-        // Check if project name is provided
         if remoteURL == "" {
             log.Fatal("Error: --remote must be provided.")
         }
 
-        // Call the new function to delete the repository
-        response, err := api.DeleteStore(remoteURL, apiKey, config.Environment.RepoManagerURL,  *forceFlag)
+        ignoreFiles := []string{} // Populate this list as needed
+        vcsType := "git" // Set the VCS type as needed
+        openaiAPIKey := config.Environment.ModelAPIKey // Adjust as necessary
+
+        // Call the updated DeleteStore function
+        response, err := api.DeleteStore(projectName, remoteURL, ignoreFiles, vcsType, apiKey, &openaiAPIKey, config.Environment.RepoManagerURL, *forceFlag)
         if err != nil {
             log.Fatalf("Error deleting store: %v", err)
         }

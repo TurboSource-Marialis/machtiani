@@ -211,30 +211,31 @@ func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiK
     }
 }
 
-func DeleteStore(projectName string, apiKey *string, repoManagerURL string, force bool) (DeleteStoreResponse, error) {
+func DeleteStore(projectName string, codehostURL string, ignoreFiles []string, vcsType string, apiKey *string, openaiAPIKey *string, repoManagerURL string, force bool) (DeleteStoreResponse, error) {
     config, _, err := utils.LoadConfigAndIgnoreFiles()
     if err != nil {
         return DeleteStoreResponse{}, err
     }
 
     if force || confirmProceed() {
-        // Start the spinner
         done := make(chan bool)
         go utils.Spinner(done)
 
         // Prepare the data to be sent in the request
         data := map[string]interface{}{
-            "project_name": projectName,
-            "api_key":      apiKey,
+            "project_name":   projectName,
+            "codehost_url":   codehostURL,
+            "ignore_files":    ignoreFiles,
+            "vcs_type":       vcsType,
+            "api_key":        apiKey,
+            "openai_api_key": openaiAPIKey,
         }
 
-        // Convert data to JSON
         jsonData, err := json.Marshal(data)
         if err != nil {
             return DeleteStoreResponse{}, fmt.Errorf("error marshaling JSON: %w", err)
         }
 
-        // Create the HTTP request
         req, err := http.NewRequest("POST", fmt.Sprintf("%s/delete-store/", repoManagerURL), bytes.NewBuffer(jsonData))
         if err != nil {
             return DeleteStoreResponse{}, fmt.Errorf("error creating request: %w", err)
@@ -255,16 +256,13 @@ func DeleteStore(projectName string, apiKey *string, repoManagerURL string, forc
         }
         defer resp.Body.Close()
 
-        // Handle the response
         if resp.StatusCode != http.StatusOK {
             body, _ := ioutil.ReadAll(resp.Body)
             return DeleteStoreResponse{}, fmt.Errorf("error deleting store: %s", body)
         }
 
-        // Stop the spinner
         done <- true
 
-        // Successfully deleted the repository, decode the response into the defined struct
         var responseMessage DeleteStoreResponse
         if err := json.NewDecoder(resp.Body).Decode(&responseMessage); err != nil {
             return DeleteStoreResponse{}, fmt.Errorf("error decoding response: %w", err)
@@ -274,7 +272,7 @@ func DeleteStore(projectName string, apiKey *string, repoManagerURL string, forc
 
     } else {
         abortedResponse := DeleteStoreResponse{
-            Message:              "Operation aborted by user",
+            Message: "Operation aborted by user",
         }
 
         return abortedResponse, nil
