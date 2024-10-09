@@ -9,6 +9,7 @@ import (
 	"strings"
     "log"
     "flag"
+    "time"
 
     "gopkg.in/yaml.v2"
     "github.com/7db9a/machtiani/internal/git"
@@ -207,5 +208,20 @@ func ValidateFlags(modelFlag, matchStrengthFlag, modeFlag *string) {
     mode := *modeFlag
     if mode != "pure-chat" && mode != "commit" && mode != "super" {
         log.Fatalf("Error: Invalid mode selected. Choose either 'chat', 'commit', or 'super'.")
+    }
+}
+
+func Spinner(done chan bool) {
+    symbols := []rune{'|', '/', '-', '\\'}
+    i := 0
+    for {
+        select {
+        case <-done:
+            return
+        default:
+            fmt.Printf("\r%c", symbols[i])
+            i = (i + 1) % len(symbols)
+            time.Sleep(100 * time.Millisecond) // adjust the speed of the spinner here
+        }
     }
 }

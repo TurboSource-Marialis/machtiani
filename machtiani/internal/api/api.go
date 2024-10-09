@@ -64,6 +64,10 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
     // Check if the user wants to proceed
     // Check if the user wants to proceed or if force is enabled
     if force || confirmProceed() {
+        // Start the spinner
+        done := make(chan bool)
+        go utils.Spinner(done)
+
         // Proceed with sending the POST request
         req, err := http.NewRequest("POST", fmt.Sprintf("%s/add-repository/", repoManagerURL), bytes.NewBuffer(jsonData))
         if err != nil {
@@ -90,6 +94,11 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
             body, _ := ioutil.ReadAll(resp.Body)
             return AddRepositoryResponse{}, fmt.Errorf("error adding repository: %s", body)
         }
+        // Stop the spinner
+        done <- true
+
+        // Clear the spinner on completion
+        fmt.Print("\r ") // Clear the spinner output
 
         // Successfully added the repository, decode the response into the defined struct
         var responseMessage AddRepositoryResponse
@@ -152,6 +161,10 @@ func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiK
 
     // Check if the user wants to proceed or if force is enabled
     if force || confirmProceed() {
+        // Start the spinner
+        done := make(chan bool)
+        go utils.Spinner(done)
+
         req, err := http.NewRequest("POST", fmt.Sprintf("%s/fetch-and-checkout/", repoManagerURL), bytes.NewBuffer(jsonData))
         if err != nil {
             return "", fmt.Errorf("error creating request: %w", err)
@@ -181,6 +194,12 @@ func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiK
         if err != nil {
             return "", fmt.Errorf("error reading response body: %w", err)
         }
+
+        // Stop the spinner
+        done <- true
+
+        // Clear the spinner on completion
+        fmt.Print("\r ") // Clear the spinner output
 
         return fmt.Sprintf("Successfully synced the repository: %s.\nServer response: %s", name, string(body)), nil
     } else {
@@ -232,6 +251,10 @@ func CallOpenAIAPI(prompt, project, mode, model, matchStrength string, force boo
         return nil, fmt.Errorf("operation aborted by user")
     }
 
+    // Start the spinner
+    done := make(chan bool)
+    go utils.Spinner(done)
+
     // Set API Gateway headers if not blank
     if config.Environment.APIGatewayHostKey != "" && config.Environment.APIGatewayHostValue != "" {
         req.Header.Set(config.Environment.APIGatewayHostKey, config.Environment.APIGatewayHostValue)
@@ -253,6 +276,12 @@ func CallOpenAIAPI(prompt, project, mode, model, matchStrength string, force boo
     if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
         return nil, fmt.Errorf("failed to decode JSON response: %w", err)
     }
+
+    // Stop the spinner
+    done <- true
+
+    // Clear the spinner on completion
+    fmt.Print("\r ") // Clear the spinner output
 
     return result, nil
 }
