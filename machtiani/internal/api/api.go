@@ -27,9 +27,7 @@ type DeleteStoreResponse struct {
 
 // getTokenCount calls the /load/token-count endpoint to get the token count
 type TokenCountResponse struct {
-    TokenCount struct {
-        Count int `json:"token_count"` // Nested structure to match the response
-    } `json:"token_count"`
+    TokenCount int `json:"token_count"`
 }
 
 
@@ -399,8 +397,6 @@ func getTokenCount(endpoint string, buffer *bytes.Buffer) (int, error) {
     if err != nil {
         return 0, fmt.Errorf("error reading response body: %v", err)
     }
-    log.Printf("Token count response: %s", body)
-
     // Decode the JSON response into the new struct
     var tokenCountResponse TokenCountResponse
     if err := json.Unmarshal(body, &tokenCountResponse); err != nil {
@@ -408,7 +404,7 @@ func getTokenCount(endpoint string, buffer *bytes.Buffer) (int, error) {
     }
 
     // Return the nested token count
-    return tokenCountResponse.TokenCount.Count, nil
+    return tokenCountResponse.TokenCount, nil
 }
 
 // confirmProceed prompts the user for confirmation to proceed
