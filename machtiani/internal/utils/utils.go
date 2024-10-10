@@ -111,6 +111,9 @@ func LoadConfigAndIgnoreFiles() (Config, []string, error) {
     if err != nil {
         return config, nil, fmt.Errorf("error reading ignore file: %w", err)
     }
+    if ignoreFiles == nil {
+        ignoreFiles = []string{}  // Default to empty list if nil
+    }
 
     return config, ignoreFiles, nil
 }
@@ -135,35 +138,38 @@ func validateConfig(config Config) error {
 
 // ReadIgnoreFile reads a `machtiani.ignore` file and returns a list of file paths
 func ReadIgnoreFile(fileName string) ([]string, error) {
-	var filePaths []string
+    var filePaths []string
 
-	// Open the file
-	file, err := os.Open(fileName)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open %s: %w", fileName, err)
-	}
-	defer file.Close()
+    // Open the file
+    file, err := os.Open(fileName)
+    if os.IsNotExist(err) {
+        // If the file does not exist, return an empty slice
+        return filePaths, nil
+    } else if err != nil {
+        return nil, fmt.Errorf("failed to open %s: %w", fileName, err)
+    }
+    defer file.Close()
 
-	// Read the file line-by-line
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
+    // Read the file line-by-line
+    scanner := bufio.NewScanner(file)
+    for scanner.Scan() {
+        line := strings.TrimSpace(scanner.Text())
 
-		// Ignore empty lines and comments
-		if line == "" || strings.HasPrefix(line, "#") {
-			continue
-		}
+        // Ignore empty lines and comments
+        if line == "" || strings.HasPrefix(line, "#") {
+            continue
+        }
 
-		// Append valid file paths to the list
-		filePaths = append(filePaths, line)
-	}
+        // Append valid file paths to the list
+        filePaths = append(filePaths, line)
+    }
 
-	// Check for scanning errors
-	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("error reading file %s: %w", fileName, err)
-	}
+    // Check for scanning errors
+    if err := scanner.Err(); err != nil {
+        return nil, fmt.Errorf("error reading file %s: %w", fileName, err)
+    }
 
-	return filePaths, nil
+    return filePaths, nil
 }
 
 

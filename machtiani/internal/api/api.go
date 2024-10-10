@@ -37,13 +37,15 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
         return AddRepositoryResponse{}, err
     }
 
-    // Print the file paths
     fmt.Println() // Prints a new line
     fmt.Println("Ignoring files based on .machtiani.ignore:")
-    fmt.Println() // Prints another new line
-
-    for _, path := range ignoreFiles {
-        fmt.Println(path)
+    if len(ignoreFiles) == 0 {
+        fmt.Println("No files to ignore.")
+    } else {
+        fmt.Println() // Prints another new line
+        for _, path := range ignoreFiles {
+            fmt.Println(path)
+        }
     }
 
     // Prepare the data to be sent in the request
