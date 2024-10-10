@@ -220,7 +220,7 @@ without the `--mode pure-chat`.
 
 If you don't select `--mode`, it's the same as `--mode commit`, where it searches commits for possible files to help answer the prompt.
 
-### Store and sync repos
+### `git-store`
 
 The `git-store` command allows you to add a repository to the Machtiani system.
 
@@ -255,6 +255,22 @@ machtiani git-sync --branch <default branch> --remote <remote name> [--force]
 ```bash
 machtiani git-sync --branch main --force
 ```
+
+### `git-delete`
+
+The `git-delete` command allows you to remove a repository from the Machtiani system.
+
+**Usage:**
+```bash
+machtiani git-delete --remote <remote name> [--force]
+```
+
+- `--remote`: Specify the name of the remote repository you want to delete. This is a mandatory flag.
+- `--force`: Skip confirmation prompt and proceed with the operation.
+
+**Example:**
+```bash
+machtiani git-delete
 
 ### Ignoring Files with `.machtiani.ignore`
 
