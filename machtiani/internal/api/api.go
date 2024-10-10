@@ -25,6 +25,13 @@ type DeleteStoreResponse struct {
     Message string `json:"message"`
 }
 
+// getTokenCount calls the /load/token-count endpoint to get the token count
+type TokenCountResponse struct {
+    TokenCount struct {
+        Count int `json:"token_count"` // Nested structure to match the response
+    } `json:"token_count"`
+}
+
 
 func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey string, repoManagerURL string, force bool) (AddRepositoryResponse, error) {
     config, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
@@ -358,51 +365,50 @@ func CallOpenAIAPI(prompt, project, mode, model, matchStrength string, force boo
     return result, nil
 }
 
-// getTokenCount calls the /load/token-count endpoint to get the token count
 func getTokenCount(endpoint string, buffer *bytes.Buffer) (int, error) {
     config, err := utils.LoadConfig()
     if err != nil {
         log.Fatalf("Error loading config: %v", err)
     }
-    // Create a new request instead of using http.Post
+
     req, err := http.NewRequest("POST", fmt.Sprintf("%stoken-count", endpoint), buffer)
     if err != nil {
         return 0, fmt.Errorf("error creating request: %w", err)
     }
 
-    // Set Content-Type header
     req.Header.Set(config.Environment.ContentTypeKey, config.Environment.ContentTypeValue)
 
-    // Optionally set the RapidAPI headers if configured
     if config.Environment.APIGatewayHostKey != "" && config.Environment.APIGatewayHostValue != "" {
         req.Header.Set(config.Environment.APIGatewayHostKey, config.Environment.APIGatewayHostValue)
     }
-    req.Header.Set(config.Environment.ContentTypeKey, config.Environment.ContentTypeValue)
 
-    // Create a new HTTP client and send the request
-    client := &http.Client{
-        Timeout: 20 * time.Minute,
-    }
+    client := &http.Client{Timeout: 20 * time.Minute}
     response, err := client.Do(req)
     if err != nil {
         return 0, fmt.Errorf("error sending request to token count endpoint: %w", err)
     }
     defer response.Body.Close()
 
-    // Check the status code of the response
     if response.StatusCode != http.StatusOK {
         body, _ := ioutil.ReadAll(response.Body)
         return 0, fmt.Errorf("error getting token count: %s", body)
     }
 
-    // Decode the JSON response into a map
-    var result map[string]int
-    if err := json.NewDecoder(response.Body).Decode(&result); err != nil {
+    // Log response body for debugging
+    body, err := ioutil.ReadAll(response.Body)
+    if err != nil {
+        return 0, fmt.Errorf("error reading response body: %v", err)
+    }
+    log.Printf("Token count response: %s", body)
+
+    // Decode the JSON response into the new struct
+    var tokenCountResponse TokenCountResponse
+    if err := json.Unmarshal(body, &tokenCountResponse); err != nil {
         return 0, fmt.Errorf("error decoding response: %w", err)
     }
 
-    // Return the token count from the result map
-    return result["token_count"], nil
+    // Return the nested token count
+    return tokenCountResponse.TokenCount.Count, nil
 }
 
 // confirmProceed prompts the user for confirmation to proceed
