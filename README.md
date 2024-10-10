@@ -220,7 +220,7 @@ without the `--mode pure-chat`.
 
 If you don't select `--mode`, it's the same as `--mode commit`, where it searches commits for possible files to help answer the prompt.
 
-### `git-store`
+#### `git-store`
 
 The `git-store` command allows you to add a repository to the Machtiani system.
 
@@ -271,6 +271,7 @@ machtiani git-delete --remote <remote name> [--force]
 **Example:**
 ```bash
 machtiani git-delete
+```
 
 ### Ignoring Files with `.machtiani.ignore`
 
