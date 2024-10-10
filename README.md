@@ -65,7 +65,7 @@ Additionally, while Machtiani aims to improve the relevance of retrieved files, 
     
     If you're using with the `api-gateway` deployed, add the following fields.
     
-    ````
+    ```
     API_GATEWAY_HOST_KEY: "x-api-gateway-host"      # Header key for API gateway host (e.g., "x-rapidapi-host")
     API_GATEWAY_HOST_VALUE: "your-api-gateway-value" # Header value for API gateway host (e.g., "rapidapi-api-key")
     ```
