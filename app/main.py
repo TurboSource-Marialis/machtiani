@@ -196,7 +196,7 @@ async def generate_response(
 
                 if match:
                     relevant_file_paths_str = match.group(1).strip()
-                    relevant_file_paths = [line.strip() for line in relevant_file_paths_str.splitlines() if line.strip()]
+                    relevant_file_paths = [line.lstrip("/").strip() for line in relevant_file_paths_str.splitlines() if line.strip()]
                     logger.info(f"Relevant file paths returned from OpenAI: {relevant_file_paths}")
                 else:
                     logger.error(f"Failed to extract relevant paths from OpenAI response: {openai_response}")
