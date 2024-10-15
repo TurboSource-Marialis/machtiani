@@ -286,21 +286,27 @@ func DeleteStore(projectName string, codehostURL string, ignoreFiles []string, v
     }
 }
 
-
 func CallOpenAIAPI(prompt, project, mode, model, matchStrength string, force bool) (map[string]interface{}, error) {
     config, err := utils.LoadConfig()
     if err != nil {
         log.Fatalf("Error loading config: %v", err)
     }
 
+    // Retrieve the codehost URL based on the current Git project.
+    codehostURL, err := utils.GetCodehostURLFromCurrentRepository()
+    if err != nil {
+        return nil, fmt.Errorf("failed to get codehost URL: %w", err)
+    }
+
     payload := map[string]interface{}{
-        "prompt":         prompt,
-        "project":        project,
-        "mode":           mode,
-        "model":          model,
-        "match_strength": matchStrength,
-        "api_key": config.Environment.ModelAPIKey,
-        "codehost_api_key": config.Environment.CodeHostAPIKey, // Include codehost_api_key
+        "prompt":          prompt,
+        "project":         project,
+        "mode":            mode,
+        "model":           model,
+        "match_strength":  matchStrength,
+        "api_key":        config.Environment.ModelAPIKey,
+        "codehost_api_key": config.Environment.CodeHostAPIKey,
+        "codehost_url":   codehostURL, // Include the codehost_url here
     }
 
     payloadBytes, err := json.Marshal(payload)
