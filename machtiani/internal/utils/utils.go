@@ -10,6 +10,7 @@ import (
     "log"
     "flag"
     "time"
+    "os/exec"
 
     "gopkg.in/yaml.v2"
     "github.com/7db9a/machtiani/internal/git"
@@ -232,3 +233,17 @@ func Spinner(done chan bool) {
     }
 }
 
+
+// GetCodehostURLFromCurrentRepository retrieves the codehost URL from the current Git repository.
+func GetCodehostURLFromCurrentRepository() (string, error) {
+    // Run the `git remote get-url origin` command to get the URL of the origin remote.
+    cmd := exec.Command("git", "remote", "get-url", "origin")
+    output, err := cmd.Output()
+    if err != nil {
+        return "", fmt.Errorf("error getting git remote URL: %w", err)
+    }
+
+    // Convert output to string and trim whitespace
+    codehostURL := strings.TrimSpace(string(output))
+    return codehostURL, nil
+}

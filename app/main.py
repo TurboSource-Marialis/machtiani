@@ -87,6 +87,7 @@ async def generate_response(
     match_strength: str = Body(..., description="The strength of the match"),
     api_key: str = Body(..., description="API key for OpenAI model"),
     codehost_api_key: SecretStr = Body(..., description="Code host API key for authentication"),
+    codehost_url: str = Body(..., description="Code host URL for the repository"),  # New parameter
 ):
     # Existing logic remains unchanged
     if model not in TOKEN_LIMITS:
@@ -115,7 +116,8 @@ async def generate_response(
             # Check for pull access before proceeding
             params = {
                 'project_name': project,
-                'codehost_api_key': codehost_api_key.get_secret_value()
+                'codehost_api_key': codehost_api_key.get_secret_value(),
+                'codehost_url': codehost_url  # Include codehost_url here
             }
             pull_access_response = await client.post(test_pull_access_url, params=params)
             pull_access_response.raise_for_status()
@@ -252,4 +254,3 @@ async def generate_response(
     except Exception as e:
         logger.exception("Unexpected error occurred")
         return {"error": f"An unexpected error occurred: {str(e)}"}
-

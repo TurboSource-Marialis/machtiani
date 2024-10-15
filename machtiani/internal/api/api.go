@@ -286,6 +286,7 @@ func DeleteStore(projectName string, codehostURL string, ignoreFiles []string, v
     }
 }
 
+
 func CallOpenAIAPI(prompt, project, mode, model, matchStrength string, force bool) (map[string]interface{}, error) {
     config, err := utils.LoadConfig()
     if err != nil {
