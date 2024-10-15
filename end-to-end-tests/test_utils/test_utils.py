@@ -1,6 +1,24 @@
 import os
 import subprocess
 
+class Teardown:
+    def __init__(self, git_directory):
+        """Initialize the Teardown class with the path to the git project directory."""
+        if not os.path.isdir(git_directory):
+            raise ValueError(f"The specified directory '{git_directory}' is not a valid directory.")
+        self.git_directory = git_directory
+
+    def run_git_delete(self):
+        """Run 'machtiani git-delete --force' in the specified git directory."""
+        command = "machtiani git-delete --force"
+        stdout, stderr = run_machtiani_command(command, self.git_directory)
+
+        # Clean and return the output
+        cleaned_output = clean_output(stdout)
+        cleaned_error = clean_output(stderr)
+
+        return cleaned_output, cleaned_error
+
 def clean_output(stdout_lines):
     """Utility function to clean the output from the command."""
     # Define function to identify progress indicator lines
