@@ -267,6 +267,7 @@ This project includes two end-to-end tests that validate the functionality of th
 To run these tests, use the following command in the terminal:
 ```bash
 python -m unittest discover end-to-end-tests
+```
 
 ## Conclusion
 
