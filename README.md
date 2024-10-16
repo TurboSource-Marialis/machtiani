@@ -209,6 +209,65 @@ go.mod
 
 The CLI will print the response received and save the output to a temporary markdown file, which will be displayed in the terminal.
 
+
+## Developer Section
+
+### End-to-End Tests
+
+This project includes two end-to-end tests that validate the functionality of the `git-store` command and the prompt handling.
+
+#### 1. Test for `git-store`
+
+- **File**: `end-to-end-tests/test_git_store.py`
+  
+- **Description**: This test verifies that the `git-store` command correctly sets up a Git repository and processes the command as expected.
+
+- **Setup**: 
+  - Initializes the test environment by creating a Git project directory.
+  - Runs the `git-store` command to set up the environment for testing.
+
+- **Test Logic**:
+  - Executes the command: 
+    ```bash
+    machtiani git-store --branch-name "master" --force
+    ```
+  - Normalizes the output and checks against the expected output, which includes:
+    - Remote URL usage
+    - Ignored files
+    - Estimated input tokens
+    - Successful addition of the VCS type repository
+
+- **Teardown**: Cleans up the test environment by running a command to delete the Git repository.
+
+#### 2. Test for Prompt Command
+
+- **File**: `end-to-end-tests/test_prompt_command.py`
+  
+- **Description**: This test validates the behavior of the prompt command when querying a specific question.
+
+- **Setup**:
+  - Initializes the same Git project directory as in the `git-store` test.
+  - Runs the `git-store` command to prepare the environment.
+
+- **Test Logic**:
+  - Executes the command:
+    ```bash
+    machtiani "what does the readme say?" --force
+    ```
+  - Normalizes the output and checks for specific lines, ensuring that:
+    - The output contains a remote URL.
+    - The estimated input tokens are accurate.
+    - The repository name "chastler" is present.
+    - A response is saved to the expected chat directory.
+
+- **Teardown**: Similarly cleans up by deleting the Git repository.
+
+### Running the Tests
+
+To run these tests, use the following command in the terminal:
+```bash
+python -m unittest discover end-to-end-tests
+
 ## Conclusion
 
 Machtiani simplifies code retrieval and interaction with repositories through a command-line interface, utilizing language models for effective responses.
