@@ -264,9 +264,9 @@ This project includes two end-to-end tests that validate the functionality of th
 
 ### Running the Tests
 
-To run these tests, use the following command in the terminal:
+To run these tests, use the following command in the `end-to-end-tests` directory:
 ```bash
-python -m unittest discover end-to-end-tests
+python -m unittest discover .
 ```
 
 ## Conclusion
