@@ -37,6 +37,14 @@ class Setup:
 
         return cleaned_output, cleaned_error
 
+    def fetch_latest_branches(self):
+        """Run the fetch_latest_branches.py script to fetch the latest branches."""
+        #script_path = 'test_utils/fetch_latest_branches.py'
+        #command = f'python3 {script_path} --git-dir {self.git_directory}'
+        res = get_latest_branches(self.git_directory)
+
+        return res
+
 def clean_output(stdout_lines):
     """Utility function to clean the output from the command."""
     def is_progress_indicator(line):
@@ -76,3 +84,20 @@ def run_machtiani_command(command, directory):
     process.stderr.close()
 
     return stdout, stderr
+
+def get_latest_branches(git_dir):
+    """Fetch the latest branches from the remote repository."""
+    try:
+        # Change to the specified Git directory
+        command = ['git', '-C', git_dir, 'fetch', '--prune']
+        print(f"Running command: {' '.join(command)}")  # Debugging output
+        subprocess.run(command, check=True)
+
+        # Get the branches
+        command = ['git', '-C', git_dir, 'branch', '-r']
+        print(f"Running command: {' '.join(command)}")  # Debugging output
+        branches = subprocess.check_output(command, text=True).strip().split('\n')
+        return [branch.strip().replace('origin/', '') for branch in branches if branch]
+    except subprocess.CalledProcessError as e:
+        print(f"An error occurred while fetching branches: {e}")
+        return []

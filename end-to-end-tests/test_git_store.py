@@ -11,8 +11,6 @@ class TestMachtianiCommand(unittest.TestCase):
     def setUp(self):
         # Set the directory for the test
         self.directory = "data/git-projects/chastler"
-        # Initialize the Teardown class with the git project directory
-        self.teardown = Teardown(self.directory)
         # Initialize the Setup class with the git project directory
         self.setup = Setup(self.directory)
 
