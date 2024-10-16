@@ -1,4 +1,5 @@
 import unittest
+import time
 from test_utils.test_utils import (
     clean_output,
     run_machtiani_command,
@@ -73,14 +74,12 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
         # Step 1: Force push `feature` branch to `master`
         self.setup.force_push("feature", "master")
 
+        # Introduce a slight delay to allow for remote to be ready
+        time.sleep(5)
         # Step 2: Run git_sync and assert the output
         command = 'machtiani git-sync --branch-name "master" --force'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
-        print("git sync output in `test_sync_new_commits_and_prompt_command`")
-        print("---")
-        print(stdout_normalized)
-        print("---")
 
         expected_output = [
             "Using remote URL: https://github.com/7db9a/chastler.git",
@@ -98,10 +97,6 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
         command = 'machtiani "what does the readme say?" --force'  # Example prompt command
         stdout_prompt, stderr_prompt = run_machtiani_command(command, self.directory)
         stdout_prompt_normalized = clean_output(stdout_prompt)
-        print("prompt output in `test_sync_new_commits_and_prompt_command`")
-        print("---")
-        print(stdout_normalized)
-        print("---")
 
         self.assertTrue(any("Using remote URL" in line for line in stdout_prompt_normalized))
         self.assertTrue(any("Estimated input tokens: 7" in line for line in stdout_prompt_normalized))
