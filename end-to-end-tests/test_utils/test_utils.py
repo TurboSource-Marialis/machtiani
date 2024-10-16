@@ -19,6 +19,10 @@ class Teardown:
 
         return cleaned_output, cleaned_error
 
+    def force_push(self, from_branch, to_branch):
+        """Force push changes from the specified branch to a target branch on the remote repository without authentication."""
+        return force_push(from_branch, to_branch, self.git_directory)
+
 class Setup:
     def __init__(self, git_directory):
         """Initialize the Setup class with the path to the git project directory."""
@@ -44,6 +48,11 @@ class Setup:
         res = get_latest_branches(self.git_directory)
 
         return res
+
+    def force_push(self, from_branch, to_branch):
+        """Force push changes from the specified branch to a target branch on the remote repository without authentication."""
+        return force_push(from_branch, to_branch, self.git_directory)
+
 
 def clean_output(stdout_lines):
     """Utility function to clean the output from the command."""
@@ -101,3 +110,13 @@ def get_latest_branches(git_dir):
     except subprocess.CalledProcessError as e:
         print(f"An error occurred while fetching branches: {e}")
         return []
+
+def force_push(from_branch, to_branch, git_dir):
+    """Force push changes from the specified branch to a target branch on the remote repository without authentication."""
+    try:
+        # Use 'origin' as the default remote
+        command = ['git', '-C', git_dir, 'push', 'origin', f"{from_branch}:{to_branch}", '--force']
+        subprocess.run(command, check=True)
+        print(f"Successfully force pushed from {from_branch} to {to_branch} on origin.")
+    except subprocess.CalledProcessError as e:
+        print(f"An error occurred while pushing to the remote repository: {e}")

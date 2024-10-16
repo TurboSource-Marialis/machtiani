@@ -16,7 +16,7 @@ class TestMachtianiCommand(unittest.TestCase):
         fetch_res = self.setup.fetch_latest_branches()
         print("fetch_res")
         print("Fetched branches:", fetch_res)
-        # Initialize the Teardown class with the git project directory
+        self.setup.force_push("master-backup", "master")
         self.setup.run_git_store()
 
     def test_run_machtiani_command(self):
@@ -45,6 +45,7 @@ class TestMachtianiCommand(unittest.TestCase):
         """Clean up the test environment by running the git delete command."""
         self.directory = "data/git-projects/chastler"
         self.teardown = Teardown(self.directory)
+        self.teardown.force_push("master-backup", "master")
         try:
             stdout, stderr = self.teardown.run_git_delete()
             # Optionally, you can log or print the output of the teardown
