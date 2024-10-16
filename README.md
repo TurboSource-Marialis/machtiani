@@ -58,13 +58,13 @@ Additionally, while Machtiani aims to improve the relevance of retrieved files, 
    ```
 
     Alternatively, you can place it in `~/.machtiani-config.yml`, but any `.machtiani-config.yml` placed in your Git project directory will override the one in `$HOME`.
-    
+
     **Warning:** If the `MODEL_API_KEY` is set, please be aware that costs will be incurred for embedding the prompt using the OpenAI API.
-    
+
     ***Also, you'll have to add a `.env` file in `machtiani-commit-file-retrieval/`.***
-    
+
     If you're using with the `api-gateway` deployed, add the following fields.
-    
+
     ```
     API_GATEWAY_HOST_KEY: "x-api-gateway-host"      # Header key for API gateway host (e.g., "x-rapidapi-host")
     API_GATEWAY_HOST_VALUE: "your-api-gateway-value" # Header value for API gateway host (e.g., "rapidapi-api-key")
@@ -209,65 +209,51 @@ go.mod
 
 The CLI will print the response received and save the output to a temporary markdown file, which will be displayed in the terminal.
 
-
 ## Developer Section
 
 ### End-to-End Tests
 
-This project includes two end-to-end tests that validate the functionality of the `git-store` command and the prompt handling.
+This project includes several end-to-end tests that validate the functionality of the Machtiani commands, with `test_end_to_end.py` serving as the **defacto test** for the application.
 
-#### 1. Test for `git-store`
+#### Why `test_end_to_end.py` is the Defacto Test
 
-- **File**: `end-to-end-tests/test_git_store.py`
-  
-- **Description**: This test verifies that the `git-store` command correctly sets up a Git repository and processes the command as expected.
+- **Comprehensive Coverage**: This test suite encompasses multiple critical functionalities of the Machtiani CLI, including the `git-store`, prompt handling, and synchronization with remote repositories. By running this test, you verify the overall integration and behavior of the CLI tool in a realistic scenario.
 
-- **Setup**: 
-  - Initializes the test environment by creating a Git project directory.
-  - Runs the `git-store` command to set up the environment for testing.
+- **Realistic Environment**: The tests are designed to execute in a realistic environment, mimicking actual user interactions with the CLI. This helps in identifying issues that may not be apparent in isolated unit tests.
 
-- **Test Logic**:
-  - Executes the command: 
-    ```bash
-    machtiani git-store --branch-name "master" --force
-    ```
-  - Normalizes the output and checks against the expected output, which includes:
-    - Remote URL usage
-    - Ignored files
-    - Estimated input tokens
-    - Successful addition of the VCS type repository
+- **Validation of Core Features**: As it encompasses key functionalities, running this test ensures that the essential features of Machtiani are working as expected.
 
-- **Teardown**: Cleans up the test environment by running a command to delete the Git repository.
+#### Running the Defacto Test
 
-#### 2. Test for Prompt Command
+To run the end-to-end test suite, particularly `test_end_to_end.py`, use the following command in the `end-to-end-tests` directory:
 
-- **File**: `end-to-end-tests/test_prompt_command.py`
-  
-- **Description**: This test validates the behavior of the prompt command when querying a specific question.
+```bash
+python -m unittest test_end_to_end.py
+```
 
-- **Setup**:
-  - Initializes the same Git project directory as in the `git-store` test.
-  - Runs the `git-store` command to prepare the environment.
+This command prioritizes the most critical integration tests, ensuring that your core functionalities more cost effectively (only a single round of setup and teardown).
 
-- **Test Logic**:
-  - Executes the command:
-    ```bash
-    machtiani "what does the readme say?" --force
-    ```
-  - Normalizes the output and checks for specific lines, ensuring that:
-    - The output contains a remote URL.
-    - The estimated input tokens are accurate.
-    - The repository name "chastler" is present.
-    - A response is saved to the expected chat directory.
+### Other Tests
 
-- **Teardown**: Similarly cleans up by deleting the Git repository.
+In addition to `test_end_to_end.py`, there are other tests available, such as:
 
-### Running the Tests
+1. **Test for `git-store`**
 
-To run these tests, use the following command in the `end-to-end-tests` directory:
+   - **File**: `end-to-end-tests/test_git_store.py`
+   - **Description**: Verifies the `git-store` command functionality.
+
+2. **Test for Prompt Command**
+
+   - **File**: `end-to-end-tests/test_prompt_command.py`
+   - **Description**: Validates the behavior of the prompt command when querying specific questions.
+
+To run all tests, you can still use:
+
 ```bash
 python -m unittest discover .
 ```
+
+However, it is recommended to prioritize the defacto test for a more focused validation of the core features.
 
 ## Conclusion
 
@@ -281,4 +267,4 @@ Machtiani simplifies code retrieval and interaction with repositories through a 
 - [x] Add as a submodule [aicommit](https://github.com/coder/aicommit).
 - [x] Calculate and cap token usage.
 - [x] Server should not block the thread (async).
-- [ ] End-to-end test coverage (strategic, not full).
+- [x] End-to-end test coverage (strategic, not full).
