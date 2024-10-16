@@ -23,6 +23,14 @@ class Teardown:
         """Force push changes from the specified branch to a target branch on the remote repository without authentication."""
         return force_push(from_branch, to_branch, self.git_directory)
 
+    def checkout_branch(self, branch_name):
+        """Checkout the specified branch from the remote repository."""
+        return checkout_branch(branch_name, self.git_directory)
+
+    def get_branches(self):
+        stdout, stderr = run_machtiani_command('git branch', self.git_directory)
+        return stdout  # Directly return stdout since it's already a list
+
 class Setup:
     def __init__(self, git_directory):
         """Initialize the Setup class with the path to the git project directory."""
@@ -52,6 +60,14 @@ class Setup:
     def force_push(self, from_branch, to_branch):
         """Force push changes from the specified branch to a target branch on the remote repository without authentication."""
         return force_push(from_branch, to_branch, self.git_directory)
+
+    def checkout_branch(self, branch_name):
+        """Checkout the specified branch from the remote repository."""
+        return checkout_branch(branch_name, self.git_directory)
+
+    def get_branches(self):
+        stdout, stderr = run_machtiani_command('git branch', self.git_directory)
+        return stdout  # Directly return stdout since it's already a list
 
 
 def clean_output(stdout_lines):
@@ -120,3 +136,14 @@ def force_push(from_branch, to_branch, git_dir):
         print(f"Successfully force pushed from {from_branch} to {to_branch} on origin.")
     except subprocess.CalledProcessError as e:
         print(f"An error occurred while pushing to the remote repository: {e}")
+
+def checkout_branch(branch_name, git_directory):
+    """Checkout the specified branch from the remote repository."""
+    print(f"Attempting to checkout branch '{branch_name}' in directory: {git_directory}")
+    command = f'git checkout -b {branch_name} origin/{branch_name}'
+    try:
+        stdout, stderr = run_machtiani_command(command, git_directory)
+        return stdout, stderr
+    except subprocess.CalledProcessError as e:
+        print(f"An error occurred while checking out branch '{branch_name}': {e}")
+        return [], [str(e)]
