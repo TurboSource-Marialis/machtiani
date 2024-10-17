@@ -30,6 +30,10 @@ type TokenCountResponse struct {
     TokenCount int `json:"token_count"`
 }
 
+type StatusResponse struct {
+    LockFilePresent bool `json:"lock_file_present"`
+}
+
 
 func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey string, repoManagerURL string, force bool) (AddRepositoryResponse, error) {
     config, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
@@ -414,6 +418,50 @@ func getTokenCount(endpoint string, buffer *bytes.Buffer) (int, error) {
 
     // Return the nested token count
     return tokenCountResponse.TokenCount, nil
+}
+
+func CheckStatus(codehostURL string, apiKey *string, repoManagerURL string) (StatusResponse, error) {
+    config, _, err := utils.LoadConfigAndIgnoreFiles()
+    if err != nil {
+        return StatusResponse{}, err
+    }
+
+    // Prepare the request URL
+    statusURL := fmt.Sprintf("%s/status?codehost_url=%s", repoManagerURL, codehostURL)
+    if apiKey != nil {
+        statusURL += fmt.Sprintf("&api_key=%s", *apiKey)
+    }
+
+    // Create the HTTP GET request
+    req, err := http.NewRequest("GET", statusURL, nil)
+    if err != nil {
+        return StatusResponse{}, fmt.Errorf("error creating request: %w", err)
+    }
+
+    // Set API Gateway headers if not blank
+    if config.Environment.APIGatewayHostKey != "" && config.Environment.APIGatewayHostValue != "" {
+        req.Header.Set(config.Environment.APIGatewayHostKey, config.Environment.APIGatewayHostValue)
+    }
+    req.Header.Set(config.Environment.ContentTypeKey, config.Environment.ContentTypeValue)
+
+    client := &http.Client{Timeout: 20 * time.Minute}
+    resp, err := client.Do(req)
+    if err != nil {
+        return StatusResponse{}, fmt.Errorf("error sending request to status endpoint: %w", err)
+    }
+    defer resp.Body.Close()
+
+    if resp.StatusCode != http.StatusOK {
+        body, _ := ioutil.ReadAll(resp.Body)
+        return StatusResponse{}, fmt.Errorf("error checking status: %s", body)
+    }
+
+    var statusResponse StatusResponse
+    if err := json.NewDecoder(resp.Body).Decode(&statusResponse); err != nil {
+        return StatusResponse{}, fmt.Errorf("error decoding status response: %w", err)
+    }
+
+    return statusResponse, nil
 }
 
 // confirmProceed prompts the user for confirmation to proceed
