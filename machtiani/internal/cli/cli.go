@@ -130,23 +130,10 @@ func Execute() {
     if len(os.Args) >= 2 && os.Args[1] == "status" {
         // Parse flags specific to status command if needed
         // Prompt for the required parameters
-        var codehostURL string
-        var apiKey *string
-
-        fmt.Print("Enter the code host URL: ")
-        fmt.Scanln(&codehostURL)
-
-        fmt.Print("Enter the API key (or leave blank if not needed): ")
-        var inputApiKey string
-        fmt.Scanln(&inputApiKey)
-        if inputApiKey != "" {
-            apiKey = &inputApiKey
-        }
-
         repoManagerURL := config.Environment.RepoManagerURL // Make sure this variable is set in your config
 
         // Call CheckStatus
-        statusResponse, err := api.CheckStatus(codehostURL, apiKey, repoManagerURL)
+        statusResponse, err := api.CheckStatus(remoteURL, apiKey, repoManagerURL)
         if err != nil {
             log.Fatalf("Error checking status: %v", err)
         }
