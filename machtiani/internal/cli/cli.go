@@ -128,12 +128,8 @@ func Execute() {
     args := os.Args[1:]
 
     if len(os.Args) >= 2 && os.Args[1] == "status" {
-        // Parse flags specific to status command if needed
-        // Prompt for the required parameters
-        repoManagerURL := config.Environment.RepoManagerURL // Make sure this variable is set in your config
-
         // Call CheckStatus
-        statusResponse, err := api.CheckStatus(remoteURL, apiKey, repoManagerURL)
+        statusResponse, err := api.CheckStatus(remoteURL, apiKey,)
         if err != nil {
             log.Fatalf("Error checking status: %v", err)
         }
@@ -141,6 +137,7 @@ func Execute() {
         // Output the result
         if statusResponse.LockFilePresent {
             fmt.Println("The repo.lock file is present.")
+            fmt.Printf("Lock duration: %s\n", statusResponse.LockTimeDuration) // Print the lock duration
         } else {
             fmt.Println("The repo.lock file is not present.")
         }

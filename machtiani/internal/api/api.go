@@ -31,7 +31,8 @@ type TokenCountResponse struct {
 }
 
 type StatusResponse struct {
-    LockFilePresent bool `json:"lock_file_present"`
+    LockFilePresent  bool   `json:"lock_file_present"`
+    LockTimeDuration float64 `json:"lock_time_duration"` // New field added
 }
 
 
@@ -420,10 +421,15 @@ func getTokenCount(endpoint string, buffer *bytes.Buffer) (int, error) {
     return tokenCountResponse.TokenCount, nil
 }
 
-func CheckStatus(codehostURL string, apiKey *string, repoManagerURL string) (StatusResponse, error) {
+func CheckStatus(codehostURL string, apiKey *string) (StatusResponse, error) {
     config, _, err := utils.LoadConfigAndIgnoreFiles()
     if err != nil {
         return StatusResponse{}, err
+    }
+
+    repoManagerURL := config.Environment.RepoManagerURL
+    if repoManagerURL == "" {
+        return StatusResponse{}, fmt.Errorf("MACHTIANI_REPO_MANAGER_URL environment variable is not set")
     }
 
     // Prepare the request URL
