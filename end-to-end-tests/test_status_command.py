@@ -35,7 +35,7 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
 
         expected_output = [
             "Using remote URL: https://github.com/7db9a/chastler.git",
-            "The repo.lock file is not present."
+            "Project is ready for chat!"
         ]
 
         expected_output = [line.strip() for line in expected_output if line.strip()]

@@ -130,20 +130,20 @@ func Execute() {
 
     if len(os.Args) >= 2 && os.Args[1] == "status" {
         // Call CheckStatus
-        statusResponse, err := api.CheckStatus(remoteURL, apiKey,)
+        statusResponse, err := api.CheckStatus(remoteURL, apiKey)
         if err != nil {
             log.Fatalf("Error checking status: %v", err)
         }
 
         // Output the result
         if statusResponse.LockFilePresent {
-            fmt.Println("The repo.lock file is present.")
+            fmt.Println("Project is getting processed and not ready for chat.")
             // Convert the float64 seconds to a duration (in nanoseconds)
             duration := time.Duration(statusResponse.LockTimeDuration * float64(time.Second))
             // Format the duration to show hours, minutes, seconds
             fmt.Printf("Lock duration: %02d:%02d:%02d\n", int(duration.Hours()), int(duration.Minutes())%60, int(duration.Seconds())%60)
         } else {
-            fmt.Println("The repo.lock file is not present.")
+            fmt.Println("Project is ready for chat!")
         }
         return // Exit after handling status
     }

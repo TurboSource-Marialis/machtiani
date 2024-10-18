@@ -127,7 +127,7 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
 
         expected_output_with_lock = [
             "Using remote URL: https://github.com/7db9a/chastler.git",
-            "The repo.lock file is present.",
+            "Project is getting processed and not ready for chat.",
             'Lock duration: 00:00:00'
         ]
 
