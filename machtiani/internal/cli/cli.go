@@ -13,6 +13,7 @@ import (
     "strings"
     "path"
     "context"
+    "time"
 
     "github.com/7db9a/machtiani/internal/api"
     "github.com/7db9a/machtiani/internal/utils"
@@ -137,7 +138,10 @@ func Execute() {
         // Output the result
         if statusResponse.LockFilePresent {
             fmt.Println("The repo.lock file is present.")
-            fmt.Printf("Lock duration: %s\n", statusResponse.LockTimeDuration) // Print the lock duration
+            // Convert the float64 seconds to a duration (in nanoseconds)
+            duration := time.Duration(statusResponse.LockTimeDuration * float64(time.Second))
+            // Format the duration to show hours, minutes, seconds
+            fmt.Printf("Lock duration: %02d:%02d:%02d\n", int(duration.Hours()), int(duration.Minutes())%60, int(duration.Seconds())%60)
         } else {
             fmt.Println("The repo.lock file is not present.")
         }
