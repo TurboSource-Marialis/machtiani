@@ -12,6 +12,7 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        cls.MaxDiff = None
         # Set the directory for the test
         cls.directory = "data/git-projects/chastler"
         # Initialize the Setup class with the git project directory
@@ -39,6 +40,10 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
             "poetry.lock",
             "Estimated input tokens: 25",
             "VCSType.git repository added successfully"
+            "",
+            "---",
+            "Your repo is getting added to machtiani is in progress!",
+            "Please check back by running `machtiani status` to see if it completed."
         ]
 
         expected_output = [line.strip() for line in expected_output if line.strip()]

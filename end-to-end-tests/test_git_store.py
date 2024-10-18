@@ -9,6 +9,7 @@ from test_utils.test_utils import (
 class TestMachtianiCommand(unittest.TestCase):
 
     def setUp(self):
+        self.maxDiff = None
         # Set the directory for the test
         self.directory = "data/git-projects/chastler"
         # Initialize the Setup class with the git project directory
@@ -33,8 +34,12 @@ class TestMachtianiCommand(unittest.TestCase):
             "Using remote URL: https://github.com/7db9a/chastler.git",
             "Ignoring files based on .machtiani.ignore:",
             "poetry.lock",
-            "Estimated input tokens: 48",
+            "Estimated input tokens: 25",
             "VCSType.git repository added successfully"
+            "",
+            "---",
+            "Your repo is getting added to machtiani is in progress!",
+            "Please check back by running `machtiani status` to see if it completed."
         ]
 
         expected_output = [line.strip() for line in expected_output if line.strip()]
