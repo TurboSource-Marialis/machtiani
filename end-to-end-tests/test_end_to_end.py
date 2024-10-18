@@ -1,5 +1,6 @@
 import unittest
 import time
+import threading
 from test_utils.test_utils import (
     clean_output,
     run_machtiani_command,
@@ -103,14 +104,42 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
         self.assertTrue(any("chastler" in line for line in stdout_prompt_normalized))
         self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_prompt_normalized))
 
+    def test_run_machtiani_status_with_lock(self):
+        def run_sync():
+            command = 'machtiani git-sync --branch-name "master" --force'
+            run_machtiani_command(command, self.directory)
+
+        sync_thread = threading.Thread(target=run_sync)
+        sync_thread.start()
+
+        # Give time for thread to start
+        time.sleep(1)
+
+        # Step 4: Now run the status command while the sync is running
+        status_command = 'machtiani status'
+        stdout_status, stderr_status = run_machtiani_command(status_command, self.directory)
+        stdout_status_normalized = clean_output(stdout_status)
+
+        expected_output_with_lock = [
+            "Using remote URL: https://github.com/7db9a/chastler.git",
+            "The repo.lock file is present.",
+            'Lock duration: 00:00:00'
+        ]
+
+        expected_output_with_lock = [line.strip() for line in expected_output_with_lock if line.strip()]
+        self.assertEqual(stdout_status_normalized, expected_output_with_lock)
+
+        # Step 5: Wait for the sync thread to finish
+        sync_thread.join()
+
     @classmethod
     def tearDownClass(cls):
         """Clean up the test environment by running the git delete command."""
         try:
-            #cls.teardown = Teardown(cls.directory)
-            #stdout, stderr = cls.teardown.run_git_delete()
-            #print("Teardown Output:", stdout)
-            #print("Teardown Errors:", stderr)
+            cls.teardown = Teardown(cls.directory)
+            stdout, stderr = cls.teardown.run_git_delete()
+            print("Teardown Output:", stdout)
+            print("Teardown Errors:", stderr)
             pass
         except Exception as e:
             print(f"Error during teardown: {e}")
