@@ -161,6 +161,10 @@ func Execute() {
         }
 
         fmt.Println(response.Message)
+        // Print the success message
+        fmt.Println("---")
+        fmt.Println("Your repo is getting added to machtiani is in progress!")
+        fmt.Println("Please check back by running `machtiani status` to see if it completed.")
         return // Exit after handling git-store
     }
 

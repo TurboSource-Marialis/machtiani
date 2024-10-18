@@ -8,19 +8,24 @@ from test_utils.test_utils import (
 
 class TestMachtianiCommand(unittest.TestCase):
 
-    def setUp(self):
-        self.maxDiff = None
+    @classmethod
+    def setUpClass(cls):
+        cls.MaxDiff = None
         # Set the directory for the test
-        self.directory = "data/git-projects/chastler"
+        cls.directory = "data/git-projects/chastler"
         # Initialize the Setup class with the git project directory
-        self.setup = Setup(self.directory)
+        cls.setup = Setup(cls.directory)
 
-        # Run git-store to set up the test environment
-        self.stdout_setup, self.stderr_setup = self.setup.run_git_store()
+        # Fetch the latest branches
+        fetch_res = cls.setup.fetch_latest_branches()
+        print("Fetched branches:", fetch_res)
+        cls.setup.force_push("master-backup", "master")
 
-        # Optionally, you can log or print the output of the setup
-        print("Setup Output:", self.stdout_setup)
-        print("Setup Errors:", self.stderr_setup)
+        branches = cls.setup.get_branches()
+        if " feature" not in branches:  # Checking for local branch existence
+            stdout, stderr = cls.setup.checkout_branch("feature")
+            print("Checkout Output:", stdout)
+            print("Checkout Errors:", stderr)  # Will contain any errors if the checkout fails
 
     def test_run_machtiani_command(self):
         # The test logic remains unchanged
