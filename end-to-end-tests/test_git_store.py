@@ -39,7 +39,8 @@ class TestMachtianiCommand(unittest.TestCase):
             "Using remote URL: https://github.com/7db9a/chastler.git",
             "Ignoring files based on .machtiani.ignore:",
             "poetry.lock",
-            "Estimated input tokens: 25",
+            "Estimated embedding tokens: 25",
+            "Estimated inference tokens: 10086",
             "VCSType.git repository added successfully"
             "",
             "---",

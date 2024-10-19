@@ -27,7 +27,8 @@ type DeleteStoreResponse struct {
 
 // getTokenCount calls the /load/token-count endpoint to get the token count
 type TokenCountResponse struct {
-    TokenCount int `json:"token_count"`
+    EmbeddingTokens int `json:"embedding_tokens"`
+    InferenceTokens int `json:"inference_tokens"`
 }
 
 type StatusResponse struct {
@@ -69,13 +70,15 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
         return AddRepositoryResponse{}, fmt.Errorf("error marshaling JSON: %w", err)
     }
 
-    tokenCount, err := getTokenCount(fmt.Sprintf("%s/add-repository/", repoManagerURL), bytes.NewBuffer(jsonData))
+    tokenCountEmbedding, tokenCountInference, err := getTokenCount(fmt.Sprintf("%s/add-repository/", repoManagerURL), bytes.NewBuffer(jsonData))
     if err != nil {
         fmt.Printf("Error getting token count: %v\n", err)
-        // Return zero value and error
         return AddRepositoryResponse{}, err
     }
-    fmt.Printf("Estimated input tokens: %d\n", tokenCount)
+
+    // Print the token counts separately
+    fmt.Printf("Estimated embedding tokens: %d\n", tokenCountEmbedding)
+    fmt.Printf("Estimated inference tokens: %d\n", tokenCountInference)
 
     // Check if the user wants to proceed
     // Check if the user wants to proceed or if force is enabled
@@ -168,12 +171,15 @@ func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiK
         return "", fmt.Errorf("MACHTIANI_REPO_MANAGER_URL environment variable is not set")
     }
 
-    tokenCount, err := getTokenCount(fmt.Sprintf("%s/fetch-and-checkout/", repoManagerURL), bytes.NewBuffer(jsonData))
+    tokenCountEmbedding, tokenCountInference , err := getTokenCount(fmt.Sprintf("%s/fetch-and-checkout/", repoManagerURL), bytes.NewBuffer(jsonData))
     if err != nil {
         fmt.Printf("Error getting token count: %v\n", err)
         return "", err
     }
-    fmt.Printf("Estimated input tokens: %d\n", tokenCount)
+
+    // Print the token counts separately
+    fmt.Printf("Estimated embedding tokens: %d\n", tokenCountEmbedding)
+    fmt.Printf("Estimated inference tokens: %d\n", tokenCountInference)
 
     // Check if the user wants to proceed or if force is enabled
     if force || confirmProceed() {
@@ -327,15 +333,16 @@ func CallOpenAIAPI(prompt, project, mode, model, matchStrength string, force boo
     repoManagerURL := config.Environment.RepoManagerURL
 
     // Check token count
-    tokenCount, err := getTokenCount(fmt.Sprintf("%s/generate-response/", repoManagerURL), bytes.NewBuffer(payloadBytes))
-
+    tokenCountEmbedding, tokenCountInference, err := getTokenCount(fmt.Sprintf("%s/generate-response/", repoManagerURL), bytes.NewBuffer(payloadBytes))
     req, err := http.NewRequest("POST", fmt.Sprintf("%s/generate-response", endpoint), bytes.NewBuffer(payloadBytes))
     if err != nil {
         fmt.Printf("Error getting token count: %v\n", err)
         return nil, err
     }
 
-    fmt.Printf("Estimated input tokens: %d\n", tokenCount)
+    // Print the token counts separately
+    fmt.Printf("Estimated embedding tokens: %d\n", tokenCountEmbedding)
+    fmt.Printf("Estimated inference tokens: %d\n", tokenCountInference)
 
     // Confirm to proceed
     if !force && !confirmProceed() {
@@ -377,7 +384,7 @@ func CallOpenAIAPI(prompt, project, mode, model, matchStrength string, force boo
     return result, nil
 }
 
-func getTokenCount(endpoint string, buffer *bytes.Buffer) (int, error) {
+func getTokenCount(endpoint string, buffer *bytes.Buffer) (int, int, error) {
     config, err := utils.LoadConfig()
     if err != nil {
         log.Fatalf("Error loading config: %v", err)
@@ -385,7 +392,7 @@ func getTokenCount(endpoint string, buffer *bytes.Buffer) (int, error) {
 
     req, err := http.NewRequest("POST", fmt.Sprintf("%stoken-count", endpoint), buffer)
     if err != nil {
-        return 0, fmt.Errorf("error creating request: %w", err)
+        return 0, 0, fmt.Errorf("error creating request: %w", err)
     }
 
     req.Header.Set(config.Environment.ContentTypeKey, config.Environment.ContentTypeValue)
@@ -397,28 +404,29 @@ func getTokenCount(endpoint string, buffer *bytes.Buffer) (int, error) {
     client := &http.Client{Timeout: 20 * time.Minute}
     response, err := client.Do(req)
     if err != nil {
-        return 0, fmt.Errorf("error sending request to token count endpoint: %w", err)
+        return 0, 0, fmt.Errorf("error sending request to token count endpoint: %w", err)
     }
     defer response.Body.Close()
 
     if response.StatusCode != http.StatusOK {
         body, _ := ioutil.ReadAll(response.Body)
-        return 0, fmt.Errorf("error getting token count: %s", body)
+        return 0, 0, fmt.Errorf("error getting token count: %s", body)
     }
 
     // Log response body for debugging
     body, err := ioutil.ReadAll(response.Body)
     if err != nil {
-        return 0, fmt.Errorf("error reading response body: %v", err)
+        return 0, 0, fmt.Errorf("error reading response body: %v", err)
     }
+
     // Decode the JSON response into the new struct
     var tokenCountResponse TokenCountResponse
     if err := json.Unmarshal(body, &tokenCountResponse); err != nil {
-        return 0, fmt.Errorf("error decoding response: %w", err)
+        return 0, 0, fmt.Errorf("error decoding response: %w", err)
     }
 
-    // Return the nested token count
-    return tokenCountResponse.TokenCount, nil
+    // Return both token counts
+    return tokenCountResponse.EmbeddingTokens, tokenCountResponse.InferenceTokens, nil
 }
 
 func CheckStatus(codehostURL string, apiKey *string) (StatusResponse, error) {

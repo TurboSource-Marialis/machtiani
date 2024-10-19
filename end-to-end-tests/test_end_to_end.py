@@ -38,7 +38,8 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
             "Using remote URL: https://github.com/7db9a/chastler.git",
             "Ignoring files based on .machtiani.ignore:",
             "poetry.lock",
-            "Estimated input tokens: 10086",
+            "Estimated embedding tokens: 25",
+            "Estimated inference tokens: 10086",
             "VCSType.git repository added successfully"
             "",
             "---",
@@ -56,7 +57,8 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
         stdout_normalized = clean_output(stdout_machtiani)
 
         self.assertTrue(any("Using remote URL" in line for line in stdout_normalized))
-        self.assertTrue(any("Estimated input tokens: 7" in line for line in stdout_normalized))
+        self.assertTrue(any("Estimated embedding tokens: 0" in line for line in stdout_normalized))
+        self.assertTrue(any("Estimated inference tokens: 7" in line for line in stdout_normalized))
         self.assertTrue(any("chastler" in line for line in stdout_normalized))
         self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_normalized))
 
@@ -69,7 +71,8 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
             "Using remote URL: https://github.com/7db9a/chastler.git",
             "Parsed file paths from machtiani.ignore:",
             "poetry.lock",
-            "Estimated input tokens: 0",
+            "Estimated embedding tokens: 0",
+            "Estimated inference tokens: 0",
             "Successfully synced the repository: https://github.com/7db9a/chastler.git.",
             'Server response: {"message":"Fetched and checked out branch \'master\' for project \'https://github.com/7db9a/chastler.git\' and updated index.","branch_name":"master","project_name":"https://github.com/7db9a/chastler.git"}'
         ]
@@ -92,7 +95,8 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
             "Using remote URL: https://github.com/7db9a/chastler.git",
             "Parsed file paths from machtiani.ignore:",
             "poetry.lock",
-            "Estimated input tokens: 30",  # Updated to match actual output
+            "Estimated embedding tokens: 16",
+            "Estimated inference tokens: 30",  # Updated to match actual output
             "Successfully synced the repository: https://github.com/7db9a/chastler.git.",
             'Server response: {"message":"Fetched and checked out branch \'master\' for project \'https://github.com/7db9a/chastler.git\' and updated index.","branch_name":"master","project_name":"https://github.com/7db9a/chastler.git"}'
         ]
@@ -106,7 +110,8 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
         stdout_prompt_normalized = clean_output(stdout_prompt)
 
         self.assertTrue(any("Using remote URL" in line for line in stdout_prompt_normalized))
-        self.assertTrue(any("Estimated input tokens: 7" in line for line in stdout_prompt_normalized))
+        self.assertTrue(any("Estimated embedding tokens: 0" in line for line in stdout_prompt_normalized))
+        self.assertTrue(any("Estimated inference tokens: 7" in line for line in stdout_prompt_normalized))
         self.assertTrue(any("chastler" in line for line in stdout_prompt_normalized))
         self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_prompt_normalized))
 

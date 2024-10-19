@@ -32,6 +32,9 @@ class TestMachtianiCommand(unittest.TestCase):
         # Assert that 'Using remote URL' is in the output
         self.assertTrue(any("Using remote URL" in line for line in stdout_normalized))
 
+        # Assert that 'Estimated embedding tokens: 0' is in the output
+        self.assertTrue(any("Estimated embedding tokens: 0" in line for line in stdout_normalized))
+
         # Assert that 'Estimated input tokens: 7' is in the output
         self.assertTrue(any("Estimated input tokens: 7" in line for line in stdout_normalized))
 
