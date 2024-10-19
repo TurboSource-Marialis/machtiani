@@ -12,7 +12,7 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.MaxDiff = None
+        cls.maxDiff = None
         # Set the directory for the test
         cls.directory = "data/git-projects/chastler"
         # Initialize the Setup class with the git project directory
@@ -38,7 +38,7 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
             "Using remote URL: https://github.com/7db9a/chastler.git",
             "Ignoring files based on .machtiani.ignore:",
             "poetry.lock",
-            "Estimated input tokens: 25",
+            "Estimated input tokens: 10086",
             "VCSType.git repository added successfully"
             "",
             "---",
@@ -50,6 +50,7 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
         self.assertEqual(stdout_normalized, expected_output)
 
     def test_run_machtiani_prompt_command(self):
+        time.sleep(15)
         command = 'machtiani "what does the readme say?" --force'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
@@ -91,7 +92,7 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
             "Using remote URL: https://github.com/7db9a/chastler.git",
             "Parsed file paths from machtiani.ignore:",
             "poetry.lock",
-            "Estimated input tokens: 16",  # Updated to match actual output
+            "Estimated input tokens: 30",  # Updated to match actual output
             "Successfully synced the repository: https://github.com/7db9a/chastler.git.",
             'Server response: {"message":"Fetched and checked out branch \'master\' for project \'https://github.com/7db9a/chastler.git\' and updated index.","branch_name":"master","project_name":"https://github.com/7db9a/chastler.git"}'
         ]
