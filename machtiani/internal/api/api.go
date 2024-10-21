@@ -330,28 +330,10 @@ func CallOpenAIAPI(prompt, project, mode, model, matchStrength string, force boo
         return nil, fmt.Errorf("MACHTIANI_URL environment variable is not set")
     }
 
-    repoManagerURL := config.Environment.RepoManagerURL
-
-    // Check token count
-    tokenCountEmbedding, tokenCountInference, err := getTokenCount(fmt.Sprintf("%s/generate-response/", repoManagerURL), bytes.NewBuffer(payloadBytes))
     req, err := http.NewRequest("POST", fmt.Sprintf("%s/generate-response", endpoint), bytes.NewBuffer(payloadBytes))
     if err != nil {
-        fmt.Printf("Error getting token count: %v\n", err)
-        return nil, err
+        return nil, fmt.Errorf("failed to create request: %w", err)
     }
-
-    // Print the token counts separately
-    fmt.Printf("Estimated embedding tokens: %d\n", tokenCountEmbedding)
-    fmt.Printf("Estimated inference tokens: %d\n", tokenCountInference)
-
-    // Confirm to proceed
-    if !force && !confirmProceed() {
-        return nil, fmt.Errorf("operation aborted by user")
-    }
-
-    // Start the spinner
-    done := make(chan bool)
-    go utils.Spinner(done)
 
     // Set API Gateway headers if not blank
     if config.Environment.APIGatewayHostKey != "" && config.Environment.APIGatewayHostValue != "" {
@@ -363,6 +345,10 @@ func CallOpenAIAPI(prompt, project, mode, model, matchStrength string, force boo
     client := &http.Client{
         Timeout: 20 * time.Minute,
     }
+
+    // Start the spinner (if needed)
+    done := make(chan bool)
+    go utils.Spinner(done)
 
     resp, err := client.Do(req)
     if err != nil {

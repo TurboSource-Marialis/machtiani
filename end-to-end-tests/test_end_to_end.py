@@ -57,9 +57,8 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
         stdout_normalized = clean_output(stdout_machtiani)
 
         self.assertTrue(any("Using remote URL" in line for line in stdout_normalized))
-        self.assertTrue(any("Estimated embedding tokens: 0" in line for line in stdout_normalized))
-        self.assertTrue(any("Estimated inference tokens: 7" in line for line in stdout_normalized))
         self.assertTrue(any("chastler" in line for line in stdout_normalized))
+        self.assertFalse(any("video" in line for line in stdout_normalized))
         self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_normalized))
 
     def test_run_machtiani_sync_command(self):
@@ -110,9 +109,7 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
         stdout_prompt_normalized = clean_output(stdout_prompt)
 
         self.assertTrue(any("Using remote URL" in line for line in stdout_prompt_normalized))
-        self.assertTrue(any("Estimated embedding tokens: 0" in line for line in stdout_prompt_normalized))
-        self.assertTrue(any("Estimated inference tokens: 7" in line for line in stdout_prompt_normalized))
-        self.assertTrue(any("chastler" in line for line in stdout_prompt_normalized))
+        self.assertTrue(any("video" in line for line in stdout_prompt_normalized))
         self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_prompt_normalized))
 
     def test_run_machtiani_status_with_lock(self):
