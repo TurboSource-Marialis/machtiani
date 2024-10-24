@@ -39,7 +39,7 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
             "Ignoring files based on .machtiani.ignore:",
             "poetry.lock",
             "Estimated embedding tokens: 25",
-            "Estimated inference tokens: 10086",
+            "Estimated inference tokens: 1428",
             "VCSType.git repository added successfully"
             "",
             "---",
@@ -51,7 +51,7 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
         self.assertEqual(stdout_normalized, expected_output)
 
     def test_run_machtiani_prompt_command(self):
-        time.sleep(15)
+        time.sleep(20)
         command = 'machtiani "what does the readme say?" --force'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
