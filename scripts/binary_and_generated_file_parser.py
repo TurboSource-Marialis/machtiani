@@ -2,6 +2,8 @@ import os
 
 # List of auto-generated directory names to ignore
 IGNORE_DIRS = [
+    'scripts',
+    'images',
     'build',
     'dist',
     'out',

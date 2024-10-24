@@ -88,6 +88,7 @@ async def generate_response(
     api_key: str = Body(..., description="API key for OpenAI model"),
     codehost_api_key: SecretStr = Body(..., description="Code host API key for authentication"),
     codehost_url: str = Body(..., description="Code host URL for the repository"),  # New parameter
+    ignore_files: List[str] = Body(..., description="List of file paths to ignore"),
 ):
     # Existing logic remains unchanged
     if model not in TOKEN_LIMITS:
@@ -100,16 +101,8 @@ async def generate_response(
     base_url = "http://commit-file-retrieval:5070"
 
     infer_file_url = f"{base_url}/infer-file/"
-    retrieve_file_contents_url = f"{base_url}/retrieve-file-contents/?project_name={project}"
     get_file_summary_url = f"{base_url}/get-file-summary/?project_name={project}"
     test_pull_access_url = f"{base_url}/test-pull-access/"
-
-    ignore_files = []
-    try:
-        with open(".machtiani.ignore", "r") as f:
-            ignore_files = [line.strip() for line in f if line.strip()]
-    except FileNotFoundError:
-        logger.warning("No .machtiani.ignore file found, proceeding without ignoring any files.")
 
     try:
         async with httpx.AsyncClient(timeout=httpx.Timeout(1200, read=1200.0)) as client:
@@ -217,7 +210,15 @@ async def generate_response(
                     return {"error": "No relevant entries found in the original payload after filtering."}
 
                 # Step 6: Retrieve file contents using relevant file paths
-                content_response = await client.post(retrieve_file_contents_url, json=relevant_file_paths_payload)
+                # Update this part to include the ignore_files parameter
+                content_response = await client.post(
+                    f"{base_url}/retrieve-file-contents/",
+                    json={
+                        "project_name": project,
+                        "file_paths": relevant_file_paths_payload,
+                        "ignore_files": ignore_files  # Pass the ignore_files list here
+                    }
+                )
                 content_response.raise_for_status()
 
                 file_content_response = FileContentResponse(**content_response.json())

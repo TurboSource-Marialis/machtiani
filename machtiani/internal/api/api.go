@@ -298,9 +298,16 @@ func DeleteStore(projectName string, codehostURL string, ignoreFiles []string, v
 }
 
 func CallOpenAIAPI(prompt, project, mode, model, matchStrength string, force bool) (map[string]interface{}, error) {
-    config, err := utils.LoadConfig()
+
+    config, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
     if err != nil {
         log.Fatalf("Error loading config: %v", err)
+    }
+
+    // Print the file paths
+    fmt.Println("Parsed file paths from machtiani.ignore:")
+    for _, path := range ignoreFiles {
+        fmt.Println(path)
     }
 
     // Retrieve the codehost URL based on the current Git project.
@@ -318,6 +325,7 @@ func CallOpenAIAPI(prompt, project, mode, model, matchStrength string, force boo
         "api_key":        config.Environment.ModelAPIKey,
         "codehost_api_key": config.Environment.CodeHostAPIKey,
         "codehost_url":   codehostURL, // Include the codehost_url here
+        "ignore_files": ignoreFiles,
     }
 
     payloadBytes, err := json.Marshal(payload)
