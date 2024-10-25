@@ -29,8 +29,15 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
             stdout, stderr = cls.setup.checkout_branch("feature")
             print("Checkout Output:", stdout)
             print("Checkout Errors:", stderr)  # Will contain any errors if the checkout fails
+        if " feature2" not in branches:  # Checking for local branch existence
+            stdout, stderr = cls.setup.checkout_branch("feature2")
+            print("Checkout Output:", stdout)
+            print("Checkout Errors:", stderr)  # Will contain any errors if the checkout fails
+        stdout, stderr = cls.setup.checkout_branch("master")
 
-    def test_run_machtiani_git_store(self):
+    def test_01_run_machtiani_git_store(self):
+        # Introduce a slight delay to allow for remote to be ready
+        time.sleep(5)
         command = 'machtiani git-store --branch-name "master" --force'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
@@ -51,18 +58,30 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
         expected_output = [line.strip() for line in expected_output if line.strip()]
         self.assertEqual(stdout_normalized, expected_output)
 
-    def test_run_machtiani_prompt_command(self):
-        time.sleep(20)
+    def test_02_run_machtiani_sync_command_not_ready(self):
+        command = 'machtiani git-sync --branch-name "master" --force'
+        stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
+        stdout_normalized = clean_output(stdout_machtiani)
+
+
+        self.assertFalse(any("Operation is locked for project 'github_com_7db9a_chastler'" in line for line in stdout_normalized))
+
+    def test_03_run_machtiani_prompt_command(self):
+        time.sleep(25)
         command = 'machtiani "what does the readme say?" --force'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
+        print(f"stdout_machtiani")
+        print(f"{stdout_machtiani}")
+        print(f"stdout_normalized")
+        print(f"{stdout_normalized}")
 
         self.assertTrue(any("Using remote URL" in line for line in stdout_normalized))
         self.assertTrue(any("chastler" in line for line in stdout_normalized))
         self.assertFalse(any("video" in line for line in stdout_normalized))
         self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_normalized))
 
-    def test_run_machtiani_sync_command(self):
+    def test_04_run_machtiani_sync_command(self):
         command = 'machtiani git-sync --branch-name "master" --force'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
@@ -80,7 +99,7 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
         expected_output = [line.strip() for line in expected_output if line.strip()]
         self.assertEqual(stdout_normalized, expected_output)
 
-    def test_sync_new_commits_and_prompt_command(self):
+    def test_05_sync_new_commits_and_prompt_command(self):
         # Step 1: Force push `feature` branch to `master`
         self.setup.force_push("feature", "master")
 
@@ -113,7 +132,13 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
         self.assertTrue(any("video" in line for line in stdout_prompt_normalized))
         self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_prompt_normalized))
 
-    def test_run_machtiani_status_with_lock(self):
+    def test_06_run_machtiani_status_with_lock(self):
+        # Step 1: Force push `feature` branch to `master`
+        self.setup.force_push("feature2", "master")
+
+        # Introduce a slight delay to allow for remote to be ready
+        time.sleep(5)
+
         def run_sync():
             command = 'machtiani git-sync --branch-name "master" --force'
             run_machtiani_command(command, self.directory)
@@ -126,16 +151,29 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
 
         # Step 4: Now run the status command while the sync is running
         status_command = 'machtiani status'
-        stdout_status, stderr_status = run_machtiani_command(status_command, self.directory)
-        stdout_status_normalized = clean_output(stdout_status)
-
         expected_output_with_lock = [
             "Using remote URL: https://github.com/7db9a/chastler.git",
             "Project is getting processed and not ready for chat.",
             'Lock duration: 00:00:00'
         ]
-
         expected_output_with_lock = [line.strip() for line in expected_output_with_lock if line.strip()]
+
+        # Retry loop for checking the status command output
+        max_wait_time = 30  # seconds
+        interval = 1  # seconds
+        elapsed_time = 0
+
+        while elapsed_time < max_wait_time:
+            stdout_status, stderr_status = run_machtiani_command(status_command, self.directory)
+            stdout_status_normalized = clean_output(stdout_status)
+
+            if stdout_status_normalized == expected_output_with_lock:
+                break  # Exit the loop if the output matches
+
+            time.sleep(interval)  # Wait before retrying
+            elapsed_time += interval
+
+        # Final assertion after loop
         self.assertEqual(stdout_status_normalized, expected_output_with_lock)
 
         # Step 5: Wait for the sync thread to finish
