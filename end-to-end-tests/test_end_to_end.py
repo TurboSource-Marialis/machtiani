@@ -22,6 +22,7 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
         fetch_res = cls.setup.fetch_latest_branches()
         print("Fetched branches:", fetch_res)
         cls.setup.force_push("master-backup", "master")
+        cls.setup.create_ignore_file()
 
         branches = cls.setup.get_branches()
         if " feature" not in branches:  # Checking for local branch existence
@@ -145,6 +146,7 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
         """Clean up the test environment by running the git delete command."""
         try:
             cls.teardown = Teardown(cls.directory)
+            cls.teardown.delete_ignore_file()
             stdout, stderr = cls.teardown.run_git_delete()
             print("Teardown Output:", stdout)
             print("Teardown Errors:", stderr)

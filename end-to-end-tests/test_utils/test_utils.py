@@ -31,6 +31,15 @@ class Teardown:
         stdout, stderr = run_machtiani_command('git branch', self.git_directory)
         return stdout  # Directly return stdout since it's already a list
 
+    def delete_ignore_file(self):
+        """Delete the .machtiani.ignore file if it exists."""
+        ignore_file_path = os.path.join(self.git_directory, '.machtiani.ignore')
+        if os.path.exists(ignore_file_path):
+            os.remove(ignore_file_path)
+            print(f"Deleted .machtiani.ignore file.")
+        else:
+            print(f".machtiani.ignore file does not exist.")
+
 class Setup:
     def __init__(self, git_directory):
         """Initialize the Setup class with the path to the git project directory."""
@@ -68,6 +77,13 @@ class Setup:
     def get_branches(self):
         stdout, stderr = run_machtiani_command('git branch', self.git_directory)
         return stdout  # Directly return stdout since it's already a list
+
+    def create_ignore_file(self):
+        """Create a .machtiani.ignore file in the git directory with the specified content."""
+        ignore_file_path = os.path.join(self.git_directory, '.machtiani.ignore')
+        with open(ignore_file_path, 'w') as f:
+            f.write('poetry.lock\n')
+        print(f"Created .machtiani.ignore file with content: 'poetry.lock'")
 
 
 def clean_output(stdout_lines):
