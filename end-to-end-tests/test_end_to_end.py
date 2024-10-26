@@ -68,7 +68,15 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
         self.assertFalse(any("Operation is locked for project 'github_com_7db9a_chastler'" in line for line in stdout_normalized))
 
     def test_03_run_machtiani_prompt_command(self):
-        time.sleep(25)
+        status_command = 'machtiani status'
+        expected_output_with_lock = [
+            "Using remote URL: https://github.com/7db9a/chastler.git",
+            "Project is getting processed and not ready for chat.",
+            'Lock duration: 00:00:00'
+        ]
+        expected_output_with_lock = [line.strip() for line in expected_output_with_lock if line.strip()]
+        wait_for_status(status_command, expected_output_with_lock, self.directory)
+
         command = 'machtiani "what does the readme say?" --force'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
