@@ -1,5 +1,6 @@
 import os
 import subprocess
+import time
 
 class Teardown:
     def __init__(self, git_directory):
@@ -163,3 +164,31 @@ def checkout_branch(branch_name, git_directory):
     except subprocess.CalledProcessError as e:
         print(f"An error occurred while checking out branch '{branch_name}': {e}")
         return [], [str(e)]
+
+def wait_for_status(command, expected_output, directory, max_wait_time=30, interval=1):
+    """
+    Wait for a command to return the expected output by polling.
+
+    Args:
+        command (str): The command to be executed.
+        expected_output (list): The expected output to match.
+        directory (str): The directory to execute the command in.
+        max_wait_time (int): Maximum waiting time in seconds.
+        interval (int): Interval time in seconds between command executions.
+
+    Returns:
+        bool: True if the expected output was matched, False otherwise.
+    """
+    elapsed_time = 0
+
+    while elapsed_time < max_wait_time:
+        stdout_status, stderr_status = run_machtiani_command(command, directory)
+        stdout_status_normalized = clean_output(stdout_status)
+
+        if stdout_status_normalized == expected_output:
+            return True  # Exit if the output matches
+
+        time.sleep(interval)  # Wait before retrying
+        elapsed_time += interval
+
+    return False  # Timeout reached without matching output

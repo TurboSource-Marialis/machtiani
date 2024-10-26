@@ -2,10 +2,11 @@ import unittest
 import time
 import threading
 from test_utils.test_utils import (
+    Teardown,
+    Setup,
     clean_output,
     run_machtiani_command,
-    Teardown,
-    Setup
+    wait_for_status,
 )
 
 class TestEndToEndMachtianiCommands(unittest.TestCase):
@@ -133,7 +134,7 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
         self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_prompt_normalized))
 
     def test_06_run_machtiani_status_with_lock(self):
-        # Step 1: Force push `feature` branch to `master`
+        # Step 1: Force push `feature2` branch to `master`
         self.setup.force_push("feature2", "master")
 
         # Introduce a slight delay to allow for remote to be ready
@@ -158,23 +159,11 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
         ]
         expected_output_with_lock = [line.strip() for line in expected_output_with_lock if line.strip()]
 
-        # Retry loop for checking the status command output
-        max_wait_time = 30  # seconds
-        interval = 1  # seconds
-        elapsed_time = 0
-
-        while elapsed_time < max_wait_time:
-            stdout_status, stderr_status = run_machtiani_command(status_command, self.directory)
-            stdout_status_normalized = clean_output(stdout_status)
-
-            if stdout_status_normalized == expected_output_with_lock:
-                break  # Exit the loop if the output matches
-
-            time.sleep(interval)  # Wait before retrying
-            elapsed_time += interval
+        # Use the wait_for_status function
+        success = wait_for_status(status_command, expected_output_with_lock, self.directory)
 
         # Final assertion after loop
-        self.assertEqual(stdout_status_normalized, expected_output_with_lock)
+        self.assertTrue(success, "Expected output was not matched before the timeout.")
 
         # Step 5: Wait for the sync thread to finish
         sync_thread.join()
