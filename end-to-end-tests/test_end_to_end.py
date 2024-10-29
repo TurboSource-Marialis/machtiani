@@ -21,7 +21,6 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
 
         # Fetch the latest branches
         fetch_res = cls.setup.fetch_latest_branches()
-        print("Fetched branches:", fetch_res)
         cls.setup.force_push("master-backup", "master")
         cls.setup.create_ignore_file()
 
@@ -80,10 +79,6 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
         command = 'machtiani "what does the readme say?" --force'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
-        print(f"stdout_machtiani")
-        print(f"{stdout_machtiani}")
-        print(f"stdout_normalized")
-        print(f"{stdout_normalized}")
 
         self.assertTrue(any("Using remote URL" in line for line in stdout_normalized))
         self.assertTrue(any("chastler" in line for line in stdout_normalized))
@@ -166,8 +161,6 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
             'Lock duration: 00:00:00'
         ]
         expected_output_with_lock = [line.strip() for line in expected_output_with_lock if line.strip()]
-
-        # Use the wait_for_status function
         success = wait_for_status(status_command, expected_output_with_lock, self.directory)
 
         # Final assertion after loop

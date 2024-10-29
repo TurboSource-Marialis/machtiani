@@ -268,3 +268,4 @@ Machtiani simplifies code retrieval and interaction with repositories through a 
 - [x] Calculate and cap token usage.
 - [x] Server should not block the thread (async).
 - [x] End-to-end test coverage (strategic, not full).
+- [ ] Refactor for code modularity and readability - first pass and low-hanging fruit
