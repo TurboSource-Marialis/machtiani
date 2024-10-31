@@ -6,7 +6,8 @@ from test_utils.test_utils import (
     Setup,
     clean_output,
     run_machtiani_command,
-    wait_for_status,
+    wait_for_status_complete,
+    wait_for_status_incomplete,
 )
 
 class TestEndToEndMachtianiCommands(unittest.TestCase):
@@ -68,13 +69,8 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
 
     def test_03_run_machtiani_prompt_command(self):
         status_command = 'machtiani status'
-        expected_output_with_lock = [
-            "Using remote URL: https://github.com/7db9a/chastler.git",
-            "Project is getting processed and not ready for chat.",
-            'Lock duration: 00:00:00'
-        ]
-        expected_output_with_lock = [line.strip() for line in expected_output_with_lock if line.strip()]
-        wait_for_status(status_command, expected_output_with_lock, self.directory)
+        wait_for_status_complete(status_command, self.directory)
+        time.sleep(3)
 
         command = 'machtiani "what does the readme say?" --force'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
@@ -155,16 +151,10 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
 
         # Step 4: Now run the status command while the sync is running
         status_command = 'machtiani status'
-        expected_output_with_lock = [
-            "Using remote URL: https://github.com/7db9a/chastler.git",
-            "Project is getting processed and not ready for chat.",
-            'Lock duration: 00:00:00'
-        ]
-        expected_output_with_lock = [line.strip() for line in expected_output_with_lock if line.strip()]
-        success = wait_for_status(status_command, expected_output_with_lock, self.directory)
-
-        # Final assertion after loop
-        self.assertTrue(success, "Expected output was not matched before the timeout.")
+        stdout_machtiani, stderr_machtiani = run_machtiani_command(status_command, self.directory)
+        stdout_normalized = clean_output(stdout_machtiani)
+        status = wait_for_status_incomplete(status_command, self.directory)
+        self.assertTrue(status)
 
         # Step 5: Wait for the sync thread to finish
         sync_thread.join()

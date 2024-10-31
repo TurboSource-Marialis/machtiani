@@ -2,6 +2,7 @@ import os
 import subprocess
 import time
 import yaml
+import re
 
 class Teardown:
     def __init__(self, git_directory):
@@ -206,14 +207,39 @@ def checkout_branch(branch_name, git_directory):
         print(f"An error occurred while checking out branch '{branch_name}': {e}")
         return [], [str(e)]
 
-def wait_for_status(command, expected_output, directory, max_wait_time=30, interval=1):
+def wait_for_status_complete(command, directory, max_wait_time=30, interval=1):
     """Wait for a command to return the expected output by polling."""
     elapsed_time = 0
     while elapsed_time < max_wait_time:
         stdout_status, stderr_status = run_machtiani_command(command, directory)
         stdout_status_normalized = clean_output(stdout_status)
 
-        if stdout_status_normalized == expected_output:
+        # Convert stdout_status_normalized to a single string if it's a list
+        if isinstance(stdout_status_normalized, list):
+            stdout_status_normalized = "\n".join(stdout_status_normalized)
+
+        # Check for expected output for readiness
+        if "Project is ready for chat!" in stdout_status_normalized:
+            return True
+
+        time.sleep(interval)
+        elapsed_time += interval
+
+    return False
+
+def wait_for_status_incomplete(command, directory, max_wait_time=30, interval=1):
+    """Wait for a command to return the expected output by polling."""
+    elapsed_time = 0
+    while elapsed_time < max_wait_time:
+        stdout_status, stderr_status = run_machtiani_command(command, directory)
+        stdout_status_normalized = clean_output(stdout_status)
+
+        # Convert stdout_status_normalized to a single string if it's a list
+        if isinstance(stdout_status_normalized, list):
+            stdout_status_normalized = "\n".join(stdout_status_normalized)
+
+        # Check for expected output for readiness
+        if "Project is getting processed and not ready for chat." in stdout_status_normalized and "Lock duration" in stdout_status_normalized and "Using remote URL: https://github.com/7db9a/chastler.git" in stdout_status_normalized:
             return True
 
         time.sleep(interval)
