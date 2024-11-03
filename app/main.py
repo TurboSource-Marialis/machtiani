@@ -11,5 +11,5 @@ logger = logging.getLogger("uvicorn")
 logger.info("Application is starting up...")
 
 # Include the routers
-app.include_router(filename_router)
-app.include_router(response_router)
+app.include_router(generate_filename)
+app.include_router(generate_response)
