@@ -25,8 +25,7 @@ type DeleteStoreResponse struct {
     Message string `json:"message"`
 }
 
-// getTokenCount calls the /load/token-count endpoint to get the token count
-type TokenCountResponse struct {
+type LoadResponse struct {
     EmbeddingTokens int `json:"embedding_tokens"`
     InferenceTokens int `json:"inference_tokens"`
 }
@@ -414,7 +413,7 @@ func getTokenCount(endpoint string, buffer *bytes.Buffer) (int, int, error) {
     }
 
     // Decode the JSON response into the new struct
-    var tokenCountResponse TokenCountResponse
+    var tokenCountResponse LoadResponse
     if err := json.Unmarshal(body, &tokenCountResponse); err != nil {
         return 0, 0, fmt.Errorf("error decoding response: %w", err)
     }
