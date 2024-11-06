@@ -36,6 +36,20 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
             print("Checkout Errors:", stderr)  # Will contain any errors if the checkout fails
         stdout, stderr = cls.setup.checkout_branch("master")
 
+    def test_00_run_machtiani_delete_nonexistent_project(self):
+        # Attempt to delete a project that does not exist
+        project_no_exist_yet = "github_com_7db9a_chastler"
+        command = f'machtiani git-delete --force'
+        stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
+        stdout_normalized = clean_output(stdout_machtiani)
+
+        # Check for the message indicating the project does not exist
+        expected_message = f"Store for project '{project_no_exist_yet}' does not exist at path: /data/users/repositories/github_com_7db9a_chastler"
+
+        # Assert that the expected message is in the output
+        self.assertTrue(any(expected_message in line for line in stdout_normalized),
+                        msg=f"Expected message not found in output: {stdout_normalized}")
+
     def test_01_run_machtiani_git_store(self):
         # Introduce a slight delay to allow for remote to be ready
         time.sleep(5)
