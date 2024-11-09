@@ -293,6 +293,8 @@ apiResponse, err := api.CallOpenAIAPI(prompt, projectName, *modeFlag, *modelFlag
 }
 
 func handleAPIResponse(prompt string, apiResponse map[string]interface{}, filename string, fileFlag string) {
+    startTime := time.Now() // Start timing
+
     // Check for the "machtiani" key first
     if machtianiMsg, ok := apiResponse["machtiani"].(string); ok {
         log.Printf("Machtiani Message: %s", machtianiMsg)
@@ -325,6 +327,10 @@ func handleAPIResponse(prompt string, apiResponse map[string]interface{}, filena
     }
 
     fmt.Printf("Response saved to %s\n", tempFile)
+
+    // End timing and print the duration
+    duration := time.Since(startTime)
+    fmt.Printf("handleAPIResponse took %s\n", duration)
 }
 
 // handleError prints the error message and exits the program.
