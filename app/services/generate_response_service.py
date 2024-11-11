@@ -3,7 +3,7 @@ import json
 import re
 import os
 import logging
-from typing import List
+from typing import List, Optional
 from pydantic import SecretStr
 from fastapi import HTTPException
 from app.utils import (
@@ -44,7 +44,7 @@ async def generate_response(
     model: str,
     match_strength: str,
     api_key: str,
-    codehost_api_key: SecretStr,
+    codehost_api_key: Optional[SecretStr],
     codehost_url: str,
     ignore_files: List[str],
 ):
@@ -63,7 +63,7 @@ async def generate_response(
         async with httpx.AsyncClient(timeout=httpx.Timeout(1200, read=1200.0)) as client:
             params = {
                 'project_name': project,
-                'codehost_api_key': codehost_api_key.get_secret_value(),
+                'codehost_api_key': codehost_api_key,
                 'codehost_url': codehost_url
             }
             pull_access_response = await client.post(test_pull_access_url, params=params)
