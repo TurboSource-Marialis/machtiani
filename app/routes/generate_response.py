@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Body
-from pydantic import SecretStr
-from typing import List
+from pydantic import SecretStr, HttpUrl
+from typing import List, Optional
 from app.services.generate_response_service import generate_response
 
 router = APIRouter()
@@ -13,8 +13,8 @@ async def generate_response_route(
     model: str = Body(..., description="The embedding model used"),
     match_strength: str = Body(..., description="The strength of the match"),
     api_key: str = Body(..., description="API key for OpenAI model"),
-    codehost_api_key: SecretStr = Body(..., description="Code host API key for authentication"),
-    codehost_url: str = Body(..., description="Code host URL for the repository"),
+    codehost_api_key: Optional[SecretStr] = Body(..., description="Code host API key for authentication"),
+    codehost_url: HttpUrl = Body(..., description="Code host URL for the repository"),
     ignore_files: List[str] = Body(..., description="List of file paths to ignore"),
 ):
     return await generate_response(

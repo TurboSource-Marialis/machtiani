@@ -4,7 +4,7 @@ import re
 import os
 import logging
 from typing import List, Optional
-from pydantic import SecretStr
+from pydantic import SecretStr, HttpUrl
 from fastapi import HTTPException
 from app.utils import (
     aggregate_file_paths,
@@ -45,7 +45,7 @@ async def generate_response(
     match_strength: str,
     api_key: str,
     codehost_api_key: Optional[SecretStr],
-    codehost_url: str,
+    codehost_url: HttpUrl,
     ignore_files: List[str],
 ):
     if model not in TOKEN_LIMITS:
@@ -63,7 +63,7 @@ async def generate_response(
         async with httpx.AsyncClient(timeout=httpx.Timeout(1200, read=1200.0)) as client:
             params = {
                 'project_name': project,
-                'codehost_api_key': codehost_api_key,
+                'codehost_api_key': codehost_api_key.get_secret_value() if codehost_api_key else None,  # Get the actual value
                 'codehost_url': codehost_url
             }
             pull_access_response = await client.post(test_pull_access_url, params=params)
