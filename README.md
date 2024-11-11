@@ -269,3 +269,6 @@ Machtiani simplifies code retrieval and interaction with repositories through a 
 - [x] Server should not block the thread (async).
 - [x] End-to-end test coverage (strategic, not full).
 - [x] Refactor for code modularity and readability - first pass and low-hanging fruit
+- [ ] Optional codehost key for optional private repo use.
+- [ ] Filter commit embeddings per oids in branch so it works regardless of branch checked out.
+- [ ] Version the file summary embeddings and tag commits at HEAD of work tree of code project so it can be switch to reflect code project branch.
