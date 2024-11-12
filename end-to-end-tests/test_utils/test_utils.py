@@ -3,6 +3,7 @@ import subprocess
 import time
 import yaml
 import re
+import shutil
 
 class Teardown:
     def __init__(self, git_directory):
@@ -10,6 +11,15 @@ class Teardown:
         if not os.path.isdir(git_directory):
             raise ValueError(f"The specified directory '{git_directory}' is not a valid directory.")
         self.git_directory = git_directory
+
+        # Copy default.machtiani-config.yml to .machtiani-config.yml
+        default_config_path = os.path.join(self.git_directory, 'default.machtiani-config.yml')
+        target_config_path = os.path.join(self.git_directory, '.machtiani-config.yml')
+        if os.path.exists(default_config_path):
+            shutil.copy(default_config_path, target_config_path)
+            print(f"Copied default.machtiani-config.yml to .machtiani-config.yml")
+        else:
+            print(f"Warning: {default_config_path} does not exist. No configuration file copied.")
 
     def run_git_delete(self):
         """Run 'machtiani git-delete --force' in the specified git directory."""
@@ -39,12 +49,22 @@ class Teardown:
             print(f".machtiani.ignore file does not exist.")
 
 class Setup:
-    def __init__(self, git_directory):
+    def __init__(self, git_directory, no_code_host_key=False):
         """Initialize the Setup class with the path to the git project directory."""
         if not os.path.isdir(git_directory):
             raise ValueError(f"The specified directory '{git_directory}' is not a valid directory.")
         self.git_directory = git_directory
         self.git_operations = GitOperations(git_directory)  # Initialize GitOperations
+
+        if no_code_host_key:
+            # Copy no-code-host-key.machtiani-config.yml to .machtiani-config.yml
+            no_code_host_key_config_path = os.path.join(self.git_directory, 'no-code-host-key.machtiani-config.yml')
+            target_config_path = os.path.join(self.git_directory, '.machtiani-config.yml')
+            if os.path.exists(no_code_host_key_config_path):
+                shutil.copy(no_code_host_key_config_path, target_config_path)
+                print(f"Copied no-code-host-key.machtiani-config.yml to .machtiani-config.yml")
+            else:
+                print(f"Warning: {no_code_host_key_config_path} does not exist. No configuration file copied.")
 
     def run_git_store(self):
         """Run 'machtiani git-store --branch-name "master" --force' in the specified git directory."""

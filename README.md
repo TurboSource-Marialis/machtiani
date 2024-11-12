@@ -269,6 +269,16 @@ Machtiani simplifies code retrieval and interaction with repositories through a 
 - [x] Server should not block the thread (async).
 - [x] End-to-end test coverage (strategic, not full).
 - [x] Refactor for code modularity and readability - first pass and low-hanging fruit
-- [ ] Optional codehost key for optional private repo use.
+- [x] Optional codehost key for optional private repo use.
+- [x] Mask key in construct_remote_url logging.
+- [x] Test using codehost without api key.
+- [ ] Test should fail if config with codehost api key isn't present, and it should verify there is no codehost api key
+- [ ] When trying to git-store an existing repo, it gives this not useful error
+
+      ```
+      Error getting token count: error getting token count: {"detail":""}
+      2024/11/11 20:29:23 Error adding repository: error getting token count: {"detail":""}
+      ```
+- [ ] If remote url for machtiani (machtiani) is not present, cli should ask for the remote url and then add to remote.
 - [ ] Filter commit embeddings per oids in branch so it works regardless of branch checked out.
 - [ ] Version the file summary embeddings and tag commits at HEAD of work tree of code project so it can be switch to reflect code project branch.
