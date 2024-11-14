@@ -163,3 +163,8 @@ cython_debug/
 
 .machtiani
 machtiani/machtiani
+end-to-end-tests/data/
+docs/private/
+docs/OpenAPI-Combined.json
+docs/OpenAPI-Port5070-Service.json
+docs/OpenAPI-Port5071-Service.json
