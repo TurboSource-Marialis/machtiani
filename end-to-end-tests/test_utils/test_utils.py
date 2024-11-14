@@ -266,3 +266,4 @@ def wait_for_status_incomplete(command, directory, max_wait_time=30, interval=1)
         elapsed_time += interval
 
     return False
+

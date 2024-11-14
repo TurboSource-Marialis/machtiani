@@ -9,53 +9,26 @@ from test_utils.test_utils import (
     wait_for_status_complete,
     wait_for_status_incomplete,
 )
+from test_utils.base_test import BaseTestEndToEnd
 
-class TestEndToEndMachtianiCommands(unittest.TestCase):
-
+class TestEndToEndWithCodeHost(BaseTestEndToEnd):
     @classmethod
     def setUpClass(cls):
-        cls.maxDiff = None
-        # Set the directory for the test
-        cls.directory = "data/git-projects/chastler"
-        # Initialize the Setup class with the git project directory
-        cls.setup = Setup(cls.directory)
-
-        # Fetch the latest branches
-        fetch_res = cls.setup.fetch_latest_branches()
-        cls.setup.force_push("master-backup", "master")
-        cls.setup.create_ignore_file()
-
-        branches = cls.setup.get_branches()
-        if " feature" not in branches:  # Checking for local branch existence
-            stdout, stderr = cls.setup.checkout_branch("feature")
-            print("Checkout Output:", stdout)
-            print("Checkout Errors:", stderr)  # Will contain any errors if the checkout fails
-        if " feature2" not in branches:  # Checking for local branch existence
-            stdout, stderr = cls.setup.checkout_branch("feature2")
-            print("Checkout Output:", stdout)
-            print("Checkout Errors:", stderr)  # Will contain any errors if the checkout fails
-        stdout, stderr = cls.setup.checkout_branch("master")
+        super().setUpClass(no_code_host_key=False)
 
     def test_00_run_machtiani_delete_nonexistent_project(self):
-        # Attempt to delete a project that does not exist
         project_no_exist_yet = "github_com_7db9a_chastler"
         command = f'machtiani git-delete --force'
-        stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
-        stdout_normalized = clean_output(stdout_machtiani)
+        stdout_normalized = self.run_machtiani_command(command)
 
-        # Check for the message indicating the project does not exist
         expected_message = f"Store for project '{project_no_exist_yet}' does not exist at path: /data/users/repositories/github_com_7db9a_chastler"
-
-        # Assert that the expected message is in the output
         self.assertTrue(any(expected_message in line for line in stdout_normalized),
                         msg=f"Expected message not found in output: {stdout_normalized}")
 
     def test_01_run_machtiani_git_store(self):
-        # Introduce a slight delay to allow for remote to be ready
         time.sleep(5)
         command = 'machtiani git-store --branch-name "master" --force'
-        stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
-        stdout_normalized = clean_output(stdout_machtiani)
+        stdout_normalized = self.run_machtiani_command(command)
 
         expected_output = [
             "Using remote URL: https://github.com/7db9a/chastler.git",
@@ -63,7 +36,7 @@ class TestEndToEndMachtianiCommands(unittest.TestCase):
             "poetry.lock",
             "Estimated embedding tokens: 25",
             "Estimated inference tokens: 1428",
-            "VCSType.git repository added successfully"
+            "VCSType.git repository added successfully",
             "",
             "---",
             "Your repo is getting added to machtiani is in progress!",
