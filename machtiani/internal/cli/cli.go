@@ -260,6 +260,8 @@ func Execute() {
         printVerboseInfo(*fileFlag, *modelFlag, *matchStrengthFlag, *modeFlag, prompt)
     }
 
+
+    startTime := time.Now() // Start the timer here
     // Call OpenAI API to generate response
 apiResponse, err := api.CallOpenAIAPI(prompt, projectName, *modeFlag, *modelFlag, *matchStrengthFlag, *forceFlag)
     if err != nil {
@@ -290,10 +292,13 @@ apiResponse, err := api.CallOpenAIAPI(prompt, projectName, *modeFlag, *modelFlag
 
     // Handle API response and save it to a markdown file with the generated filename
     handleAPIResponse(prompt, apiResponse, filename, *fileFlag) // Pass filename here
+    // End timing after the response is handled
+    duration := time.Since(startTime)
+    fmt.Printf("Total response handling took %s\n", duration) // Print total duration
 }
 
 func handleAPIResponse(prompt string, apiResponse map[string]interface{}, filename string, fileFlag string) {
-    startTime := time.Now() // Start timing
+    // Timing within this function is no longer needed since the timing is handled in Execute
 
     // Check for the "machtiani" key first
     if machtianiMsg, ok := apiResponse["machtiani"].(string); ok {
@@ -327,10 +332,6 @@ func handleAPIResponse(prompt string, apiResponse map[string]interface{}, filena
     }
 
     fmt.Printf("Response saved to %s\n", tempFile)
-
-    // End timing and print the duration
-    duration := time.Since(startTime)
-    fmt.Printf("handleAPIResponse took %s\n", duration)
 }
 
 // handleError prints the error message and exits the program.
