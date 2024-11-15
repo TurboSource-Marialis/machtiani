@@ -162,6 +162,7 @@ cython_debug/
 #.idea/
 
 .machtiani
+.machtiain-config.yml
 machtiani/machtiani
 end-to-end-tests/data/
 private/
