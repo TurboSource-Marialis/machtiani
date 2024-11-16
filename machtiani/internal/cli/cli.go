@@ -121,9 +121,7 @@ func Execute() {
     }
 
     if !compatible {
-        log.Fatalf("This CLI is no longer compatible with the current environment. Please update to the latest version.")
-        log.Fatalf("")
-        log.Fatalf(message)
+        log.Fatalf("This CLI is no longer compatible with the current environment. Please update to the latest version by following the below instructions\n\n%v", message)
     }
 
 
