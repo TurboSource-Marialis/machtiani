@@ -171,3 +171,16 @@ class BaseTestEndToEnd:
         # Step 5: Wait for the sync thread to finish
         sync_thread.join()
 
+    def test_07_run_machtiani_git_store_existing_project(self):
+        """Test running git-store on an already added project."""
+        command = 'machtiani git-store --branch-name "master" --force'
+        
+        # Run git-store for the first time
+        stdout_normalized = self.run_machtiani_command(command)
+        
+        # Now run git-store again to check for existing project response
+        stdout_normalized_second_run = self.run_machtiani_command(command)
+
+        # Check if the output contains the expected message
+        self.assertTrue(any("The project already exists!" in line for line in stdout_normalized), "Expected message about existing project not found in output.")
+
