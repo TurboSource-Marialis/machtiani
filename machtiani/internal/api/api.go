@@ -12,8 +12,10 @@ import (
 
     "github.com/7db9a/machtiani/internal/utils"
 )
-
-var HEAD_OID string
+var (
+    HeadOID    string = "none"
+    BuildDate string = "unknown"
+)
 
 type AddRepositoryResponse struct {
     Message        string `json:"message"`
@@ -516,13 +518,13 @@ func CheckHeadOIDsMatch() (bool, error) {
         return false, fmt.Errorf("error decoding response: %w", err)
     }
 
-    // Compare the returned head_oid with HEAD_OID
+    // Compare the returned head_oid with HeadOID
     returnedHeadOID, ok := response["head_oid"]
     if !ok {
         return false, fmt.Errorf("response does not contain head_oid")
     }
 
-    return returnedHeadOID == HEAD_OID, nil
+    return returnedHeadOID == HeadOID, nil
 }
 
 
