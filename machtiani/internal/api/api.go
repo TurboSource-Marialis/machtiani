@@ -475,7 +475,7 @@ func CheckStatus(codehostURL string, apiKey *string) (StatusResponse, error) {
     return statusResponse, nil
 }
 
-func CheckHeadOIDsMatch() (bool, string, error) {
+func GetInstallInfo() (bool, string, error) {
     config, _, err := utils.LoadConfigAndIgnoreFiles()
     if err != nil {
         return false, "", fmt.Errorf("error loading config: %w", err)
