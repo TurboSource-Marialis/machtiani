@@ -115,7 +115,7 @@ func Execute() {
     branchName := fs.String("branch-name", "", "Branch name")
     forceFlag := fs.Bool("force", false, "Skip confirmation prompt and proceed with the operation.")
 
-    compatible, message, err := api.CheckHeadOIDsMatch()
+    compatible, message, err := api.GetInstallInfo()
     if err != nil {
         log.Fatalf("Error checking HEAD OIDs match: %v", err)
     }
