@@ -26,13 +26,27 @@ class BaseTestEndToEnd:
         branches = cls.setup.get_branches()
         if "feature" not in branches:
             stdout, stderr = cls.setup.checkout_branch("feature")
-            print("Checkout Output:", stdout)
-            print("Checkout Errors:", stderr)
+            if stdout or stderr and "fatal: a branch named 'feature' already exists" not in stderr:
+                if stdout:
+                    print("Checkout Output:", stdout)
+                if stderr:
+                    print("Checkout Errors:", stderr)
+
         if "feature2" not in branches:
             stdout, stderr = cls.setup.checkout_branch("feature2")
-            print("Checkout Output:", stdout)
-            print("Checkout Errors:", stderr)
-        stdout, stderr = cls.setup.checkout_branch("master")
+            if stdout or stderr and "fatal: a branch named 'feature2' already exists" not in stderr:
+                if stdout:
+                    print("Checkout Output:", stdout)
+                if stderr:
+                    print("Checkout Errors:", stderr)
+
+        if "master" not in branches:
+            stdout, stderr = cls.setup.checkout_branch("master")
+            if stdout or stderr and "fatal: a branch named 'master' already exists" not in stderr:
+                if stdout:
+                    print("Checkout Output:", stdout)
+                if stderr:
+                    print("Checkout Errors:", stderr)
 
     @classmethod
     def teardown_end_to_end(cls):
@@ -174,10 +188,10 @@ class BaseTestEndToEnd:
     def test_07_run_machtiani_git_store_existing_project(self):
         """Test running git-store on an already added project."""
         command = 'machtiani git-store --branch-name "master" --force'
-        
+
         # Run git-store for the first time
         stdout_normalized = self.run_machtiani_command(command)
-        
+
         # Now run git-store again to check for existing project response
         stdout_normalized_second_run = self.run_machtiani_command(command)
 
