@@ -79,7 +79,7 @@ Additionally, while Machtiani aims to improve the relevance of retrieved files, 
 4. Build the Machtiani CLI in `machtiani/machtiani/`.
 
    ```bash
-   go build -o machtiani ./cmd/machtiani
+   go build -ldflags "-X 'github.com/7db9a/machtiani/internal/api.HEAD_OID=<MACHTIANI_GIT_HEAD_OID>'" -o machtiani ./cmd/machtiani
    ```
 
 5. Copy the CLI to a path that works for you.
@@ -272,8 +272,10 @@ Machtiani simplifies code retrieval and interaction with repositories through a 
 - [x] Optional codehost key for optional private repo use.
 - [x] Mask key in construct_remote_url logging.
 - [x] Test using codehost without api key.
-- [ ] Test should fail if config with codehost api key isn't present, and it should verify there is no codehost api key
-- [ ] When trying to git-store an existing repo, it gives this not useful error
+- [ ] Add endpoint to get HEAD of server.
+- [ ] Cli makes sure its compatabile with server, otherwise it throws an error and instructs to update cli. (create a flag to silence).
+- [ ] Clean up cli for open sourcing to optional build cli without release.
+- [x] Write test, When trying to git-store an existing repo, it gives this not useful error
 
       ```
       Error getting token count: error getting token count: {"detail":""}
@@ -282,3 +284,5 @@ Machtiani simplifies code retrieval and interaction with repositories through a 
 - [ ] If remote url for machtiani (machtiani) is not present, cli should ask for the remote url and then add to remote.
 - [ ] Filter commit embeddings per oids in branch so it works regardless of branch checked out.
 - [ ] Version the file summary embeddings and tag commits at HEAD of work tree of code project so it can be switch to reflect code project branch.
+- [ ] Test to ensure that no binaries are indexed or sought in retrieval results.
+- [ ] Improve output formatting (some spacing) and specific input tokens for estimates.
