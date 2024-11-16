@@ -115,13 +115,15 @@ func Execute() {
     branchName := fs.String("branch-name", "", "Branch name")
     forceFlag := fs.Bool("force", false, "Skip confirmation prompt and proceed with the operation.")
 
-    compatible, err := api.CheckHeadOIDsMatch()
+    compatible, message, err := api.CheckHeadOIDsMatch()
     if err != nil {
         log.Fatalf("Error checking HEAD OIDs match: %v", err)
     }
 
     if !compatible {
         log.Fatalf("This CLI is no longer compatible with the current environment. Please update to the latest version.")
+        log.Fatalf("")
+        log.Fatalf(message)
     }
 
 

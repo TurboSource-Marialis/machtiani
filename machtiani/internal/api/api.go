@@ -475,15 +475,15 @@ func CheckStatus(codehostURL string, apiKey *string) (StatusResponse, error) {
     return statusResponse, nil
 }
 
-func CheckHeadOIDsMatch() (bool, error) {
+func CheckHeadOIDsMatch() (bool, string, error) {
     config, _, err := utils.LoadConfigAndIgnoreFiles()
     if err != nil {
-        return false, fmt.Errorf("error loading config: %w", err)
+        return false, "", fmt.Errorf("error loading config: %w", err)
     }
 
     machtianiURL := config.Environment.MachtianiURL
     if machtianiURL == "" {
-        return false, fmt.Errorf("MACHTIANI_URL environment variable is not set")
+        return false, "", fmt.Errorf("MACHTIANI_URL environment variable is not set")
     }
     // Define the URL for the get-head-oid endpoint
     endpoint := fmt.Sprintf("%s/get-head-oid", machtianiURL) // Change this URL based on your FastAPI server configuration
@@ -491,7 +491,7 @@ func CheckHeadOIDsMatch() (bool, error) {
     // Create a new HTTP GET request
     req, err := http.NewRequest("GET", endpoint, nil)
     if err != nil {
-        return false, fmt.Errorf("error creating request: %w", err)
+        return false, "", fmt.Errorf("error creating request: %w", err)
     }
 
     // Create a new HTTP client with a timeout
@@ -502,29 +502,33 @@ func CheckHeadOIDsMatch() (bool, error) {
     // Send the request
     resp, err := client.Do(req)
     if err != nil {
-        return false, fmt.Errorf("error sending request: %w", err)
+        return false, "", fmt.Errorf("error sending request: %w", err)
     }
     defer resp.Body.Close()
 
     // Check if the response status is OK
     if resp.StatusCode != http.StatusOK {
         body, _ := ioutil.ReadAll(resp.Body)
-        return false, fmt.Errorf("error: received status code %d from the server: %s", resp.StatusCode, body)
+        return false, "", fmt.Errorf("error: received status code %d from the server: %s", resp.StatusCode, body)
     }
 
     // Decode the response body
     var response map[string]string
     if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-        return false, fmt.Errorf("error decoding response: %w", err)
+        return false, "", fmt.Errorf("error decoding response: %w", err)
     }
 
     // Compare the returned head_oid with HeadOID
     returnedHeadOID, ok := response["head_oid"]
     if !ok {
-        return false, fmt.Errorf("response does not contain head_oid")
+        return false, "", fmt.Errorf("response does not contain head_oid")
+    }
+    message, ok := response["message"]
+    if !ok {
+        return false, "", fmt.Errorf("response does not contain head_oid")
     }
 
-    return returnedHeadOID == HeadOID, nil
+    return returnedHeadOID == HeadOID, message, nil
 }
 
 
