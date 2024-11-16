@@ -79,7 +79,7 @@ Additionally, while Machtiani aims to improve the relevance of retrieved files, 
 4. Build the Machtiani CLI in `machtiani/machtiani/`.
 
    ```bash
-   go build -ldflags "-X 'github.com/7db9a/machtiani/internal/api.HEAD_OID=<MACHTIANI_GIT_HEAD_OID>'" -o machtiani ./cmd/machtiani
+   ./build.sh
    ```
 
 5. Copy the CLI to a path that works for you.
@@ -272,8 +272,9 @@ Machtiani simplifies code retrieval and interaction with repositories through a 
 - [x] Optional codehost key for optional private repo use.
 - [x] Mask key in construct_remote_url logging.
 - [x] Test using codehost without api key.
-- [ ] Add endpoint to get HEAD of server.
+- [x] Add endpoint to get HEAD of server.
 - [ ] Cli makes sure its compatabile with server, otherwise it throws an error and instructs to update cli. (create a flag to silence).
+      See [convo](https://chatgpt.com/share/6737fdb6-9f00-8002-adc3-05f8c8716a75) on a go build script to include oid)
 - [ ] Clean up cli for open sourcing to optional build cli without release.
 - [x] Write test, When trying to git-store an existing repo, it gives this not useful error
 
