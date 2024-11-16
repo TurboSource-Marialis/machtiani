@@ -150,6 +150,17 @@ func Execute() {
         // Call the new function to handle git-store
         handleGitStore(remoteURL, apiKey, *forceFlag, config)
         return // Exit after handling git-store
+    case "git-sync":
+        err := utils.ParseFlags(fs, os.Args[2:]) // Parse flags after the command
+        if err != nil {
+            log.Fatalf("Error parsing flags: %v", err)
+        }
+
+        // Call the HandleGitSync function
+        if err := handleGitSync(remoteURL, *branchName, apiKey, *forceFlag, config); err != nil {
+            log.Fatalf("Error handling git-sync: %v", err)
+        }
+        return
     default:
         //fmt.Printf("Unknown command: %s\n", command)
         //return
@@ -164,27 +175,6 @@ func Execute() {
         return
     }
 
-    // Check if the command is git-sync
-    if len(os.Args) >= 2 && os.Args[1] == "git-sync" {
-        err := utils.ParseFlags(fs, args[1:]) // Parse flags after the command
-        if err != nil {
-            log.Fatalf("Error parsing flags: %v", err)
-        }
-
-        if remoteURL == "" || *branchName == "" {
-            log.Fatal("Error: all flags --code-url, --branch-name must be provided.")
-        }
-
-        // Call the new function to fetch and checkout the branch
-        message, err := api.FetchAndCheckoutBranch(remoteURL, remoteURL, *branchName, apiKey, config.Environment.ModelAPIKey, *forceFlag)
-        if err != nil {
-            log.Fatalf("Error syncing repository: %v", err)
-        }
-
-        // Print the returned message
-        fmt.Println(message)
-        return
-    }
 
     if len(os.Args) >= 2 && os.Args[1] == "git-delete" {
         err := utils.ParseFlags(fs, args[1:]) // Parse flags after the command
