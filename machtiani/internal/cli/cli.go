@@ -115,8 +115,14 @@ func Execute() {
     branchName := fs.String("branch-name", "", "Branch name")
     forceFlag := fs.Bool("force", false, "Skip confirmation prompt and proceed with the operation.")
 
-    compatibile, err := api.CheckHeadOIDsMatch()
-    fmt.Printf("compatible: %s\n", compatibile)
+    compatible, err := api.CheckHeadOIDsMatch()
+    if err != nil {
+        log.Fatalf("Error checking HEAD OIDs match: %v", err)
+    }
+
+    if !compatible {
+        log.Fatalf("This CLI is no longer compatible with the current environment. Please update to the latest version.")
+    }
 
 
     // Use the new remote URL function

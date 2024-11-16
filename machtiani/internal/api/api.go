@@ -522,9 +522,6 @@ func CheckHeadOIDsMatch() (bool, error) {
         return false, fmt.Errorf("response does not contain head_oid")
     }
 
-    fmt.Printf("returnedHeadOID: %s\n", returnedHeadOID)
-    fmt.Printf("HEAD_OID: %s\n", HEAD_OID)
-
     return returnedHeadOID == HEAD_OID, nil
 }
 
