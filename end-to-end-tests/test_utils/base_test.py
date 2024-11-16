@@ -23,30 +23,16 @@ class BaseTestEndToEnd:
         cls.setup.force_push("master-backup", "master")
         cls.setup.create_ignore_file()
 
-        branches = cls.setup.get_branches()
-        if "feature" not in branches:
-            stdout, stderr = cls.setup.checkout_branch("feature")
-            if stdout or stderr and "fatal: a branch named 'feature' already exists" not in stderr:
-                if stdout:
-                    print("Checkout Output:", stdout)
-                if stderr:
-                    print("Checkout Errors:", stderr)
+        cls.checkout_branches(["feature", "feature2", "master"])
 
-        if "feature2" not in branches:
-            stdout, stderr = cls.setup.checkout_branch("feature2")
-            if stdout or stderr and "fatal: a branch named 'feature2' already exists" not in stderr:
-                if stdout:
-                    print("Checkout Output:", stdout)
-                if stderr:
-                    print("Checkout Errors:", stderr)
-
-        if "master" not in branches:
-            stdout, stderr = cls.setup.checkout_branch("master")
-            if stdout or stderr and "fatal: a branch named 'master' already exists" not in stderr:
-                if stdout:
-                    print("Checkout Output:", stdout)
-                if stderr:
-                    print("Checkout Errors:", stderr)
+    @classmethod
+    def checkout_branches(cls, branches):
+        """Checkout specified branches if they do not exist."""
+        for branch in branches:
+            if branch not in cls.setup.get_branches():
+                stdout, stderr = cls.setup.checkout_branch(branch)
+                print(f"Checkout Output for {branch}:", stdout)
+                print(f"Checkout Errors for {branch}:", stderr)
 
     @classmethod
     def teardown_end_to_end(cls):
