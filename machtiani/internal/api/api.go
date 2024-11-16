@@ -13,6 +13,8 @@ import (
     "github.com/7db9a/machtiani/internal/utils"
 )
 
+//var HEAD_OID string
+
 type AddRepositoryResponse struct {
     Message        string `json:"message"`
     FullPath       string `json:"full_path"`
@@ -470,6 +472,63 @@ func CheckStatus(codehostURL string, apiKey *string) (StatusResponse, error) {
 
     return statusResponse, nil
 }
+
+func CheckHeadOIDsMatch() (bool, error) {
+    config, _, err := utils.LoadConfigAndIgnoreFiles()
+    if err != nil {
+        return false, fmt.Errorf("error loading config: %w", err)
+    }
+
+    machtianiURL := config.Environment.MachtianiURL
+    if machtianiURL == "" {
+        return false, fmt.Errorf("MACHTIANI_URL environment variable is not set")
+    }
+    // Define the URL for the get-head-oid endpoint
+    endpoint := fmt.Sprintf("%s/get-head-oid", machtianiURL) // Change this URL based on your FastAPI server configuration
+
+    // Create a new HTTP GET request
+    req, err := http.NewRequest("GET", endpoint, nil)
+    if err != nil {
+        return false, fmt.Errorf("error creating request: %w", err)
+    }
+
+    // Create a new HTTP client with a timeout
+    client := &http.Client{
+        Timeout: 20 * time.Second, // Set an appropriate timeout
+    }
+
+    // Send the request
+    resp, err := client.Do(req)
+    if err != nil {
+        return false, fmt.Errorf("error sending request: %w", err)
+    }
+    defer resp.Body.Close()
+
+    // Check if the response status is OK
+    if resp.StatusCode != http.StatusOK {
+        body, _ := ioutil.ReadAll(resp.Body)
+        return false, fmt.Errorf("error: received status code %d from the server: %s", resp.StatusCode, body)
+    }
+
+    // Decode the response body
+    var response map[string]string
+    if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+        return false, fmt.Errorf("error decoding response: %w", err)
+    }
+
+    // Compare the returned head_oid with HEAD_OID
+    returnedHeadOID, ok := response["head_oid"]
+    if !ok {
+        return false, fmt.Errorf("response does not contain head_oid")
+    }
+
+    fmt.Printf("returnedHeadOID: %s\n", returnedHeadOID)
+    fmt.Printf("HEAD_OID: %s\n", "f1895df1346c4407ac3b64e72409341c11a9d77c")
+
+    return returnedHeadOID == "f1895df1346c4407ac3b64e72409341c11a9d77c", nil
+}
+
+
 
 // confirmProceed prompts the user for confirmation to proceed
 func confirmProceed() bool {

@@ -115,6 +115,10 @@ func Execute() {
     branchName := fs.String("branch-name", "", "Branch name")
     forceFlag := fs.Bool("force", false, "Skip confirmation prompt and proceed with the operation.")
 
+    compatibile, err := api.CheckHeadOIDsMatch()
+    fmt.Printf("compatible: %s\n", compatibile)
+
+
     // Use the new remote URL function
     remoteURL, err := utils.GetRemoteURL(remoteName)
     if err != nil {
