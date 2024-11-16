@@ -13,7 +13,7 @@ import (
     "github.com/7db9a/machtiani/internal/utils"
 )
 
-//var HEAD_OID string
+var HEAD_OID string
 
 type AddRepositoryResponse struct {
     Message        string `json:"message"`
@@ -523,9 +523,9 @@ func CheckHeadOIDsMatch() (bool, error) {
     }
 
     fmt.Printf("returnedHeadOID: %s\n", returnedHeadOID)
-    fmt.Printf("HEAD_OID: %s\n", "f1895df1346c4407ac3b64e72409341c11a9d77c")
+    fmt.Printf("HEAD_OID: %s\n", HEAD_OID)
 
-    return returnedHeadOID == "f1895df1346c4407ac3b64e72409341c11a9d77c", nil
+    return returnedHeadOID == HEAD_OID, nil
 }
 
 
