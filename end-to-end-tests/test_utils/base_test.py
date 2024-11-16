@@ -31,8 +31,17 @@ class BaseTestEndToEnd:
         for branch in branches:
             if branch not in cls.setup.get_branches():
                 stdout, stderr = cls.setup.checkout_branch(branch)
-                print(f"Checkout Output for {branch}:", stdout)
-                print(f"Checkout Errors for {branch}:", stderr)
+
+                # Print stdout if there is any output
+                if stdout:
+                    print(f"Checkout Output for {branch}:", stdout)
+
+                # Check for errors and print them only if they are not the expected ones
+                if stderr and not any(expected_error in stderr for expected_error in [
+                    f"fatal: a branch named '{branch}' already exists"
+                ]):
+                    print(f"Checkout Errors for {branch}:", stderr)
+
 
     @classmethod
     def teardown_end_to_end(cls):
