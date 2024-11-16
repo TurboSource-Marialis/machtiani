@@ -140,8 +140,19 @@ func Execute() {
     case "status":
         handleStatus(&config, remoteURL, apiKey)
         return // Exit after handling status
+    case "git-store":
+        // Parse flags for git-store
+        err := utils.ParseFlags(fs, os.Args[2:]) // Parse flags after the command
+        if err != nil {
+            log.Fatalf("Error parsing flags: %v", err)
+        }
+
+        // Call the new function to handle git-store
+        handleGitStore(remoteURL, apiKey, *forceFlag, config)
+        return // Exit after handling git-store
     default:
-        //fmt.Println("Unknown command: %s", command)
+        //fmt.Printf("Unknown command: %s\n", command)
+        //return
     }
 
 
@@ -151,26 +162,6 @@ func Execute() {
     if len(os.Args) < 2 || os.Args[1] == "help" || os.Args[1] == "--help" {
         printHelp()
         return
-    }
-
-    if len(os.Args) >= 2 && os.Args[1] == "git-store" {
-        err := utils.ParseFlags(fs, args[1:]) // Parse flags after the command
-        if err != nil {
-            log.Fatalf("Error parsing flags: %v", err)
-        }
-
-        // Call the new function to add the repository
-        response, err := api.AddRepository(remoteURL, remoteURL, apiKey, config.Environment.ModelAPIKey, config.Environment.RepoManagerURL, *forceFlag)
-        if err != nil {
-            log.Fatalf("Error adding repository: %v", err)
-        }
-
-        fmt.Println(response.Message)
-        // Print the success message
-        fmt.Println("---")
-        fmt.Println("Your repo is getting added to machtiani is in progress!")
-        fmt.Println("Please check back by running `machtiani status` to see if it completed.")
-        return // Exit after handling git-store
     }
 
     // Check if the command is git-sync
