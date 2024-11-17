@@ -161,6 +161,25 @@ func Execute() {
             log.Fatalf("Error handling git-sync: %v", err)
         }
         return
+    case "git-delete": // New case for git-delete
+        err := utils.ParseFlags(fs, os.Args[2:]) // Parse flags after the command
+        if err != nil {
+            log.Fatalf("Error parsing flags: %v", err)
+        }
+
+        if remoteURL == "" {
+            log.Fatal("Error: --remote must be provided.")
+        }
+
+        // Define additional parameters for git-delete
+        ignoreFiles := []string{} // Populate this list as needed
+        vcsType := "git"          // Set the VCS type as needed
+        openaiAPIKey := config.Environment.ModelAPIKey // Adjust as necessary
+
+        // Call the handleGitDelete function
+        handleGitDelete(remoteURL, projectName, ignoreFiles, vcsType, apiKey, &openaiAPIKey, *forceFlag, config)
+        return
+
     default:
         //fmt.Printf("Unknown command: %s\n", command)
         //return
@@ -173,31 +192,6 @@ func Execute() {
     if len(os.Args) < 2 || os.Args[1] == "help" || os.Args[1] == "--help" {
         printHelp()
         return
-    }
-
-
-    if len(os.Args) >= 2 && os.Args[1] == "git-delete" {
-        err := utils.ParseFlags(fs, args[1:]) // Parse flags after the command
-        if err != nil {
-            log.Fatalf("Error parsing flags: %v", err)
-        }
-
-        if remoteURL == "" {
-            log.Fatal("Error: --remote must be provided.")
-        }
-
-        ignoreFiles := []string{} // Populate this list as needed
-        vcsType := "git" // Set the VCS type as needed
-        openaiAPIKey := config.Environment.ModelAPIKey // Adjust as necessary
-
-        // Call the updated DeleteStore function
-        response, err := api.DeleteStore(projectName, remoteURL, ignoreFiles, vcsType, apiKey, &openaiAPIKey, config.Environment.RepoManagerURL, *forceFlag)
-        if err != nil {
-            log.Fatalf("Error deleting store: %v", err)
-        }
-
-        fmt.Println(response.Message)
-        return // Exit after handling git-delete
     }
 
     var promptParts []string
