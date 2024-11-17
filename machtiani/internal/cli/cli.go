@@ -95,40 +95,26 @@ func Execute() {
         return // Exit after handling status
     case "git-store":
         // Parse flags for git-store
-        err := utils.ParseFlags(fs, os.Args[2:]) // Parse flags after the command
-        if err != nil {
-            log.Fatalf("Error parsing flags: %v", err)
-        }
-
+        parseFlags(fs, os.Args[2:]) // Use the new helper function
         // Call the new function to handle git-store
         handleGitStore(remoteURL, apiKey, *forceFlag, config)
         return // Exit after handling git-store
     case "git-sync":
-        err := utils.ParseFlags(fs, os.Args[2:]) // Parse flags after the command
-        if err != nil {
-            log.Fatalf("Error parsing flags: %v", err)
-        }
-
+        parseFlags(fs, os.Args[2:]) // Use the new helper function
         // Call the HandleGitSync function
         if err := handleGitSync(remoteURL, *branchName, apiKey, *forceFlag, config); err != nil {
             log.Fatalf("Error handling git-sync: %v", err)
         }
         return
-    case "git-delete": // New case for git-delete
-        err := utils.ParseFlags(fs, os.Args[2:]) // Parse flags after the command
-        if err != nil {
-            log.Fatalf("Error parsing flags: %v", err)
-        }
-
+    case "git-delete":
+        parseFlags(fs, os.Args[2:]) // Use the new helper function
         if remoteURL == "" {
             log.Fatal("Error: --remote must be provided.")
         }
-
         // Define additional parameters for git-delete
         ignoreFiles := []string{} // Populate this list as needed
         vcsType := "git"          // Set the VCS type as needed
         openaiAPIKey := config.Environment.ModelAPIKey // Adjust as necessary
-
         // Call the handleGitDelete function
         handleGitDelete(remoteURL, projectName, ignoreFiles, vcsType, apiKey, &openaiAPIKey, *forceFlag, config)
         return
@@ -148,6 +134,13 @@ func Execute() {
 func handleError(message string) {
     fmt.Fprintf(os.Stderr, "%s\n", message)
     os.Exit(1)
+}
+
+func parseFlags(fs *flag.FlagSet, args []string) {
+    err := utils.ParseFlags(fs, args) // Parse flags after the command
+    if err != nil {
+        log.Fatalf("Error parsing flags: %v", err)
+    }
 }
 
 // runAicommit generates a commit message using aicommit and lets it perform the git commit.
