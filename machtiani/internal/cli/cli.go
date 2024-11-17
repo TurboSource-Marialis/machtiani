@@ -82,6 +82,12 @@ func Execute() {
 
     var apiKey *string = utils.GetAPIKey(config)
 
+    // Check if no command is provided
+    if len(os.Args) < 2 {
+        printHelp()
+        return // Exit after printing help
+    }
+
     command := os.Args[1]
     switch command {
     case "status":
