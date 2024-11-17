@@ -273,8 +273,7 @@ Machtiani simplifies code retrieval and interaction with repositories through a 
 - [x] Mask key in construct_remote_url logging.
 - [x] Test using codehost without api key.
 - [x] Add endpoint to get HEAD of server.
-- [ ] Cli makes sure its compatabile with server, otherwise it throws an error and instructs to update cli. (create a flag to silence).
-      See [convo](https://chatgpt.com/share/6737fdb6-9f00-8002-adc3-05f8c8716a75) on a go build script to include oid)
+- [x] Cli makes sure its compatabile with server, otherwise it throws an error and instructs to update cli. (create a flag to silence).
 - [ ] Clean up cli for open sourcing to optional build cli without release.
 - [x] Write test, When trying to git-store an existing repo, it gives this not useful error
 
@@ -282,6 +281,11 @@ Machtiani simplifies code retrieval and interaction with repositories through a 
       Error getting token count: error getting token count: {"detail":""}
       2024/11/11 20:29:23 Error adding repository: error getting token count: {"detail":""}
       ```
+- [ ] Test help commands
+- [ ] Test flags
+- [ ] Test compatibility stdout.
+- [ ] Test chat file actually saved (add to setup and teardown too)
+- [ ] Test using --file flag (Need a Setup method to use a prexisting chat
 - [ ] If remote url for machtiani (machtiani) is not present, cli should ask for the remote url and then add to remote.
 - [ ] Filter commit embeddings per oids in branch so it works regardless of branch checked out.
 - [ ] Version the file summary embeddings and tag commits at HEAD of work tree of code project so it can be switch to reflect code project branch.
