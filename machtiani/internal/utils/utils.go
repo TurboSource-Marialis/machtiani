@@ -181,14 +181,6 @@ func GetAPIKey(config Config) *string {
     return nil
 }
 
-func GetRemoteURL(remoteName *string) (string, error) {
-    remoteURL, err := git.GetRemoteURL(*remoteName)
-    if err != nil {
-        return "", fmt.Errorf("Error fetching remote URL: %v", err)
-    }
-    return remoteURL, nil
-}
-
 func ParseFlags(fs *flag.FlagSet, args []string) error {
     return fs.Parse(args)
 }

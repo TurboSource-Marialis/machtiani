@@ -23,7 +23,15 @@ func GetProjectName() (string, error) {
     return projectName, nil
 }
 
-func GetRemoteURL(remoteName string) (string, error) {
+func GetRemoteURL(remoteName *string) (string, error) {
+    remoteURL, err := getRemoteURL(*remoteName)
+    if err != nil {
+        return "", fmt.Errorf("Error fetching remote URL: %v", err)
+    }
+    return remoteURL, nil
+}
+
+func getRemoteURL(remoteName string) (string, error) {
     cmd := exec.Command("git", "remote", "get-url", remoteName)
     output, err := cmd.Output()
     if err != nil {

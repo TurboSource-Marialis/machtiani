@@ -16,8 +16,4 @@ func handleGitDelete(remoteURL string, projectName string, ignoreFiles []string,
     }
 
     fmt.Println(response.Message)
-    // Print the success message
-    fmt.Println("---")
-    fmt.Println("Your repo is being removed from machtiani.")
-    fmt.Println("Please check back by running `machtiani status` to see if it completed.")
 }

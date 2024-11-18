@@ -11,6 +11,7 @@ import (
 
     "github.com/7db9a/machtiani/internal/api"
     "github.com/7db9a/machtiani/internal/utils"
+    "github.com/7db9a/machtiani/internal/git"
     "github.com/sashabaranov/go-openai" // Ensure you import the OpenAI package
 )
 
@@ -73,7 +74,7 @@ func Execute() {
 
 
     // Use the new remote URL function
-    remoteURL, err := utils.GetRemoteURL(remoteName)
+    remoteURL, err := git.GetRemoteURL(remoteName)
     if err != nil {
         log.Fatalf(err.Error())
     }
