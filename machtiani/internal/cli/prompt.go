@@ -16,35 +16,41 @@ import (
     "github.com/charmbracelet/glamour"
 )
 
-func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey *string, fileFlag string, verboseFlag bool, modelFlag *string, matchStrengthFlag *string, modeFlag *string) {
-    var promptParts []string
-    var flagArgs []string
+func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey *string) {
+    fs := flag.NewFlagSet("machtiani", flag.ContinueOnError)
+    modelFlag := fs.String("model", defaultModel, "Model to use (options: gpt-4o, gpt-4o-mini)")
+    matchStrengthFlag := fs.String("match-strength", defaultMatchStrength, "Match strength (options: high, mid, low)")
+    modeFlag := fs.String("mode", defaultMode, "Search mode: pure-chat, commit, or super")
+    fileFlag := fs.String("file", "", "Path to the markdown file")
+    forceFlag := fs.Bool("force", false, "Force the operation")
+    verboseFlag := fs.Bool("verbose", false, "Enable verbose output")
 
-    for i := 0; i < len(args); i++ {
-        if strings.HasPrefix(args[i], "-") {
-            flagArgs = append(flagArgs, args[i])
-            if i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
-                flagArgs = append(flagArgs, args[i+1])
-                i++
-            }
-        } else {
-            promptParts = append(promptParts, args[i])
-        }
+    // Parse the flags from args
+    err := fs.Parse(args)
+    if err != nil {
+        log.Fatalf("Error parsing flags: %v", err)
     }
 
-    fs := flag.NewFlagSet("machtiani", flag.ContinueOnError)
-    fs.Parse(flagArgs)
-
+    // Collect non-flag arguments (the prompt)
+    promptParts := fs.Args()
     prompt := strings.Join(promptParts, " ")
-    if prompt == "" {
+
+    // If --file flag is provided, read the content from the file
+    if *fileFlag != "" {
+        content, err := ioutil.ReadFile(*fileFlag)
+        if err != nil {
+            log.Fatalf("Error reading markdown file: %v", err)
+        }
+        prompt = string(content) // Set prompt to the content of the file
+    } else if prompt == "" {
         log.Fatal("Error: No prompt provided. Please provide either a prompt or a markdown file.")
     }
 
-    if verboseFlag {
-        printVerboseInfo(fileFlag, *modelFlag, *matchStrengthFlag, *modeFlag, prompt)
+    if *verboseFlag {
+        printVerboseInfo(*fileFlag, *modelFlag, *matchStrengthFlag, *modeFlag, prompt)
     }
 
-    apiResponse, err := api.CallOpenAIAPI(prompt, *remoteURL, *modeFlag, *modelFlag, *matchStrengthFlag, false)
+    apiResponse, err := api.CallOpenAIAPI(prompt, *remoteURL, *modeFlag, *modelFlag, *matchStrengthFlag, *forceFlag)
     if err != nil {
         log.Fatalf("Error making API call: %v", err)
     }
@@ -53,8 +59,10 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
         log.Fatalf("Error from API: %s", errorMsg)
     }
 
-    filename := path.Base(fileFlag)
+    // Determine the filename to save the response
+    filename := path.Base(*fileFlag)
 
+    // Strip all extensions from the filename
     for ext := path.Ext(filename); ext != ""; ext = path.Ext(filename) {
         filename = strings.TrimSuffix(filename, ext)
     }
@@ -66,7 +74,7 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
         }
     }
 
-    handleAPIResponse(prompt, apiResponse, filename, fileFlag)
+    handleAPIResponse(prompt, apiResponse, filename, *fileFlag)
 }
 
 func generateFilename(context string, apiKey string) (string, error) {

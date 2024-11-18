@@ -54,11 +54,6 @@ func Execute() {
     }
 
     fs := flag.NewFlagSet("machtiani", flag.ContinueOnError)
-    fileFlag := fs.String("file", "", "Path to the markdown file")
-    modelFlag := fs.String("model", defaultModel, "Model to use (options: gpt-4o, gpt-4o-mini)")
-    matchStrengthFlag := fs.String("match-strength", defaultMatchStrength, "Match strength (options: high, mid, low)")
-    modeFlag := fs.String("mode", defaultMode, "Search mode: pure-chat, commit, or super")
-    verboseFlag := fs.Bool("verbose", false, "Enable verbose output.")
     remoteName := fs.String("remote", "origin", "Name of the remote repository")
     branchName := fs.String("branch-name", "", "Branch name")
     forceFlag := fs.Bool("force", false, "Skip confirmation prompt and proceed with the operation.")
@@ -124,7 +119,8 @@ func Execute() {
         return // Exit after printing help
     default:
         startTime := time.Now() // Start the timer here
-        handlePrompt(os.Args[1:], &config, &remoteURL, apiKey, *fileFlag, *verboseFlag, modelFlag, matchStrengthFlag, modeFlag)
+        args := os.Args[1:]
+        handlePrompt(args, &config, &remoteURL, apiKey)
         duration := time.Since(startTime)
         fmt.Printf("Total response handling took %s\n", duration) // Print total duration
         return
