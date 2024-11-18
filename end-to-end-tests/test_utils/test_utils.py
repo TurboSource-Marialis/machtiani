@@ -47,6 +47,26 @@ class Teardown:
             print(f"Deleted .machtiani.ignore file.")
         else:
             print(f".machtiani.ignore file does not exist.")
+    def delete_chat_files(self):
+       """Delete all files in the .machtiani/chat directory."""
+       chat_directory = os.path.join(self.git_directory, '.machtiani', 'chat')
+
+       # Check if the directory exists
+       if not os.path.exists(chat_directory):
+           print(f"{chat_directory} does not exist. No files to delete.")
+           return
+
+       # Iterate through all files and delete them
+       for filename in os.listdir(chat_directory):
+           file_path = os.path.join(chat_directory, filename)
+           if os.path.isfile(file_path):
+               os.remove(file_path)
+               print(f"Deleted file: {file_path}")
+
+       # Optionally, you might want to remove the directory itself if it's empty
+       if not os.listdir(chat_directory):
+           os.rmdir(chat_directory)
+           print(f"Deleted directory: {chat_directory}")
 
 class Setup:
     def __init__(self, git_directory, no_code_host_key=False):
@@ -267,3 +287,39 @@ def wait_for_status_incomplete(command, directory, max_wait_time=30, interval=1)
 
     return False
 
+
+def append_future_features_to_chat_file(base_directory):
+    """Append future features to the only file in the .machtiani/chat/ directory."""
+    chat_directory = os.path.join(base_directory, '.machtiani', 'chat')
+
+    # Get the list of files in the directory
+    files = [f for f in os.listdir(chat_directory) if os.path.isfile(os.path.join(chat_directory, f))]
+
+    if len(files) != 1:
+        raise FileNotFoundError(f"There should be exactly one file in {chat_directory}, found {len(files)} files.")
+
+    chat_file = files[0]
+
+    chat_file_full_path = os.path.join(chat_directory, chat_file)
+
+    future_features = """
+
+# User
+
+Update the readme with the following:
+
+```
+Future Features
+
+- Integration with an efficient ML model for content categorization
+- Categorization of image frames
+- Filter image frames by category in real-time
+```
+"""
+
+    with open(chat_file_full_path, 'a') as chat_file:
+        chat_file.write(future_features)
+        print(f"Appended future features to {chat_file_full_path}.")
+
+    relative_path = os.path.relpath(chat_file_full_path, base_directory)
+    return relative_path

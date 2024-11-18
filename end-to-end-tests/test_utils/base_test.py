@@ -8,6 +8,8 @@ from test_utils.test_utils import (
     run_machtiani_command,
     wait_for_status_complete,
     wait_for_status_incomplete,
+    append_future_features_to_chat_file,
+
 )
 
 class BaseTestEndToEnd:
@@ -49,6 +51,7 @@ class BaseTestEndToEnd:
         try:
             cls.teardown = Teardown(cls.directory)
             cls.teardown.delete_ignore_file()
+            cls.teardown.delete_chat_files()
             stdout, stderr = cls.teardown.run_git_delete()
             print("Teardown Output:", stdout)
             print("Teardown Errors:", stderr)
@@ -153,7 +156,21 @@ class BaseTestEndToEnd:
         self.assertTrue(any("video" in line for line in stdout_prompt_normalized))
         self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_prompt_normalized))
 
-    def test_06_run_machtiani_status_with_lock(self):
+    def test_06_run_machtiani_prompt_file_flag_command(self):
+        chat_file_path = append_future_features_to_chat_file(self.directory)
+        command = f"machtiani --file {chat_file_path}"
+        stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
+        stdout_normalized = clean_output(stdout_machtiani)
+        print(f"Test command: {command}")
+        print(f"Test prompt file flag command:\n\n{stdout_machtiani}")
+        print(f"Test prompt file flag command (normalized):\n\n{stdout_normalized}")
+
+        self.assertTrue(any("Using remote URL" in line for line in stdout_normalized))
+        self.assertTrue(any("ilter" in line for line in stdout_normalized))
+        self.assertTrue(any("ategorization" in line for line in stdout_normalized))
+        self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_normalized))
+
+    def test_07_run_machtiani_status_with_lock(self):
         # Step 1: Force push `feature2` branch to `master`
         self.setup.force_push("feature2", "master")
 
@@ -180,7 +197,7 @@ class BaseTestEndToEnd:
         # Step 5: Wait for the sync thread to finish
         sync_thread.join()
 
-    def test_07_run_machtiani_git_store_existing_project(self):
+    def test_08_run_machtiani_git_store_existing_project(self):
         """Test running git-store on an already added project."""
         command = 'machtiani git-store --branch-name "master" --force'
 
