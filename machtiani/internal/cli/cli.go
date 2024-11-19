@@ -5,7 +5,6 @@ import (
     "fmt"
     "log"
     "os"
-    "os/exec"
     "time"
 
     "github.com/7db9a/machtiani/internal/api"

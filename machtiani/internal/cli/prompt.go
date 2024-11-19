@@ -16,6 +16,12 @@ import (
     "github.com/charmbracelet/glamour"
 )
 
+const (
+    defaultModel        = "gpt-4o-mini"
+    defaultMatchStrength = "mid"
+    defaultMode         = "commit"
+)
+
 func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey *string) {
     fs := flag.NewFlagSet("machtiani", flag.ContinueOnError)
     modelFlag := fs.String("model", defaultModel, "Model to use (options: gpt-4o, gpt-4o-mini)")
