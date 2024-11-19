@@ -181,8 +181,11 @@ func GetAPIKey(config Config) *string {
     return nil
 }
 
-func ParseFlags(fs *flag.FlagSet, args []string) error {
-    return fs.Parse(args)
+func ParseFlags(fs *flag.FlagSet, args []string) {
+     err := fs.Parse(args)
+    if err != nil {
+        log.Fatalf("Error parsing flags: %v", err)
+    }
 }
 
 func GetProjectOrDefault(projectFlag *string) (string, error) {

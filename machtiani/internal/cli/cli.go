@@ -6,13 +6,11 @@ import (
     "log"
     "os"
     "os/exec"
-    "context"
     "time"
 
     "github.com/7db9a/machtiani/internal/api"
     "github.com/7db9a/machtiani/internal/utils"
     "github.com/7db9a/machtiani/internal/git"
-    "github.com/sashabaranov/go-openai" // Ensure you import the OpenAI package
 )
 
 const (
@@ -73,19 +71,19 @@ func Execute() {
         return // Exit after handling status
     case "git-store":
         // Parse flags for git-store
-        parseFlags(fs, os.Args[2:]) // Use the new helper function
+        utils.ParseFlags(fs, os.Args[2:]) // Use the new helper function
         // Call the new function to handle git-store
         handleGitStore(remoteURL, apiKey, *forceFlag, config)
         return // Exit after handling git-store
     case "git-sync":
-        parseFlags(fs, os.Args[2:]) // Use the new helper function
+        utils.ParseFlags(fs, os.Args[2:]) // Use the new helper function
         // Call the HandleGitSync function
         if err := handleGitSync(remoteURL, *branchName, apiKey, *forceFlag, config); err != nil {
             log.Fatalf("Error handling git-sync: %v", err)
         }
         return
     case "git-delete":
-        parseFlags(fs, os.Args[2:]) // Use the new helper function
+        utils.ParseFlags(fs, os.Args[2:]) // Use the new helper function
         if remoteURL == "" {
             log.Fatal("Error: --remote must be provided.")
         }
@@ -113,13 +111,6 @@ func Execute() {
 func handleError(message string) {
     fmt.Fprintf(os.Stderr, "%s\n", message)
     os.Exit(1)
-}
-
-func parseFlags(fs *flag.FlagSet, args []string) {
-    err := utils.ParseFlags(fs, args) // Parse flags after the command
-    if err != nil {
-        log.Fatalf("Error parsing flags: %v", err)
-    }
 }
 
 // runAicommit generates a commit message using aicommit and lets it perform the git commit.
