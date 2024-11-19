@@ -19,14 +19,6 @@ const (
     defaultMode         = "commit"
 )
 
-func float32ToFloat64(input []float32) []float64 {
-    output := make([]float64, len(input))
-    for i, v := range input {
-        output[i] = float64(v)
-    }
-    return output
-}
-
 func Execute() {
     config, err := utils.LoadConfig()
     if err != nil {
