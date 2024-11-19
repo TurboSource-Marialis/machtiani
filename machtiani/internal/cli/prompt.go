@@ -56,7 +56,7 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
         printVerboseInfo(*fileFlag, *modelFlag, *matchStrengthFlag, *modeFlag, prompt)
     }
 
-    apiResponse, err := api.CallOpenAIAPI(prompt, *remoteURL, *modeFlag, *modelFlag, *matchStrengthFlag, *forceFlag)
+    apiResponse, err := api.GenerateResponse(prompt, *remoteURL, *modeFlag, *modelFlag, *matchStrengthFlag, *forceFlag)
     if err != nil {
         log.Fatalf("Error making API call: %v", err)
     }

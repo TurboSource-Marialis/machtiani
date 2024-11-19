@@ -300,7 +300,7 @@ func DeleteStore(projectName string, codehostURL string, ignoreFiles []string, v
     }
 }
 
-func CallOpenAIAPI(prompt, project, mode, model, matchStrength string, force bool) (map[string]interface{}, error) {
+func GenerateResponse(prompt, project, mode, model, matchStrength string, force bool) (map[string]interface{}, error) {
 
     config, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
     if err != nil {
