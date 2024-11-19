@@ -215,6 +215,14 @@ The CLI will print the response received and save the output to a temporary mark
 
 This project includes several end-to-end tests that validate the functionality of the Machtiani commands, with `test_end_to_end.py` serving as the **defacto test** for the application.
 
+#### Running the Defacto Tests
+
+To run the end-to-end test suite from inside `end-to-end-tests` directory:
+
+```bash
+python -m unittest test_end_to_end.py test_end_to_end_no_codehost_api_key.py
+```
+
 #### Why `test_end_to_end.py` is the Defacto Test
 
 - **Comprehensive Coverage**: This test suite encompasses multiple critical functionalities of the Machtiani CLI, including the `git-store`, prompt handling, and synchronization with remote repositories. By running this test, you verify the overall integration and behavior of the CLI tool in a realistic scenario.
@@ -223,19 +231,12 @@ This project includes several end-to-end tests that validate the functionality o
 
 - **Validation of Core Features**: As it encompasses key functionalities, running this test ensures that the essential features of Machtiani are working as expected.
 
-#### Running the Defacto Test
-
-To run the end-to-end test suite, particularly `test_end_to_end.py`, use the following command in the `end-to-end-tests` directory:
-
-```bash
-python -m unittest test_end_to_end.py
-```
 
 This command prioritizes the most critical integration tests, ensuring that your core functionalities more cost effectively (only a single round of setup and teardown).
 
 ### Other Tests
 
-In addition to `test_end_to_end.py`, there are other tests available, such as:
+In addition to `test_end_to_end.py`, there are other tests available, such a below. However, it is recommended to prioritize the defacto tests above for a more focused validation of the core features. There no guarantee that the other tests will be maintained or its documentation kept up-to-date.
 
 1. **Test for `git-store`**
 
@@ -253,7 +254,6 @@ To run all tests, you can still use:
 python -m unittest discover .
 ```
 
-However, it is recommended to prioritize the defacto test for a more focused validation of the core features.
 
 ## Conclusion
 
