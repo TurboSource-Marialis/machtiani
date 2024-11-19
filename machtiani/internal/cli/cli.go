@@ -67,13 +67,15 @@ func Execute() {
         utils.ParseFlags(fs, os.Args[2:]) // Use the new helper function
         // Call the HandleGitSync function
         if err := handleGitSync(remoteURL, *branchName, apiKey, *forceFlag, config); err != nil {
-            log.Fatalf("Error handling git-sync: %v", err)
+            log.Printf("Error handling git-sync: %v", err)
+            os.Exit(1)
         }
         return
     case "git-delete":
         utils.ParseFlags(fs, os.Args[2:]) // Use the new helper function
         if remoteURL == "" {
-            log.Fatal("Error: --remote must be provided.")
+            log.Printf("Error: --remote must be provided.")
+            os.Exit(1)
         }
         // Define additional parameters for git-delete
         ignoreFiles := []string{} // Populate this list as needed
