@@ -25,6 +25,9 @@ func GetProjectName() (string, error) {
 
 func GetRemoteURL(remoteName *string) (string, error) {
     remoteURL, err := getRemoteURL(*remoteName)
+    if remoteName == nil || *remoteName == "" {
+        return "", fmt.Errorf("remote name cannot be empty")
+    }
     if err != nil {
         return "", fmt.Errorf("Error fetching remote URL: %v", err)
     }

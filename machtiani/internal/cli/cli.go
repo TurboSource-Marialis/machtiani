@@ -38,7 +38,7 @@ func Execute() {
     // Use the new remote URL function
     remoteURL, err := git.GetRemoteURL(remoteName)
     if err != nil {
-        log.Fatalf(err.Error())
+        log.Printf("Error getting remote url: %v", err)
     }
     fmt.Printf("Using remote URL: %s\n", remoteURL)
     projectName :=  remoteURL
