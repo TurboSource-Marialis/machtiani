@@ -26,12 +26,12 @@ func Execute() {
     compatible, message, err := api.GetInstallInfo()
     if err != nil {
         log.Printf("Error getting install info: %v", err)
-        return
+        os.Exit(1)
     }
 
     if !compatible {
         log.Printf("This CLI is no longer compatible with the current environment. Please update to the latest version by following the below instructions\n\n%v", message)
-        return
+        os.Exit(1)
     }
 
 
@@ -39,6 +39,7 @@ func Execute() {
     remoteURL, err := git.GetRemoteURL(remoteName)
     if err != nil {
         log.Printf("Error getting remote url: %v", err)
+        os.Exit(1)
     }
     fmt.Printf("Using remote URL: %s\n", remoteURL)
     projectName :=  remoteURL
