@@ -29,24 +29,6 @@ func float32ToFloat64(input []float32) []float64 {
     return output
 }
 
-
-func generateEmbeddings(apiKey, prompt string) ([]float64, error) {
-    client := openai.NewClient(apiKey)
-    req := openai.EmbeddingRequest{
-        Model: "text-embedding-3-large",
-        Input: []string{prompt},
-    }
-    resp, err := client.CreateEmbeddings(context.Background(), req)
-    if err != nil {
-        return nil, fmt.Errorf("failed to create embeddings: %w", err)
-    }
-
-    if len(resp.Data) > 0 {
-        return float32ToFloat64(resp.Data[0].Embedding), nil
-    }
-    return nil, fmt.Errorf("no embeddings returned")
-}
-
 func Execute() {
     config, err := utils.LoadConfig()
     if err != nil {
