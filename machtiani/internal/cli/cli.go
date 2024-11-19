@@ -25,11 +25,13 @@ func Execute() {
 
     compatible, message, err := api.GetInstallInfo()
     if err != nil {
-        log.Fatalf("Error checking HEAD OIDs match: %v", err)
+        log.Printf("Error getting install info: %v", err)
+        return
     }
 
     if !compatible {
-        log.Fatalf("This CLI is no longer compatible with the current environment. Please update to the latest version by following the below instructions\n\n%v", message)
+        log.Printf("This CLI is no longer compatible with the current environment. Please update to the latest version by following the below instructions\n\n%v", message)
+        return
     }
 
 

@@ -525,7 +525,7 @@ func GetInstallInfo() (bool, string, error) {
     }
     message, ok := response["message"]
     if !ok {
-        return false, "", fmt.Errorf("response does not contain head_oid")
+        return false, "", fmt.Errorf("response does not contain message")
     }
 
     return returnedHeadOID == HeadOID, message, nil
