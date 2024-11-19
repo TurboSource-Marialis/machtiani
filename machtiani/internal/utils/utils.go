@@ -174,7 +174,7 @@ func ReadIgnoreFile(fileName string) ([]string, error) {
 }
 
 
-func GetAPIKey(config Config) *string {
+func GetCodeHostAPIKey(config Config) *string {
     if config.Environment.CodeHostAPIKey != "" {
         return &config.Environment.CodeHostAPIKey
     }
@@ -242,3 +242,4 @@ func GetCodehostURLFromCurrentRepository() (string, error) {
     codehostURL := strings.TrimSpace(string(output))
     return codehostURL, nil
 }
+
