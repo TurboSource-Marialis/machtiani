@@ -1,4 +1,5 @@
 import unittest
+import os
 import time
 import threading
 from test_utils.test_utils import (
@@ -26,6 +27,10 @@ class BaseTestEndToEnd:
         cls.setup.create_ignore_file()
 
         cls.checkout_branches(["feature", "feature2", "master"])
+
+        # Ensure the .machtiani/chat directory exists
+        chat_dir = os.path.join(cls.directory, ".machtiani", "chat")
+        os.makedirs(chat_dir, exist_ok=True)
 
     @classmethod
     def checkout_branches(cls, branches):
@@ -161,9 +166,6 @@ class BaseTestEndToEnd:
         command = f"machtiani --file {chat_file_path}"
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
-        print(f"Test command: {command}")
-        print(f"Test prompt file flag command:\n\n{stdout_machtiani}")
-        print(f"Test prompt file flag command (normalized):\n\n{stdout_normalized}")
 
         self.assertTrue(any("Using remote URL" in line for line in stdout_normalized))
         self.assertTrue(any("ilter" in line for line in stdout_normalized))

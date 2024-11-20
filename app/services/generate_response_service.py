@@ -55,7 +55,7 @@ async def generate_response(
     if match_strength not in ["high", "mid", "low"]:
         return {"error": "Invalid match strength selected. Choose either 'high', 'mid', or 'low'."}
 
-    if not await check_token_limit(combined_prompt, model, TOKEN_LIMITS):
+    if not await check_token_limit(prompt, model, TOKEN_LIMITS):
         error_message = (
             f"Prompt token limit exceeded for the selected model. "
             f"Limit: {max_tokens}, Count: {token_count}. "
