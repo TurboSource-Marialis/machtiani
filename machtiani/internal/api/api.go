@@ -494,6 +494,13 @@ func GetInstallInfo() (bool, string, error) {
         return false, "", fmt.Errorf("error creating request: %w", err)
     }
 
+    // Set API Gateway headers if not blank
+    if config.Environment.APIGatewayHostKey != "" && config.Environment.APIGatewayHostValue != "" {
+        req.Header.Set(config.Environment.APIGatewayHostKey, config.Environment.APIGatewayHostValue)
+    }
+    req.Header.Set(config.Environment.ContentTypeKey, config.Environment.ContentTypeValue)
+
+
     // Create a new HTTP client with a timeout
     client := &http.Client{
         Timeout: 20 * time.Second, // Set an appropriate timeout
