@@ -60,3 +60,14 @@ async def send_prompt_to_openai(prompt_text: str, api_key: str, model: str = "gp
 async def count_tokens(text: str) -> int:
     return len(text) // 4 + 1
 
+
+async def check_token_limit(prompt: str, model: str, token_limits: dict) -> bool:
+    token_count = await count_tokens(prompt)
+    max_tokens = token_limits.get(model)
+
+    logger.info(f"model: {model}, token count: {token_count}, max limit: {max_tokens}")
+
+    if token_count > max_tokens:
+        return False  # Return False if the token count exceeds the limit
+
+    return True  # Return True if within limit

@@ -173,11 +173,7 @@ async def generate_response(
                 for path, content in file_content_response.contents.items():
                     combined_prompt += f"\n--- {path} ---\n{content}\n"
 
-            token_count = await count_tokens(combined_prompt)
-            max_tokens = TOKEN_LIMITS[model]
-            logger.info(f"model: {model}, token count: {token_count}, max limit: {max_tokens}")
-
-            if token_count > max_tokens:
+            if not await check_token_limit(combined_prompt, model, TOKEN_LIMITS):
                 error_message = (
                     f"Token limit exceeded for the selected model. "
                     f"Limit: {max_tokens}, Count: {token_count}. "
