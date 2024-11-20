@@ -274,7 +274,7 @@ Machtiani simplifies code retrieval and interaction with repositories through a 
 - [x] Test using codehost without api key.
 - [x] Add endpoint to get HEAD of server.
 - [x] Cli makes sure its compatabile with server, otherwise it throws an error and instructs to update cli. (create a flag to silence).
-- [ ] Clean up cli for open sourcing to optional build cli without release.
+- [ ] Barrier: Clean up cli for open sourcing to optional build cli without release.
 - [x] Write test, When trying to git-store an existing repo, it gives this not useful error
 
       ```
@@ -283,11 +283,12 @@ Machtiani simplifies code retrieval and interaction with repositories through a 
       ```
 - [ ] Test help commands
 - [ ] Test flags
-- [ ] Test compatibility stdout.
-- [ ] Test chat file actually saved (add to setup and teardown too)
-- [ ] Test using --file flag (Need a Setup method to use a prexisting chat
-- [ ] If remote url for machtiani (machtiani) is not present, cli should ask for the remote url and then add to remote.
-- [ ] Filter commit embeddings per oids in branch so it works regardless of branch checked out.
-- [ ] Version the file summary embeddings and tag commits at HEAD of work tree of code project so it can be switch to reflect code project branch.
-- [ ] Test to ensure that no binaries are indexed or sought in retrieval results.
-- [ ] Improve output formatting (some spacing) and specific input tokens for estimates.
+- [x] Test compatibility stdout (natural part of running tests, as it will often fail after making a commit).
+- [x] Test chat file actually saved (add to setup and teardown too)
+- [x] Test using --file flag (Need a Setup method to use a prexisting chat)
+- [ ] Barrier: If remote url for machtiani (machtiani) is not present, cli should ask for the remote url and then add to remote.
+- [ ] High: ensure chat path doesn't have any `.` other than for `.md` extension.
+- [ ] Mid Filter commit embeddings per oids in branch so it works regardless of branch checked out.
+- [ ] Mid: Version the file summary embeddings and tag commits at HEAD of work tree of code project so it can be switch to reflect code project branch.
+- [ ] Mid: Test to ensure that no binaries are indexed or sought in retrieval results.
+- [ ] High: Improve output formatting (some spacing) and specific input tokens for estimates.
