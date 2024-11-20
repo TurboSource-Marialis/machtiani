@@ -13,6 +13,7 @@ from app.utils import (
     FileContentResponse,
     count_tokens,
     add_sys_path,
+    check_token_limit,
 )
 from utils.enums import (
     SearchMode,
@@ -53,6 +54,15 @@ async def generate_response(
 
     if match_strength not in ["high", "mid", "low"]:
         return {"error": "Invalid match strength selected. Choose either 'high', 'mid', or 'low'."}
+
+    if not await check_token_limit(combined_prompt, model, TOKEN_LIMITS):
+        error_message = (
+            f"Prompt token limit exceeded for the selected model. "
+            f"Limit: {max_tokens}, Count: {token_count}. "
+            f"Please reduce the length of your prompt."
+        )
+        logger.error(error_message)
+        return {"error": error_message}
 
     base_url = "http://commit-file-retrieval:5070"
     infer_file_url = f"{base_url}/infer-file/"
