@@ -17,6 +17,12 @@ var (
     BuildDate string = "unknown"
 )
 
+const (
+    CONTENT_TYPE_KEY   = "Content-Type"
+    CONTENT_TYPE_VALUE = "application/json"
+    API_GATEWAY_HOST_KEY = "X-RapidAPI-Key"
+)
+
 type AddRepositoryResponse struct {
     Message        string `json:"message"`
     FullPath       string `json:"full_path"`
@@ -97,10 +103,10 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
         }
 
         // Set API Gateway headers if not blank
-        if config.Environment.APIGatewayHostKey != "" && config.Environment.APIGatewayHostValue != "" {
-            req.Header.Set(config.Environment.APIGatewayHostKey, config.Environment.APIGatewayHostValue)
+        if config.Environment.APIGatewayHostValue != "" {
+            req.Header.Set(API_GATEWAY_HOST_KEY, config.Environment.APIGatewayHostValue)
         }
-        req.Header.Set(config.Environment.ContentTypeKey, config.Environment.ContentTypeValue)
+        req.Header.Set(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE)
 
         client := &http.Client{
             Timeout: 20 * time.Minute,
@@ -196,10 +202,10 @@ func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiK
         }
 
         // Set API Gateway headers if not blank
-        if config.Environment.APIGatewayHostKey != "" && config.Environment.APIGatewayHostValue != "" {
-            req.Header.Set(config.Environment.APIGatewayHostKey, config.Environment.APIGatewayHostValue)
+        if config.Environment.APIGatewayHostValue != "" {
+            req.Header.Set(API_GATEWAY_HOST_KEY, config.Environment.APIGatewayHostValue)
         }
-        req.Header.Set(config.Environment.ContentTypeKey, config.Environment.ContentTypeValue)
+        req.Header.Set(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE)
 
         client := &http.Client{
             Timeout: 20 * time.Minute,
@@ -263,10 +269,10 @@ func DeleteStore(projectName string, codehostURL string, ignoreFiles []string, v
         }
 
         // Set API Gateway headers if not blank
-        if config.Environment.APIGatewayHostKey != "" && config.Environment.APIGatewayHostValue != "" {
-            req.Header.Set(config.Environment.APIGatewayHostKey, config.Environment.APIGatewayHostValue)
+        if config.Environment.APIGatewayHostValue != "" {
+            req.Header.Set(API_GATEWAY_HOST_KEY, config.Environment.APIGatewayHostValue)
         }
-        req.Header.Set(config.Environment.ContentTypeKey, config.Environment.ContentTypeValue)
+        req.Header.Set(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE)
 
         client := &http.Client{
             Timeout: 20 * time.Minute,
@@ -347,10 +353,10 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
     }
 
     // Set API Gateway headers if not blank
-    if config.Environment.APIGatewayHostKey != "" && config.Environment.APIGatewayHostValue != "" {
-        req.Header.Set(config.Environment.APIGatewayHostKey, config.Environment.APIGatewayHostValue)
+    if config.Environment.APIGatewayHostValue != "" {
+        req.Header.Set(API_GATEWAY_HOST_KEY, config.Environment.APIGatewayHostValue)
     }
-    req.Header.Set(config.Environment.ContentTypeKey, config.Environment.ContentTypeValue)
+    req.Header.Set(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE)
 
     // Create a new HTTP client with a timeout
     client := &http.Client{
@@ -391,11 +397,10 @@ func getTokenCount(endpoint string, buffer *bytes.Buffer) (int, int, error) {
     if err != nil {
         return 0, 0, fmt.Errorf("error creating request: %w", err)
     }
+    req.Header.Set(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE)
 
-    req.Header.Set(config.Environment.ContentTypeKey, config.Environment.ContentTypeValue)
-
-    if config.Environment.APIGatewayHostKey != "" && config.Environment.APIGatewayHostValue != "" {
-        req.Header.Set(config.Environment.APIGatewayHostKey, config.Environment.APIGatewayHostValue)
+    if config.Environment.APIGatewayHostValue != "" {
+        req.Header.Set(API_GATEWAY_HOST_KEY, config.Environment.APIGatewayHostValue)
     }
 
     client := &http.Client{Timeout: 20 * time.Minute}
@@ -450,10 +455,10 @@ func CheckStatus(codehostURL string, apiKey *string) (StatusResponse, error) {
     }
 
     // Set API Gateway headers if not blank
-    if config.Environment.APIGatewayHostKey != "" && config.Environment.APIGatewayHostValue != "" {
-        req.Header.Set(config.Environment.APIGatewayHostKey, config.Environment.APIGatewayHostValue)
+    if config.Environment.APIGatewayHostValue != "" {
+        req.Header.Set(API_GATEWAY_HOST_KEY, config.Environment.APIGatewayHostValue)
     }
-    req.Header.Set(config.Environment.ContentTypeKey, config.Environment.ContentTypeValue)
+    req.Header.Set(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE)
 
     client := &http.Client{Timeout: 20 * time.Minute}
     resp, err := client.Do(req)
@@ -495,11 +500,10 @@ func GetInstallInfo() (bool, string, error) {
     }
 
     // Set API Gateway headers if not blank
-    if config.Environment.APIGatewayHostKey != "" && config.Environment.APIGatewayHostValue != "" {
-        req.Header.Set(config.Environment.APIGatewayHostKey, config.Environment.APIGatewayHostValue)
+    if config.Environment.APIGatewayHostValue != "" {
+        req.Header.Set(API_GATEWAY_HOST_KEY, config.Environment.APIGatewayHostValue)
     }
-    req.Header.Set(config.Environment.ContentTypeKey, config.Environment.ContentTypeValue)
-
+    req.Header.Set(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE)
 
     // Create a new HTTP client with a timeout
     client := &http.Client{

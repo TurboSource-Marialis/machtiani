@@ -126,12 +126,6 @@ func validateConfig(config Config) error {
     if config.Environment.RepoManagerURL == "" {
         return fmt.Errorf("MACHTIANI_REPO_MANAGER_URL must be set")
     }
-    if config.Environment.ContentTypeKey == "" {
-        return fmt.Errorf("CONTENT_TYPE_KEY must be set")
-    }
-    if config.Environment.ContentTypeValue == "" {
-        return fmt.Errorf("CONTENT_TYPE_VALUE must be set")
-    }
     // The following can be empty
     // ModelAPIKey and API Gateway related keys can be empty
     return nil

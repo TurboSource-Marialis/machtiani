@@ -22,6 +22,12 @@ const (
     defaultMode         = "commit"
 )
 
+const (
+    CONTENT_TYPE_KEY   = "Content-Type"
+    CONTENT_TYPE_VALUE = "application/json"
+    API_GATEWAY_HOST_KEY = "X-RapidAPI-Key"
+)
+
 func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey *string) {
     fs := flag.NewFlagSet("machtiani", flag.ContinueOnError)
     modelFlag := fs.String("model", defaultModel, "Model to use (options: gpt-4o, gpt-4o-mini)")
@@ -101,10 +107,10 @@ func generateFilename(context string, apiKey string) (string, error) {
         return "", fmt.Errorf("failed to create request: %v", err)
     }
 
-    if config.Environment.APIGatewayHostKey != "" && config.Environment.APIGatewayHostValue != "" {
-        req.Header.Set(config.Environment.APIGatewayHostKey, config.Environment.APIGatewayHostValue)
+    if config.Environment.APIGatewayHostValue != "" {
+        req.Header.Set(API_GATEWAY_HOST_KEY, config.Environment.APIGatewayHostValue)
     }
-    req.Header.Set(config.Environment.ContentTypeKey, config.Environment.ContentTypeValue)
+    req.Header.Set(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE)
 
     client := &http.Client{}
     resp, err := client.Do(req)
