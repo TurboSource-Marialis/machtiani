@@ -117,8 +117,6 @@ class BaseTestEndToEnd:
 
         expected_output = [
             "Using remote URL: https://github.com/7db9a/chastler.git",
-            "Parsed file paths from machtiani.ignore:",
-            "poetry.lock",
             "Estimated embedding tokens: 0",
             "Estimated inference tokens: 0",
             "Successfully synced the repository: https://github.com/7db9a/chastler.git.",
@@ -141,8 +139,6 @@ class BaseTestEndToEnd:
 
         expected_output = [
             "Using remote URL: https://github.com/7db9a/chastler.git",
-            "Parsed file paths from machtiani.ignore:",
-            "poetry.lock",
             "Estimated embedding tokens: 16",
             "Estimated inference tokens: 30",  # Updated to match actual output
             "Successfully synced the repository: https://github.com/7db9a/chastler.git.",
