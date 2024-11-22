@@ -256,6 +256,7 @@ Machtiani simplifies code retrieval and interaction with repositories through a 
 
 ## Todo
 
+- [x] High: handlePrompt doesn't handle many of the flags and arguments. Look at old code when in Execute or older handlePrompts to get it back in.
 - [x] Retrieve file content and add to prompt.
 - [x] Improve messaging when no files are retrieved but found.
 - [x] Warn CLI user if there are no retrieved files, suggesting to lower match strength.
@@ -269,7 +270,7 @@ Machtiani simplifies code retrieval and interaction with repositories through a 
 - [x] Test using codehost without api key.
 - [x] Add endpoint to get HEAD of server.
 - [x] Cli makes sure its compatabile with server, otherwise it throws an error and instructs to update cli. (create a flag to silence).
-- [ ] Barrier: Clean up cli for open sourcing to optional build cli without release.
+- [x] Barrier: Clean up cli for open sourcing to optional build cli without release.
 - [x] Write test, When trying to git-store an existing repo, it gives this not useful error
 
       ```
