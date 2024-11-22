@@ -39,8 +39,9 @@ func main() {
         machtianiURL := urls[0]
         repoManagerURL := urls[1]
 
-        // Append the ldflags for MachtianiURL and RepoManagerURL
-        ldflags += fmt.Sprintf(" -X 'github.com/7db9a/machtiani/internal/api.MachtianiURL=%s' -X 'github.com/7db9a/machtiani/internal/api.RepoManagerURL=%s' -X 'github.com/7db9a/machtiani/internal/cli.MachtianiURL=%s'", machtianiURL, repoManagerURL, machtianiURL)
+        // Append the ldflags for MachtianiURL and RepoManagerURL for both api and cli packages
+        ldflags += fmt.Sprintf(" -X 'github.com/7db9a/machtiani/internal/api.MachtianiURL=%s' -X 'github.com/7db9a/machtiani/internal/api.RepoManagerURL=%s'", machtianiURL, repoManagerURL)
+        ldflags += fmt.Sprintf(" -X 'github.com/7db9a/machtiani/internal/cli.MachtianiURL=%s' -X 'github.com/7db9a/machtiani/internal/cli.RepoManagerURL=%s'", machtianiURL, repoManagerURL)
     }
 
     // Print the final ldflags
