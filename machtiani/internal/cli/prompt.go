@@ -217,10 +217,20 @@ func readMarkdownFile(path string) string {
 }
 
 func printVerboseInfo(markdown, model, matchStrength, mode, prompt string) {
+    _, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
+    if err != nil {
+        log.Fatalf("Error loading config: %v", err)
+    }
+
+    // Print the file paths
+    fmt.Println("Parsed file paths from machtiani.ignore:")
+    for _, path := range ignoreFiles {
+        fmt.Printf(" %s\n", path)
+    }
     fmt.Println("Arguments passed:")
-    fmt.Printf("Markdown file: %s\n", markdown)
-    fmt.Printf("Model: %s\n", model)
-    fmt.Printf("Match strength: %s\n", matchStrength)
-    fmt.Printf("Mode: %s\n", mode)
-    fmt.Printf("Prompt: %s\n", prompt)
+    fmt.Printf("  Markdown file: %s\n", markdown)
+    fmt.Printf("  Model: %s\n", model)
+    fmt.Printf("  Match strength: %s\n", matchStrength)
+    fmt.Printf("  Mode: %s\n", mode)
+    fmt.Printf("  Prompt: %s\n", prompt)
 }

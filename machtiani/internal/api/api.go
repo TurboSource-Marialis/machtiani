@@ -156,12 +156,6 @@ func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiK
         return "", err
     }
 
-    // Print the file paths
-    fmt.Println("Parsed file paths from machtiani.ignore:")
-    for _, path := range ignoreFiles {
-        fmt.Println(path)
-    }
-
     // Prepare the data to be sent in the request
     data := map[string]interface{}{
         "codehost_url":   codeURL,
@@ -309,19 +303,11 @@ func DeleteStore(projectName string, codehostURL string, ignoreFiles []string, v
 }
 
 func GenerateResponse(prompt, project, mode, model, matchStrength string, force bool) (map[string]interface{}, error) {
-
     config, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
     if err != nil {
         log.Fatalf("Error loading config: %v", err)
     }
 
-    // Print the file paths
-    fmt.Println("Parsed file paths from machtiani.ignore:")
-    for _, path := range ignoreFiles {
-        fmt.Println(path)
-    }
-
-    // Retrieve the codehost URL based on the current Git project.
     codehostURL, err := utils.GetCodehostURLFromCurrentRepository()
     if err != nil {
         return nil, fmt.Errorf("failed to get codehost URL: %w", err)
