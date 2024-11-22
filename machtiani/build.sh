@@ -23,7 +23,7 @@ done
 
 if [ "$RELEASE" = true ]; then
   # Generate ldflags
-  LD_FLAGS=$(./generate_ldflags)
+  LD_FLAGS=$(./generate_ldflags --release "https://machtiani2.p.rapidapi.com https://machtiani2.p.rapidapi.com")
 
   # Build for macOS (Intel)
   GOOS=darwin GOARCH=amd64 go build -ldflags "$LD_FLAGS" -o machtiani-darwin-amd64 ./cmd/machtiani

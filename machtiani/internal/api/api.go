@@ -15,6 +15,8 @@ import (
 var (
     HeadOID    string = "none"
     BuildDate string = "unknown"
+    MachtianiURL string = "http://localhost:5071"
+    RepoManagerURL string = "http://localhost:5070"
 )
 
 const (
@@ -175,7 +177,7 @@ func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiK
         return "", fmt.Errorf("error marshaling JSON: %w", err)
     }
 
-    repoManagerURL := config.Environment.RepoManagerURL
+    repoManagerURL := RepoManagerURL
     if repoManagerURL == "" {
         return "", fmt.Errorf("MACHTIANI_REPO_MANAGER_URL environment variable is not set")
     }
@@ -342,7 +344,7 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
         return nil, fmt.Errorf("failed to marshal JSON: %w", err)
     }
 
-    endpoint := config.Environment.MachtianiURL
+    endpoint := MachtianiURL
     if endpoint == "" {
         return nil, fmt.Errorf("MACHTIANI_URL environment variable is not set")
     }
@@ -437,7 +439,7 @@ func CheckStatus(codehostURL string, apiKey *string) (StatusResponse, error) {
         return StatusResponse{}, err
     }
 
-    repoManagerURL := config.Environment.RepoManagerURL
+    repoManagerURL := RepoManagerURL
     if repoManagerURL == "" {
         return StatusResponse{}, fmt.Errorf("MACHTIANI_REPO_MANAGER_URL environment variable is not set")
     }
@@ -486,7 +488,7 @@ func GetInstallInfo() (bool, string, error) {
         return false, "", fmt.Errorf("error loading config: %w", err)
     }
 
-    machtianiURL := config.Environment.MachtianiURL
+    machtianiURL := MachtianiURL
     if machtianiURL == "" {
         return false, "", fmt.Errorf("MACHTIANI_URL environment variable is not set")
     }

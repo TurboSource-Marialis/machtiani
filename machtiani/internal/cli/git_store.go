@@ -7,9 +7,12 @@ import (
     "github.com/7db9a/machtiani/internal/utils"
 )
 
+
+var RepoManagerURL string = "http://localhost:5070"
+
 func handleGitStore(remoteURL string, apiKey *string, forceFlag bool, config utils.Config) {
     // Call the new function to add the repository
-    response, err := api.AddRepository(remoteURL, remoteURL, apiKey, config.Environment.ModelAPIKey, config.Environment.RepoManagerURL, forceFlag)
+    response, err := api.AddRepository(remoteURL, remoteURL, apiKey, config.Environment.ModelAPIKey, RepoManagerURL, forceFlag)
     if err != nil {
         log.Fatalf("Error adding repository: %v", err)
     }

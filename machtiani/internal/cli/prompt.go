@@ -16,6 +16,10 @@ import (
     "github.com/charmbracelet/glamour"
 )
 
+var (
+    MachtianiURL string = "http://localhost:5071"
+)
+
 const (
     defaultModel        = "gpt-4o-mini"
     defaultMatchStrength = "mid"
@@ -27,6 +31,7 @@ const (
     CONTENT_TYPE_VALUE = "application/json"
     API_GATEWAY_HOST_KEY = "X-RapidAPI-Key"
 )
+
 
 func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey *string) {
     fs := flag.NewFlagSet("machtiani", flag.ContinueOnError)
@@ -95,7 +100,7 @@ func generateFilename(context string, apiKey string) (string, error) {
         log.Fatalf("Error loading config: %v", err)
     }
 
-    endpoint := config.Environment.MachtianiURL
+    endpoint := MachtianiURL
     if endpoint == "" {
         return "", fmt.Errorf("MACHTIANI_URL environment variable is not set")
     }
