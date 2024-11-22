@@ -50,25 +50,19 @@ Additionally, while Machtiani aims to improve the relevance of retrieved files, 
 
    ```yaml
    environment:
+     MODEL_API_KEY: "your_openapi_api_key"
+   ```
+
+   If you want to work with private repos you have access to.
+
+   ```
      CODE_HOST_API_KEY: "your_github_key_with_repo_scopes"
-     MACHTIANI_URL: "http://localhost:5071"
-     MACHTIANI_REPO_MANAGER_URL: "http://localhost:5070"
-     CONTENT_TYPE_KEY: "Content-Type"
-     CONTENT_TYPE_VALUE: "application/json"
    ```
 
     Alternatively, you can place it in `~/.machtiani-config.yml`, but any `.machtiani-config.yml` placed in your Git project directory will override the one in `$HOME`.
 
-    **Warning:** If the `MODEL_API_KEY` is set, please be aware that costs will be incurred for embedding the prompt using the OpenAI API.
-
     ***Also, you'll have to add a `.env` file in `machtiani-commit-file-retrieval/`.***
 
-    If you're using with the `api-gateway` deployed, add the following fields.
-
-    ```
-    API_GATEWAY_HOST_KEY: "x-api-gateway-host"      # Header key for API gateway host (e.g., "x-rapidapi-host")
-    API_GATEWAY_HOST_VALUE: "your-api-gateway-value" # Header value for API gateway host (e.g., "rapidapi-api-key")
-    ```
 
 3. Launch the application in development (without the API Gateway):
 
@@ -79,6 +73,7 @@ Additionally, while Machtiani aims to improve the relevance of retrieved files, 
 4. Build the Machtiani CLI in `machtiani/machtiani/`.
 
    ```bash
+    go build -o generate_ldflags generate_ldflags.go
    ./build.sh
    ```
 
@@ -88,7 +83,7 @@ Additionally, while Machtiani aims to improve the relevance of retrieved files, 
    cp machtiani ~/.local/bin/
    ```
 
-6. Build the `aicommit` binary in `machtiani/aicommit/`.
+6. Optional: build the `aicommit` binary in `machtiani/aicommit/`.
 
    ```bash
    cd aicommit
@@ -292,3 +287,50 @@ Machtiani simplifies code retrieval and interaction with repositories through a 
 - [ ] Mid: Version the file summary embeddings and tag commits at HEAD of work tree of code project so it can be switch to reflect code project branch.
 - [ ] Mid: Test to ensure that no binaries are indexed or sought in retrieval results.
 - [ ] High: Improve output formatting (some spacing) and specific input tokens for estimates.
+- [ ] High: When passing incorrect branch in sync command, it gives unclear error to user
+      ```
+      Error getting token count: error getting token count: {"detail":"Internal Server Error"}
+      2024/11/21 12:46:51 Error handling git-sync: Error syncing repository: error getting token count: {"detail":"Internal Server Error"}
+      ```
+- [ ] High: When a user is not authorized to chat it gives unclear error to user
+
+      ```
+      2024/11/21 18:30:43 Error from API: An unexpected error occurred:
+      ````
+
+      On the server, the error is clear
+
+      ```
+      commit-file-retrieval  | INFO:     172.18.0.4:59360 - "POST /test-pull-access/?project_name=https%3A%2F%2Fgithub.com%2FturboSource-marialis%2Fmachtiani&codehost_api_key=&codehost_url=https%3A%2F%2Fgithub.com%2FturboSource-marialis%2Fmachtiani HTTP/1.1" 200 OK
+      machtiani              | ERROR:    Unexpected error occurred
+      machtiani              | Traceback (most recent call last):
+      machtiani              |   File "/app/app/services/generate_response_service.py", line 83, in generate_response
+      machtiani              |     raise HTTPException(status_code=403, detail="Pull access denied.")
+      machtiani              | fastapi.exceptions.HTTPException
+      ```
+
+- [ ] High: Even though the user isn't authorized, they can still call `machtiani status` on a repo.
+- [ ] High: When syncing an authorized url, the error is opaque
+
+    on cli:
+
+    ```
+    Error getting token count: error getting token count: {"detail":"Internal Server Error"}
+    2024/11/21 18:33:41 Error handling git-sync: Error syncing repository: error getting token count: {"detail":"Internal Server Error"}
+    ```
+  
+    on server
+
+    ```
+    commit-file-retrieval  | DEBUG:lib.utils.utilities:Using unauthenticated URL.
+    commit-file-retrieval  | DEBUG:git.cmd:Popen(['git', 'remote', 'set-url', '--', 'origin', 'https://github.com/turboSource-marialis/machtiani'], cwd=/data/users/repositories/github_com_turbosource-marialis_machtiani/repo/git, stdin=None, shell=False, universal_newlines=False)
+    commit-file-retrieval  | DEBUG:git.cmd:Popen(['git', 'fetch', '-v', '--', 'origin'], cwd=/data/users/repositories/github_com_turbosource-marialis_machtiani/repo/git, stdin=None, shell=False, universal_newlines=False)
+    commit-file-retrieval  | DEBUG:git.cmd:AutoInterrupt wait stderr: b"fatal: could not read Username for 'https://github.com': No such device or address"
+    commit-file-retrieval  | ERROR:lib.vcs.repo_manager:Git command failed: Cmd('git') failed due to: exit code(128)
+    commit-file-retrieval  |   cmdline: git fetch -v -- origin
+    commit-file-retrieval  |   stderr: 'fatal: could not read Username for 'https://github.com': No such device or address'
+    commit-file-retrieval  | ERROR:app.routes.count_tokens_fetch_and_checkout:An error occurred while processing token count: Cmd('git') failed due to: exit code(128)
+    commit-file-retrieval  |   cmdline: git fetch -v -- origin
+    commit-file-retrieval  |   stderr: 'fatal: could not read Username for 'https://github.com': No such device or address'
+    commit-file-retrieval  | INFO:     172.18.0.2:43212 - "POST /fetch-and-checkout/token-count HTTP/1.1" 500 Internal Server Error
+    ```
