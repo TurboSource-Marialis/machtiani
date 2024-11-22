@@ -159,6 +159,7 @@ class BaseTestEndToEnd:
 
         self.assertTrue(any("Using remote URL" in line for line in stdout_prompt_normalized))
         self.assertTrue(any("video" in line for line in stdout_prompt_normalized))
+        self.assertFalse(any("--force" in line for line in stdout_prompt_normalized))
         self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_prompt_normalized))
 
     def test_06_run_machtiani_prompt_file_flag_command(self):

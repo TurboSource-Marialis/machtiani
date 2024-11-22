@@ -2,7 +2,6 @@ package cli
 
 import (
     "encoding/json"
-    "flag"
     "fmt"
     "io/ioutil"
     "log"
@@ -14,6 +13,7 @@ import (
     "github.com/7db9a/machtiani/internal/api"
     "github.com/7db9a/machtiani/internal/utils"
     "github.com/charmbracelet/glamour"
+    "github.com/spf13/pflag"
 )
 
 var (
@@ -32,9 +32,8 @@ const (
     API_GATEWAY_HOST_KEY = "X-RapidAPI-Key"
 )
 
-
 func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey *string) {
-    fs := flag.NewFlagSet("machtiani", flag.ContinueOnError)
+    fs := pflag.NewFlagSet("machtiani", pflag.ContinueOnError)
     modelFlag := fs.String("model", defaultModel, "Model to use (options: gpt-4o, gpt-4o-mini)")
     matchStrengthFlag := fs.String("match-strength", defaultMatchStrength, "Match strength (options: high, mid, low)")
     modeFlag := fs.String("mode", defaultMode, "Search mode: pure-chat, commit, or super")
