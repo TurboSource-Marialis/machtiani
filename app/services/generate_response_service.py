@@ -50,10 +50,12 @@ async def generate_response(
     ignore_files: List[str],
 ):
     if model not in TOKEN_LIMITS:
-        return {"error": "Invalid model selected. Choose either 'gpt-4o' or 'gpt-4o-mini'."}
+        yield {"error": "Invalid model selected. Choose either 'gpt-4o' or 'gpt-4o-mini'."}
+        return
 
     if match_strength not in ["high", "mid", "low"]:
-        return {"error": "Invalid match strength selected. Choose either 'high', 'mid', or 'low'."}
+        yield {"error": "Invalid match strength selected. Choose either 'high', 'mid', or 'low'."}
+        return
 
     if not await check_token_limit(prompt, model, TOKEN_LIMITS):
         error_message = (
@@ -62,7 +64,8 @@ async def generate_response(
             f"Please reduce the length of your prompt."
         )
         logger.error(error_message)
-        return {"error": error_message}
+        yield {"error": error_message}
+        return
 
     base_url = "http://commit-file-retrieval:5070"
     infer_file_url = f"{base_url}/infer-file/"
@@ -73,7 +76,7 @@ async def generate_response(
         async with httpx.AsyncClient(timeout=httpx.Timeout(1200, read=1200.0)) as client:
             params = {
                 'project_name': project,
-                'codehost_api_key': codehost_api_key.get_secret_value() if codehost_api_key else None,  # Get the actual value
+                'codehost_api_key': codehost_api_key.get_secret_value() if codehost_api_key else None,
                 'codehost_url': codehost_url
             }
             pull_access_response = await client.post(test_pull_access_url, params=params)
@@ -106,7 +109,8 @@ async def generate_response(
                 logger.info(f"Payload for retrieve-file-contents: {file_paths_payload}")
 
                 if not file_paths_payload:
-                    return {"machtiani": "no files found"}
+                    yield {"machtiani": "no files found"}
+                    return
 
                 file_summaries = {}
                 file_paths_to_summarize = [entry["path"] for entry in file_paths_payload]
@@ -133,7 +137,8 @@ async def generate_response(
 
                 if not file_summaries:
                     logger.error("No summaries found for any of the files.")
-                    return {"error": "No relevant file summaries found."}
+                    yield {"error": "No relevant file summaries found."}
+                    return
 
                 summary_prompt = (
                     f"Here are the file summaries:\n\n{json.dumps(file_summaries, indent=2)}\n\n"
@@ -143,7 +148,14 @@ async def generate_response(
                     f"Example format:\n---\n/path/to/relevant_file1\n/path/to/relevant_file2\n---"
                 )
 
-                openai_response = await send_prompt_to_openai(summary_prompt, api_key, model)
+                # Collect tokens from streaming response
+                response_tokens = []
+                async for token_json in send_prompt_to_openai(summary_prompt, api_key, model):
+                    token_data = json.loads(token_json)
+                    token = token_data.get("token", "")
+                    response_tokens.append(token)
+
+                openai_response = ''.join(response_tokens)
 
                 match = re.search(r"---\s*(.*?)\s*---", openai_response, re.DOTALL)
 
@@ -153,10 +165,12 @@ async def generate_response(
                     logger.info(f"Relevant file paths returned from OpenAI: {relevant_file_paths}")
                 else:
                     logger.error(f"Failed to extract relevant paths from OpenAI response: {openai_response}")
-                    return {"error": "Invalid response format from OpenAI API."}
+                    yield {"error": "Invalid response format from OpenAI API."}
+                    return
 
                 if not relevant_file_paths:
-                    return {"error": "No relevant file paths found from OpenAI response."}
+                    yield {"error": "No relevant file paths found from OpenAI response."}
+                    return
 
                 relevant_file_paths_payload = [
                     entry for entry in file_paths_payload if entry["path"] in relevant_file_paths
@@ -164,7 +178,8 @@ async def generate_response(
 
                 if not relevant_file_paths_payload:
                     logger.error("No relevant entries found in the original payload after filtering.")
-                    return {"error": "No relevant entries found in the original payload after filtering."}
+                    yield {"error": "No relevant entries found in the original payload after filtering."}
+                    return
 
                 content_response = await client.post(
                     f"{base_url}/retrieve-file-contents/",
@@ -190,18 +205,24 @@ async def generate_response(
                     f"Please reduce the length of your prompt or the number of retrieved contents."
                 )
                 logger.error(error_message)
-                return {"error": error_message}
+                yield {"error": error_message}
+                return
 
-            openai_response = await send_prompt_to_openai(combined_prompt, api_key, model)
+            # Yield retrieved_file_paths if any
+            if retrieved_file_paths:
+                yield {"retrieved_file_paths": retrieved_file_paths}
 
-            return {"openai_response": openai_response, "retrieved_file_paths": retrieved_file_paths}
+            # Stream tokens from OpenAI response
+            async for token_json in send_prompt_to_openai(combined_prompt, api_key, model):
+                yield json.loads(token_json)
 
     except httpx.RequestError as exc:
         logger.error(f"Request error: {exc}")
-        return {"error": f"Error connecting to commit-file-retrieval service: {exc}"}
+        yield {"error": f"Error connecting to commit-file-retrieval service: {exc}"}
     except httpx.HTTPStatusError as exc:
         logger.error(f"HTTP status error: {exc.response.json()}")
-        return {"error": f"Error response from commit-file-retrieval service: {exc.response.json()}"}
+        yield {"error": f"Error response from commit-file-retrieval service: {exc.response.json()}"}
     except Exception as e:
         logger.exception("Unexpected error occurred")
-        return {"error": f"An unexpected error occurred: {str(e)}"}
+        yield {"error": f"An unexpected error occurred: {str(e)}"}
+

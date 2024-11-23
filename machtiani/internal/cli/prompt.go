@@ -66,14 +66,15 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
         printVerboseInfo(*fileFlag, *modelFlag, *matchStrengthFlag, *modeFlag, prompt)
     }
 
-    apiResponse, err := api.GenerateResponse(prompt, *remoteURL, *modeFlag, *modelFlag, *matchStrengthFlag, *forceFlag)
+    // Call GenerateResponse and handle the structured response
+    result, err := api.GenerateResponse(prompt, *remoteURL, *modeFlag, *modelFlag, *matchStrengthFlag, *forceFlag)
     if err != nil {
         log.Fatalf("Error making API call: %v", err)
     }
 
-    if errorMsg, ok := apiResponse["error"].(string); ok {
-        log.Fatalf("Error from API: %s", errorMsg)
-    }
+    // Access the fields from the result struct
+    openaiResponse := result.OpenAIResponse
+    retrievedFilePaths := result.RetrievedFilePaths
 
     // Determine the filename to save the response
     filename := path.Base(*fileFlag)
@@ -90,7 +91,34 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
         }
     }
 
-    handleAPIResponse(prompt, apiResponse, filename, *fileFlag)
+    // Handle the API response with the structured data
+    handleAPIResponse(prompt, openaiResponse, retrievedFilePaths, filename, *fileFlag)
+}
+
+func handleAPIResponse(prompt, openaiResponse string, retrievedFilePaths []string, filename, fileFlag string) {
+    // Create markdown content with the prompt, OpenAI response, and retrieved file paths
+    markdownContent := createMarkdownContent(prompt, openaiResponse, retrievedFilePaths, fileFlag)
+
+    // Render the markdown content (assuming renderMarkdown handles the display)
+    renderMarkdown(markdownContent)
+
+    // Save the response to the markdown file with the provided filename
+    tempFile, err := utils.CreateTempMarkdownFile(markdownContent, filename) // Pass the filename
+    if err != nil {
+        log.Fatalf("Error creating markdown file: %v", err)
+    }
+
+    fmt.Printf("Response saved to %s\n", tempFile)
+
+    // Optionally, handle retrieved file paths further if needed
+    //if len(retrievedFilePaths) > 0 {
+    //    log.Println("Retrieved File Paths:")
+    //    for _, path := range retrievedFilePaths {
+    //        log.Println(path)
+    //    }
+    //} else {
+    //    log.Println("No file paths were retrieved.")
+    //}
 }
 
 func generateFilename(context string, apiKey string) (string, error) {
@@ -134,43 +162,6 @@ func generateFilename(context string, apiKey string) (string, error) {
     }
 
     return filename, nil
-}
-
-func handleAPIResponse(prompt string, apiResponse map[string]interface{}, filename string, fileFlag string) {
-    // Timing within this function is no longer needed since the timing is handled in Execute
-
-    // Check for the "machtiani" key first
-    if machtianiMsg, ok := apiResponse["machtiani"].(string); ok {
-        log.Printf("Machtiani Message: %s", machtianiMsg)
-        return // Exit early since we do not have further responses to handle
-    }
-
-    openAIResponse, ok := apiResponse["openai_response"].(string)
-    if !ok {
-        log.Fatalf("Error: openai_response key missing")
-    }
-
-    var retrievedFilePaths []string
-    if paths, exists := apiResponse["retrieved_file_paths"].([]interface{}); exists {
-        for _, path := range paths {
-            if filePath, valid := path.(string); valid {
-                retrievedFilePaths = append(retrievedFilePaths, filePath)
-            }
-        }
-    } else {
-        log.Fatalf("Error: retrieved_file_paths key missing")
-    }
-
-    markdownContent := createMarkdownContent(prompt, openAIResponse, retrievedFilePaths, fileFlag)
-    renderMarkdown(markdownContent)
-
-    // Save the response to the markdown file with the provided filename
-    tempFile, err := utils.CreateTempMarkdownFile(markdownContent, filename) // Pass the filename
-    if err != nil {
-        log.Fatalf("Error creating markdown file: %v", err)
-    }
-
-    fmt.Printf("Response saved to %s\n", tempFile)
 }
 
 func createMarkdownContent(prompt, openAIResponse string, retrievedFilePaths []string, fileFlag string) string {

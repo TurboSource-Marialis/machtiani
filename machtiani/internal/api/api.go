@@ -7,6 +7,7 @@ import (
     "bytes"
     "log"
     "net/http"
+    "io"
     "io/ioutil"
     "time"
 
@@ -302,7 +303,12 @@ func DeleteStore(projectName string, codehostURL string, ignoreFiles []string, v
     }
 }
 
-func GenerateResponse(prompt, project, mode, model, matchStrength string, force bool) (map[string]interface{}, error) {
+type GenerateResponseResult struct {
+    OpenAIResponse     string   `json:"openai_response"`
+    RetrievedFilePaths []string `json:"retrieved_file_paths"`
+}
+
+func GenerateResponse(prompt, project, mode, model, matchStrength string, force bool) (*GenerateResponseResult, error) {
     config, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
     if err != nil {
         log.Fatalf("Error loading config: %v", err)
@@ -314,15 +320,15 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
     }
 
     payload := map[string]interface{}{
-        "prompt":          prompt,
-        "project":         project,
-        "mode":            mode,
-        "model":           model,
-        "match_strength":  matchStrength,
-        "api_key":        config.Environment.ModelAPIKey,
+        "prompt":           prompt,
+        "project":          project,
+        "mode":             mode,
+        "model":            model,
+        "match_strength":   matchStrength,
+        "api_key":          config.Environment.ModelAPIKey,
         "codehost_api_key": config.Environment.CodeHostAPIKey,
-        "codehost_url":   codehostURL, // Include the codehost_url here
-        "ignore_files": ignoreFiles,
+        "codehost_url":     codehostURL,
+        "ignore_files":     ignoreFiles,
     }
 
     payloadBytes, err := json.Marshal(payload)
@@ -331,11 +337,12 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
     }
 
     endpoint := MachtianiURL
+
     if endpoint == "" {
         return nil, fmt.Errorf("MACHTIANI_URL environment variable is not set")
     }
 
-    req, err := http.NewRequest("POST", fmt.Sprintf("%s/generate-response", endpoint), bytes.NewBuffer(payloadBytes))
+    req, err := http.NewRequest("POST", fmt.Sprintf("%s/generate-response/", endpoint), bytes.NewBuffer(payloadBytes))
     if err != nil {
         return nil, fmt.Errorf("failed to create request: %w", err)
     }
@@ -361,16 +368,75 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
     }
     defer resp.Body.Close()
 
-    var result map[string]interface{}
-    if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-        return nil, fmt.Errorf("failed to decode JSON response: %w", err)
+    // Stop the spinner when done
+    defer func() {
+        done <- true
+        fmt.Print("\r ") // Clear the spinner output
+    }()
+
+    // Use a JSON decoder to read multiple JSON objects from the response stream
+    decoder := json.NewDecoder(resp.Body)
+
+    var openaiResponseBuilder strings.Builder
+    var retrievedFilePaths []string
+    var errorMessage string
+
+    for {
+        var chunk map[string]interface{}
+        if err := decoder.Decode(&chunk); err == io.EOF {
+            // End of response stream
+            break
+        } else if err != nil {
+            return nil, fmt.Errorf("failed to decode JSON response: %w", err)
+        }
+
+        // Uncomment to see the results stream in.
+        //chunkJSON, _ := json.Marshal(chunk)
+        //log.Printf("Received chunk: %s", string(chunkJSON))
+
+        // Handle error messages
+        if errMsg, ok := chunk["error"].(string); ok {
+            errorMessage = errMsg
+            break
+        }
+
+        // Handle tokens from OpenAI response
+        if token, ok := chunk["token"].(string); ok {
+            openaiResponseBuilder.WriteString(token)
+        }
+
+        // Handle retrieved file paths
+        if paths, ok := chunk["retrieved_file_paths"]; ok {
+            pathsJSON, err := json.Marshal(paths)
+            if err != nil {
+                log.Printf("Failed to marshal retrieved_file_paths: %v", err)
+                continue
+            }
+
+            var pathList []string
+            if err := json.Unmarshal(pathsJSON, &pathList); err != nil {
+                log.Printf("Failed to unmarshal retrieved_file_paths: %v", err)
+                continue
+            }
+
+            retrievedFilePaths = append(retrievedFilePaths, pathList...)
+            //log.Printf("Retrieved file paths: %v", retrievedFilePaths)
+        }
     }
 
-    // Stop the spinner
-    done <- true
+    if errorMessage != "" {
+        return nil, fmt.Errorf("server error: %s", errorMessage)
+    }
 
-    // Clear the spinner on completion
-    fmt.Print("\r ") // Clear the spinner output
+    // Check if retrievedFilePaths is empty
+    if len(retrievedFilePaths) == 0 {
+        log.Printf("Warning: retrieved_file_paths is empty")
+    }
+
+    result := &GenerateResponseResult{
+        OpenAIResponse:     openaiResponseBuilder.String(),
+        RetrievedFilePaths: retrievedFilePaths,
+    }
 
     return result, nil
 }

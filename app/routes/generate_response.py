@@ -1,4 +1,6 @@
 from fastapi import APIRouter, Body
+from fastapi.responses import StreamingResponse
+import json
 from pydantic import SecretStr, HttpUrl
 from typing import List, Optional
 from app.services.generate_response_service import generate_response
@@ -17,14 +19,18 @@ async def generate_response_route(
     codehost_url: HttpUrl = Body(..., description="Code host URL for the repository"),
     ignore_files: List[str] = Body(..., description="List of file paths to ignore"),
 ):
-    return await generate_response(
-        prompt,
-        project,
-        mode,
-        model,
-        match_strength,
-        api_key,
-        codehost_api_key,
-        codehost_url,
-        ignore_files,
-    )
+    async def event_stream():
+        async for response in generate_response(
+            prompt,
+            project,
+            mode,
+            model,
+            match_strength,
+            api_key,
+            codehost_api_key,
+            codehost_url,
+            ignore_files,
+        ):
+            yield json.dumps(response) + '\n'
+
+    return StreamingResponse(event_stream(), media_type="application/json")
