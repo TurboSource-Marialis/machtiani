@@ -383,7 +383,16 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
     // Use a JSON decoder to read multiple JSON objects from the response stream
     decoder := json.NewDecoder(resp.Body)
 
-    header := fmt.Sprintf("# User\n%s\n# Assistant\n", prompt) // One newline after prompt
+    // Check if the prompt already starts with the User header
+    var header string
+    if strings.HasPrefix(strings.TrimSpace(prompt), "# User") {
+        // If the prompt already contains the User header, use it as is
+        header = fmt.Sprintf("%s\n# Assistant\n", prompt)
+    } else {
+        // Otherwise, prepend the User header
+        header = fmt.Sprintf("# User\n%s\n# Assistant\n", prompt)
+    }
+
     if err := renderMarkdown(header); err != nil {
         return nil, fmt.Errorf("failed to render header: %w", err)
     }
