@@ -383,6 +383,12 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
     // Use a JSON decoder to read multiple JSON objects from the response stream
     decoder := json.NewDecoder(resp.Body)
 
+    header := fmt.Sprintf("# User\n%s\n# Assistant\n", prompt) // One newline after prompt
+    if err := renderMarkdown(header); err != nil {
+        return nil, fmt.Errorf("failed to render header: %w", err)
+    }
+    completeResponse.WriteString(header)
+
     for {
         var chunk map[string]interface{}
         if err := decoder.Decode(&chunk); err == io.EOF {
