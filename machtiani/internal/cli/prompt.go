@@ -1,5 +1,4 @@
 package cli
-
 import (
     "encoding/json"
     "fmt"
@@ -66,13 +65,13 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
         printVerboseInfo(*fileFlag, *modelFlag, *matchStrengthFlag, *modeFlag, prompt)
     }
 
-    // Call GenerateResponse and handle the structured response
+    // Call GenerateResponse to get the streamed response
     result, err := api.GenerateResponse(prompt, *remoteURL, *modeFlag, *modelFlag, *matchStrengthFlag, *forceFlag)
     if err != nil {
         log.Fatalf("Error making API call: %v", err)
     }
 
-    // Access the fields from the result struct
+    // Collect the final OpenAI response for further processing if needed
     openaiResponse := result.OpenAIResponse
     retrievedFilePaths := result.RetrievedFilePaths
 
@@ -84,6 +83,7 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
         filename = strings.TrimSuffix(filename, ext)
     }
 
+    // Generate a filename if necessary
     if filename == "" || filename == "." {
         filename, err = generateFilename(prompt, config.Environment.ModelAPIKey)
         if err != nil {
@@ -91,7 +91,7 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
         }
     }
 
-    // Handle the API response with the structured data
+    // Handle the final API response with structured data
     handleAPIResponse(prompt, openaiResponse, retrievedFilePaths, filename, *fileFlag)
 }
 

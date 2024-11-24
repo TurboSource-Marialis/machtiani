@@ -10,14 +10,22 @@ import (
     "io"
     "io/ioutil"
     "time"
+    "sync"
 
     "github.com/7db9a/machtiani/internal/utils"
+    "github.com/charmbracelet/glamour"
 )
 var (
     HeadOID    string = "none"
     BuildDate string = "unknown"
     MachtianiURL string = "http://localhost:5071"
     RepoManagerURL string = "http://localhost:5070"
+)
+
+var (
+    renderer     *glamour.TermRenderer
+    rendererOnce sync.Once
+    rendererErr  error
 )
 
 const (
@@ -95,9 +103,6 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
     // Check if the user wants to proceed
     // Check if the user wants to proceed or if force is enabled
     if force || confirmProceed() {
-        // Start the spinner
-        done := make(chan bool)
-        go utils.Spinner(done)
 
         // Proceed with sending the POST request
         req, err := http.NewRequest("POST", fmt.Sprintf("%s/add-repository/", repoManagerURL), bytes.NewBuffer(jsonData))
@@ -125,12 +130,6 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
             body, _ := ioutil.ReadAll(resp.Body)
             return AddRepositoryResponse{}, fmt.Errorf("error adding repository: %s", body)
         }
-        // Stop the spinner
-        done <- true
-
-        // Clear the spinner on completion
-        fmt.Print("\r ") // Clear the spinner output
-
         // Successfully added the repository, decode the response into the defined struct
         var responseMessage AddRepositoryResponse
         if err := json.NewDecoder(resp.Body).Decode(&responseMessage); err != nil {
@@ -308,6 +307,18 @@ type GenerateResponseResult struct {
     RetrievedFilePaths []string `json:"retrieved_file_paths"`
 }
 
+func init() {
+    rendererOnce.Do(func() {
+        renderer, rendererErr = glamour.NewTermRenderer(
+            glamour.WithAutoStyle(),
+            glamour.WithWordWrap(120),
+        )
+        if rendererErr != nil {
+            log.Fatalf("Error creating renderer: %v", rendererErr)
+        }
+    })
+}
+
 func GenerateResponse(prompt, project, mode, model, matchStrength string, force bool) (*GenerateResponseResult, error) {
     config, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
     if err != nil {
@@ -358,28 +369,19 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
         Timeout: 20 * time.Minute,
     }
 
-    // Start the spinner (if needed)
-    done := make(chan bool)
-    go utils.Spinner(done)
-
     resp, err := client.Do(req)
     if err != nil {
         return nil, fmt.Errorf("failed to make API request: %w", err)
     }
     defer resp.Body.Close()
 
-    // Stop the spinner when done
-    defer func() {
-        done <- true
-        fmt.Print("\r ") // Clear the spinner output
-    }()
+    // Initialize variables
+    var completeResponse strings.Builder
+    var retrievedFilePaths []string
+    var tokenBuffer bytes.Buffer // Buffer to accumulate tokens
 
     // Use a JSON decoder to read multiple JSON objects from the response stream
     decoder := json.NewDecoder(resp.Body)
-
-    var openaiResponseBuilder strings.Builder
-    var retrievedFilePaths []string
-    var errorMessage string
 
     for {
         var chunk map[string]interface{}
@@ -390,55 +392,102 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
             return nil, fmt.Errorf("failed to decode JSON response: %w", err)
         }
 
-        // Uncomment to see the results stream in.
-        //chunkJSON, _ := json.Marshal(chunk)
-        //log.Printf("Received chunk: %s", string(chunkJSON))
-
         // Handle error messages
         if errMsg, ok := chunk["error"].(string); ok {
-            errorMessage = errMsg
-            break
+            return nil, fmt.Errorf("API error: %s", errMsg)
         }
 
         // Handle tokens from OpenAI response
         if token, ok := chunk["token"].(string); ok {
-            openaiResponseBuilder.WriteString(token)
+            tokenBuffer.WriteString(token)
+            completeResponse.WriteString(token) // Append to complete response
+
+            // Check if buffer contains two consecutive newlines indicating a block end
+            content := tokenBuffer.String()
+            for {
+                idx := strings.Index(content, "\n\n")
+                if idx == -1 {
+                    break // No complete block yet
+                }
+
+                // Extract the block up to the delimiter
+                block := content[:idx]
+                // Trim any trailing newline characters
+                trimmedBlock := strings.TrimRight(block, "\r\n")
+                // Normalize line endings to Unix-style
+                trimmedBlock = strings.ReplaceAll(trimmedBlock, "\r\n", "\n")
+
+                // Render the complete block
+                if err := renderMarkdown(trimmedBlock); err != nil {
+                    // Log the error and continue
+                    log.Printf("Error rendering block: %v", err)
+                    // Optionally, you can choose to return the error instead of continuing
+                }
+
+                // Remove the rendered block and the delimiter from the buffer
+                content = content[idx+2:] // Skip the "\n\n"
+                tokenBuffer.Reset()
+                tokenBuffer.WriteString(content)
+            }
         }
 
         // Handle retrieved file paths
         if paths, ok := chunk["retrieved_file_paths"]; ok {
             pathsJSON, err := json.Marshal(paths)
             if err != nil {
-                log.Printf("Failed to marshal retrieved_file_paths: %v", err)
-                continue
+                return nil, fmt.Errorf("failed to marshal retrieved_file_paths: %w", err)
             }
 
-            var pathList []string
+            pathList := []string{}
             if err := json.Unmarshal(pathsJSON, &pathList); err != nil {
-                log.Printf("Failed to unmarshal retrieved_file_paths: %v", err)
-                continue
+                return nil, fmt.Errorf("failed to unmarshal retrieved_file_paths: %w", err)
             }
 
             retrievedFilePaths = append(retrievedFilePaths, pathList...)
-            //log.Printf("Retrieved file paths: %v", retrievedFilePaths)
+            // Optionally log retrieved file paths
+            // log.Printf("Retrieved file paths: %v", retrievedFilePaths)
         }
     }
 
-    if errorMessage != "" {
-        return nil, fmt.Errorf("server error: %s", errorMessage)
+    // Render any remaining content in the buffer after the stream ends
+    if tokenBuffer.Len() > 0 {
+        remainingContent := tokenBuffer.String()
+        trimmedContent := strings.TrimRight(remainingContent, "\r\n")
+        trimmedContent = strings.ReplaceAll(trimmedContent, "\r\n", "\n")
+        if err := renderMarkdown(trimmedContent); err != nil {
+            log.Printf("Error rendering remaining content: %v", err)
+            // Optionally, you can choose to return the error or continue
+        }
     }
 
-    // Check if retrievedFilePaths is empty
-    if len(retrievedFilePaths) == 0 {
-        log.Printf("Warning: retrieved_file_paths is empty")
-    }
-
-    result := &GenerateResponseResult{
-        OpenAIResponse:     openaiResponseBuilder.String(),
+    return &GenerateResponseResult{
+        OpenAIResponse:     completeResponse.String(),
         RetrievedFilePaths: retrievedFilePaths,
+    }, nil
+}
+
+func renderMarkdown(content string) error {
+    if rendererErr != nil {
+        return rendererErr
     }
 
-    return result, nil
+    // Debug: Log the content being rendered
+    //log.Printf("Rendering Markdown Block: '%s'\n", content)
+
+    out, err := renderer.Render(content)
+    if err != nil {
+        log.Printf("Error rendering Markdown: %v", err)
+        return err
+    }
+
+    // Debug: Log the rendered output
+    //log.Printf("Rendered Output: '%s'\n", out)
+
+    // Trim trailing newline to prevent double newlines between blocks
+    out = strings.TrimRight(out, "\n")
+
+    fmt.Print(out) // Print the rendered content without adding extra newlines
+    return nil
 }
 
 func getTokenCount(endpoint string, buffer *bytes.Buffer) (int, int, error) {
@@ -596,8 +645,6 @@ func GetInstallInfo() (bool, string, error) {
     return returnedHeadOID == HeadOID, message, nil
 }
 
-
-
 // confirmProceed prompts the user for confirmation to proceed
 func confirmProceed() bool {
     var response string
@@ -605,3 +652,4 @@ func confirmProceed() bool {
     fmt.Scanln(&response)
     return strings.ToLower(response) == "y"
 }
+
