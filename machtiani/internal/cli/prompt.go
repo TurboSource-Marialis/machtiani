@@ -97,13 +97,13 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
 
 func handleAPIResponse(prompt, openaiResponse string, retrievedFilePaths []string, filename, fileFlag string) {
     // Create markdown content with the prompt, OpenAI response, and retrieved file paths
-    markdownContent := createMarkdownContent(prompt, openaiResponse, retrievedFilePaths, fileFlag)
+    //markdownContent := createMarkdownContent(prompt, openaiResponse, retrievedFilePaths, fileFlag)
 
     // Render the markdown content (assuming renderMarkdown handles the display)
     //renderMarkdown(markdownContent)
 
     // Save the response to the markdown file with the provided filename
-    tempFile, err := utils.CreateTempMarkdownFile(markdownContent, filename) // Pass the filename
+    tempFile, err := utils.CreateTempMarkdownFile(openaiResponse, filename) // Pass the filename
     if err != nil {
         log.Fatalf("Error creating markdown file: %v", err)
     }
