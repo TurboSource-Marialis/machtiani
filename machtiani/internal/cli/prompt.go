@@ -100,7 +100,7 @@ func handleAPIResponse(prompt, openaiResponse string, retrievedFilePaths []strin
     markdownContent := createMarkdownContent(prompt, openaiResponse, retrievedFilePaths, fileFlag)
 
     // Render the markdown content (assuming renderMarkdown handles the display)
-    renderMarkdown(markdownContent)
+    //renderMarkdown(markdownContent)
 
     // Save the response to the markdown file with the provided filename
     tempFile, err := utils.CreateTempMarkdownFile(markdownContent, filename) // Pass the filename
@@ -108,7 +108,7 @@ func handleAPIResponse(prompt, openaiResponse string, retrievedFilePaths []strin
         log.Fatalf("Error creating markdown file: %v", err)
     }
 
-    fmt.Printf("Response saved to %s\n", tempFile)
+    fmt.Printf("\n\nResponse saved to %s\n", tempFile)
 
     // Optionally, handle retrieved file paths further if needed
     //if len(retrievedFilePaths) > 0 {

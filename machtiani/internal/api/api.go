@@ -456,15 +456,32 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
     }
 
     // Render any remaining content in the buffer after the stream ends
-    //if tokenBuffer.Len() > 0 {
-    //    remainingContent := tokenBuffer.String()
-    //    trimmedContent := strings.TrimRight(remainingContent, "\r\n")
-    //    trimmedContent = strings.ReplaceAll(trimmedContent, "\r\n", "\n")
-    //    if err := renderMarkdown(trimmedContent); err != nil {
-    //        log.Printf("Error rendering remaining content: %v", err)
-    //        // Optionally, you can choose to return the error or continue
-    //    }
-    //}
+    if tokenBuffer.Len() > 0 {
+        remainingContent := tokenBuffer.String()
+        trimmedContent := strings.TrimRight(remainingContent, "\r\n")
+        trimmedContent = strings.ReplaceAll(trimmedContent, "\r\n", "\n")
+        if err := renderMarkdown(trimmedContent); err != nil {
+            log.Printf("Error rendering remaining content: %v", err)
+            // Optionally, you can choose to return the error or continue
+        }
+    }
+
+    // Append Retrieved File Paths to the Stream if any
+    if len(retrievedFilePaths) > 0 {
+        retrievedFilePathsMarkdown := "\n\n---\n\n# Retrieved File Paths\n\n"
+        for _, path := range retrievedFilePaths {
+            retrievedFilePathsMarkdown += fmt.Sprintf("- %s\n", path)
+        }
+
+        // Append to the complete response
+        completeResponse.WriteString(retrievedFilePathsMarkdown)
+
+        // Render the Markdown so it appears in the stream
+        if err := renderMarkdown(retrievedFilePathsMarkdown); err != nil {
+            log.Printf("Error rendering retrieved file paths: %v", err)
+            // You can choose to handle the error differently if needed
+        }
+    }
 
     return &GenerateResponseResult{
         OpenAIResponse:     completeResponse.String(),
