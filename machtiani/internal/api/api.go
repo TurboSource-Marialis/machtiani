@@ -456,15 +456,15 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
     }
 
     // Render any remaining content in the buffer after the stream ends
-    if tokenBuffer.Len() > 0 {
-        remainingContent := tokenBuffer.String()
-        trimmedContent := strings.TrimRight(remainingContent, "\r\n")
-        trimmedContent = strings.ReplaceAll(trimmedContent, "\r\n", "\n")
-        if err := renderMarkdown(trimmedContent); err != nil {
-            log.Printf("Error rendering remaining content: %v", err)
-            // Optionally, you can choose to return the error or continue
-        }
-    }
+    //if tokenBuffer.Len() > 0 {
+    //    remainingContent := tokenBuffer.String()
+    //    trimmedContent := strings.TrimRight(remainingContent, "\r\n")
+    //    trimmedContent = strings.ReplaceAll(trimmedContent, "\r\n", "\n")
+    //    if err := renderMarkdown(trimmedContent); err != nil {
+    //        log.Printf("Error rendering remaining content: %v", err)
+    //        // Optionally, you can choose to return the error or continue
+    //    }
+    //}
 
     return &GenerateResponseResult{
         OpenAIResponse:     completeResponse.String(),
