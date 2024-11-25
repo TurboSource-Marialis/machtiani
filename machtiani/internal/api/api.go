@@ -376,9 +376,12 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
     defer resp.Body.Close()
 
     // Initialize variables
+    // Initialize variables
     var completeResponse strings.Builder
     var retrievedFilePaths []string
     var tokenBuffer bytes.Buffer // Buffer to accumulate tokens
+    var inCodeBlock bool        // Track if we're inside a code block
+    var codeBlockBuffer bytes.Buffer // Buffer to accumulate code block content
 
     // Use a JSON decoder to read multiple JSON objects from the response stream
     decoder := json.NewDecoder(resp.Body)
@@ -417,7 +420,7 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
             tokenBuffer.WriteString(token)
             completeResponse.WriteString(token) // Append to complete response
 
-            // Check if buffer contains two consecutive newlines indicating a block end
+            // Check if buffer contains two consecutive newlines indicating a potential block end
             content := tokenBuffer.String()
             for {
                 idx := strings.Index(content, "\n\n")
@@ -427,20 +430,53 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 
                 // Extract the block up to the delimiter
                 block := content[:idx]
-                // Trim any trailing newline characters
-                trimmedBlock := strings.TrimRight(block, "\r\n")
-                // Normalize line endings to Unix-style
-                trimmedBlock = strings.ReplaceAll(trimmedBlock, "\r\n", "\n")
+                remainingContent := content[idx+2:] // Skip the "\n\n"
 
-                // Render the complete block
-                if err := renderMarkdown(trimmedBlock); err != nil {
-                    // Log the error and continue
-                    log.Printf("Error rendering block: %v", err)
-                    // Optionally, you can choose to return the error instead of continuing
+                // Update inCodeBlock state based on the current block
+                lines := strings.Split(block, "\n")
+                for _, line := range lines {
+                    trimmedLine := strings.TrimSpace(line)
+                    if strings.HasPrefix(trimmedLine, "```") {
+                        inCodeBlock = !inCodeBlock
+                    }
+                }
+
+                if inCodeBlock {
+                    // Accumulate code block content
+                    codeBlockBuffer.WriteString(block + "\n\n")
+                    // Do not render yet; wait until the code block ends
+                } else {
+                    if codeBlockBuffer.Len() > 0 {
+                        // We're exiting a code block; accumulate the last part
+                        codeBlockBuffer.WriteString(block)
+                        // Render the entire code block
+                        if err := renderMarkdown(codeBlockBuffer.String()); err != nil {
+                            log.Printf("Error rendering code block: %v", err)
+                        }
+                        // Append to complete response
+                        completeResponse.WriteString(codeBlockBuffer.String())
+                        // Reset the code block buffer
+                        codeBlockBuffer.Reset()
+                    } else {
+                        // Trim any trailing newline characters
+                        trimmedBlock := strings.TrimRight(block, "\r\n")
+                        // Normalize line endings to Unix-style
+                        trimmedBlock = strings.ReplaceAll(trimmedBlock, "\r\n", "\n")
+
+                        // Render the complete block
+                        if err := renderMarkdown(trimmedBlock); err != nil {
+                            // Log the error and continue
+                            log.Printf("Error rendering block: %v", err)
+                            // Optionally, you can choose to return the error instead of continuing
+                        }
+
+                        // Append to complete response
+                        completeResponse.WriteString(trimmedBlock)
+                    }
                 }
 
                 // Remove the rendered block and the delimiter from the buffer
-                content = content[idx+2:] // Skip the "\n\n"
+                content = remainingContent
                 tokenBuffer.Reset()
                 tokenBuffer.WriteString(content)
             }
