@@ -78,7 +78,7 @@ class BaseTestEndToEnd:
             "Ignoring files based on .machtiani.ignore:",
             "poetry.lock",
             "Estimated embedding tokens: 25",
-            "Estimated inference tokens: 1428",
+            "Estimated inference tokens: 1429",
             "VCSType.git repository added successfully",
             "",
             "---",
