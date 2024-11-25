@@ -193,18 +193,22 @@ func ValidateFlags(modelFlag, matchStrengthFlag, modeFlag *string) {
 func Spinner(done chan bool) {
     symbols := []rune{'|', '/', '-', '\\'}
     i := 0
+
+    fmt.Println()
+
     for {
         select {
         case <-done:
+            // Clear the spinner by overwriting with a space and carriage return
+            fmt.Print("\r \r")
             return
         default:
             fmt.Printf("\r%c", symbols[i])
             i = (i + 1) % len(symbols)
-            time.Sleep(100 * time.Millisecond) // adjust the speed of the spinner here
+            time.Sleep(100 * time.Millisecond) // Adjust the spinner speed here
         }
     }
 }
-
 
 // GetCodehostURLFromCurrentRepository retrieves the codehost URL from the current Git repository.
 func GetCodehostURLFromCurrentRepository() (string, error) {

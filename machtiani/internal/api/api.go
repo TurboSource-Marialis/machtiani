@@ -376,7 +376,6 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
     defer resp.Body.Close()
 
     // Initialize variables
-    // Initialize variables
     var completeResponse strings.Builder
     var retrievedFilePaths []string
     var tokenBuffer bytes.Buffer // Buffer to accumulate tokens
@@ -400,6 +399,15 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
         return nil, fmt.Errorf("failed to render header: %w", err)
     }
     completeResponse.WriteString(header)
+
+    // Initialize SpinnerController
+    spinner := NewSpinnerController()
+
+    // Start the initial spinner
+    spinner.Start()
+
+    // Ensure the spinner is stopped when the function exits
+    defer spinner.Stop()
 
     for {
         var chunk map[string]interface{}
@@ -438,6 +446,13 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
                     trimmedLine := strings.TrimSpace(line)
                     if strings.HasPrefix(trimmedLine, "```") {
                         inCodeBlock = !inCodeBlock
+                        if inCodeBlock {
+                            // Start spinner when entering a code block
+                            spinner.Start()
+                        } else {
+                            // Stop spinner when exiting a code block
+                            spinner.Stop()
+                        }
                     }
                 }
 
@@ -449,6 +464,10 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
                     if codeBlockBuffer.Len() > 0 {
                         // We're exiting a code block; accumulate the last part
                         codeBlockBuffer.WriteString(block)
+
+                        // Stop the spinner (in case it's not already stopped)
+                        spinner.Stop()
+
                         // Render the entire code block
                         if err := renderMarkdown(codeBlockBuffer.String()); err != nil {
                             log.Printf("Error rendering code block: %v", err)
@@ -462,6 +481,9 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
                         trimmedBlock := strings.TrimRight(block, "\r\n")
                         // Normalize line endings to Unix-style
                         trimmedBlock = strings.ReplaceAll(trimmedBlock, "\r\n", "\n")
+
+                        // Stop the spinner
+                        spinner.Stop()
 
                         // Render the complete block
                         if err := renderMarkdown(trimmedBlock); err != nil {
@@ -719,5 +741,37 @@ func confirmProceed() bool {
     fmt.Print("Do you wish to proceed? (y/n): ")
     fmt.Scanln(&response)
     return strings.ToLower(response) == "y"
+}
+
+
+type SpinnerController struct {
+    done     chan bool
+    spinning bool
+    mutex    sync.Mutex
+}
+
+func NewSpinnerController() *SpinnerController {
+    return &SpinnerController{
+        done: make(chan bool),
+    }
+}
+
+func (s *SpinnerController) Start() {
+    s.mutex.Lock()
+    defer s.mutex.Unlock()
+    if !s.spinning {
+        s.spinning = true
+        s.done = make(chan bool)
+        go utils.Spinner(s.done)
+    }
+}
+
+func (s *SpinnerController) Stop() {
+    s.mutex.Lock()
+    defer s.mutex.Unlock()
+    if s.spinning {
+        s.done <- true
+        s.spinning = false
+    }
 }
 
