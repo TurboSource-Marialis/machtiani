@@ -426,7 +426,7 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
         // Handle tokens from OpenAI response
         if token, ok := chunk["token"].(string); ok {
             tokenBuffer.WriteString(token)
-            completeResponse.WriteString(token) // Append to complete response
+            // Removed the direct appending to completeResponse to prevent duplication
 
             // Check if buffer contains two consecutive newlines indicating a potential block end
             content := tokenBuffer.String()
@@ -531,6 +531,7 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
             log.Printf("Error rendering remaining content: %v", err)
             // Optionally, you can choose to return the error or continue
         }
+        completeResponse.WriteString(trimmedContent)
     }
 
     // Append Retrieved File Paths to the Stream if any
