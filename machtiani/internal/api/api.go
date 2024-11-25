@@ -304,6 +304,7 @@ func DeleteStore(projectName string, codehostURL string, ignoreFiles []string, v
 
 type GenerateResponseResult struct {
     OpenAIResponse     string   `json:"openai_response"`
+    RawResponse     string   `json:"openai_response"`
     RetrievedFilePaths []string `json:"retrieved_file_paths"`
 }
 
@@ -377,6 +378,7 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 
     // Initialize variables
     var completeResponse strings.Builder
+    var rawResponse strings.Builder         // Initialize rawResponse
     var retrievedFilePaths []string
     var tokenBuffer bytes.Buffer // Buffer to accumulate tokens
     var inCodeBlock bool        // Track if we're inside a code block
@@ -389,16 +391,17 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
     var header string
     if strings.HasPrefix(strings.TrimSpace(prompt), "# User") {
         // If the prompt already contains the User header, use it as is
-        header = fmt.Sprintf("%s\n# Assistant\n", prompt)
+        header = fmt.Sprintf("%s\n# Assistant\n\n", prompt)
     } else {
         // Otherwise, prepend the User header
-        header = fmt.Sprintf("# User\n%s\n# Assistant\n", prompt)
+        header = fmt.Sprintf("# User\n\n%s\n\n# Assistant\n\n", prompt)
     }
 
     if err := renderMarkdown(header); err != nil {
         return nil, fmt.Errorf("failed to render header: %w", err)
     }
     completeResponse.WriteString(header)
+    rawResponse.WriteString(header)
 
     // Initialize SpinnerController
     spinner := NewSpinnerController()
@@ -426,7 +429,7 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
         // Handle tokens from OpenAI response
         if token, ok := chunk["token"].(string); ok {
             tokenBuffer.WriteString(token)
-            // Removed the direct appending to completeResponse to prevent duplication
+            rawResponse.WriteString(token) // Append to rawResponse
 
             // Check if buffer contains two consecutive newlines indicating a potential block end
             content := tokenBuffer.String()
@@ -543,6 +546,7 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 
         // Append to the complete response
         completeResponse.WriteString(retrievedFilePathsMarkdown)
+        rawResponse.WriteString(retrievedFilePathsMarkdown)
 
         // Render the Markdown so it appears in the stream
         if err := renderMarkdown(retrievedFilePathsMarkdown); err != nil {
@@ -552,7 +556,8 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
     }
 
     return &GenerateResponseResult{
-        OpenAIResponse:     completeResponse.String(),
+        OpenAIResponse:      completeResponse.String(),
+        RawResponse:         rawResponse.String(), // Include rawResponse
         RetrievedFilePaths: retrievedFilePaths,
     }, nil
 }

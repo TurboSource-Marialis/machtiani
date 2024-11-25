@@ -72,7 +72,7 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
     }
 
     // Collect the final OpenAI response for further processing if needed
-    openaiResponse := result.OpenAIResponse
+    rawResponse := result.RawResponse
     retrievedFilePaths := result.RetrievedFilePaths
 
     // Determine the filename to save the response
@@ -92,7 +92,7 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
     }
 
     // Handle the final API response with structured data
-    handleAPIResponse(prompt, openaiResponse, retrievedFilePaths, filename, *fileFlag)
+    handleAPIResponse(prompt, rawResponse, retrievedFilePaths, filename, *fileFlag)
 }
 
 func handleAPIResponse(prompt, openaiResponse string, retrievedFilePaths []string, filename, fileFlag string) {
