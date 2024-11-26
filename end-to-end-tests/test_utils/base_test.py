@@ -2,6 +2,7 @@ import unittest
 import os
 import time
 import threading
+import subprocess
 from test_utils.test_utils import (
     Teardown,
     Setup,
@@ -89,14 +90,51 @@ class BaseTestEndToEnd:
         expected_output = [line.strip() for line in expected_output if line.strip()]
         self.assertEqual(stdout_normalized, expected_output)
 
-    def test_02_run_machtiani_sync_command_not_ready(self):
+    def test_02_check_git_directory_initialized(self):
+        """Test that the content directory is an initialized git directory."""
+
+        status_command = 'machtiani status'
+        wait_for_status_complete(status_command, self.directory)
+        container_name = "commit-file-retrieval"  # Name of your container
+        content_directory = "/data/users/repositories/github_com_7db9a_chastler/contents"  # Path in the container
+
+        # Command to check if the .git directory exists
+        command = (
+            f"if [ -d {content_directory}/.git ]; then "
+            f"echo 'exists'; "
+            f"else echo 'not exists'; fi"
+        )
+
+        # Execute the command in the Docker container
+        try:
+            result = subprocess.run(
+                ["docker-compose", "exec", container_name, "bash", "-c", command],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            full_output = result.stdout.strip()
+
+            # Check if the directory exists
+            if 'exists' in full_output:
+                exists_check = 'exists'
+            else:
+                exists_check = 'not exists'
+
+            # Assert that the .git directory exists
+            self.assertEqual(exists_check, 'exists', f"Expected .git directory to exist in: {content_directory}")
+
+        except subprocess.CalledProcessError as e:
+            self.fail(f"Failed to check for .git directory: {e.stderr.strip()}")
+
+    def test_03_run_machtiani_sync_command_not_ready(self):
         command = 'machtiani git-sync --branch-name "master" --force'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
 
         self.assertFalse(any("Operation is locked for project 'github_com_7db9a_chastler'" in line for line in stdout_normalized))
 
-    def test_03_run_machtiani_prompt_command(self):
+    def test_04_run_machtiani_prompt_command(self):
         status_command = 'machtiani status'
         wait_for_status_complete(status_command, self.directory)
         time.sleep(3)
@@ -110,7 +148,7 @@ class BaseTestEndToEnd:
         self.assertFalse(any("video" in line for line in stdout_normalized))
         self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_normalized))
 
-    def test_04_run_machtiani_sync_command(self):
+    def test_05_run_machtiani_sync_command(self):
         command = 'machtiani git-sync --branch-name "master" --force'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
@@ -126,7 +164,7 @@ class BaseTestEndToEnd:
         expected_output = [line.strip() for line in expected_output if line.strip()]
         self.assertEqual(stdout_normalized, expected_output)
 
-    def test_05_sync_new_commits_and_prompt_command(self):
+    def test_06_sync_new_commits_and_prompt_command(self):
         # Step 1: Force push `feature` branch to `master`
         self.setup.force_push("feature", "master")
 
@@ -158,7 +196,7 @@ class BaseTestEndToEnd:
         self.assertFalse(any("--force" in line for line in stdout_prompt_normalized))
         self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_prompt_normalized))
 
-    def test_06_run_machtiani_prompt_file_flag_command(self):
+    def test_07_run_machtiani_prompt_file_flag_command(self):
         chat_file_path = append_future_features_to_chat_file(self.directory)
         command = f"machtiani --file {chat_file_path}"
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
@@ -169,7 +207,7 @@ class BaseTestEndToEnd:
         self.assertTrue(any("ategorization" in line for line in stdout_normalized))
         self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_normalized))
 
-    def test_07_run_machtiani_status_with_lock(self):
+    def test_08_run_machtiani_status_with_lock(self):
         # Step 1: Force push `feature2` branch to `master`
         self.setup.force_push("feature2", "master")
 
@@ -196,7 +234,7 @@ class BaseTestEndToEnd:
         # Step 5: Wait for the sync thread to finish
         sync_thread.join()
 
-    def test_08_run_machtiani_git_store_existing_project(self):
+    def test_09_run_machtiani_git_store_existing_project(self):
         """Test running git-store on an already added project."""
         command = 'machtiani git-store --branch-name "master" --force'
 
@@ -208,4 +246,3 @@ class BaseTestEndToEnd:
 
         # Check if the output contains the expected message
         self.assertTrue(any("The project already exists!" in line for line in stdout_normalized), "Expected message about existing project not found in output.")
-
