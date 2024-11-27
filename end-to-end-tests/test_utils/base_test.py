@@ -246,3 +246,26 @@ class BaseTestEndToEnd:
 
         # Check if the output contains the expected message
         self.assertTrue(any("The project already exists!" in line for line in stdout_normalized), "Expected message about existing project not found in output.")
+
+    def test_10_commit_messages_count(self):
+        """Test that there are exactly 3 git commit messages in the content directory."""
+        container_name = "commit-file-retrieval"  # Name of your container
+        content_directory = "/data/users/repositories/github_com_7db9a_chastler/contents"  # Path in the container
+
+        # Command to count the number of commits
+        command = f"git -C {content_directory} rev-list --count HEAD"
+
+        # Execute the command in the Docker container
+        try:
+            result = subprocess.run(
+                ["docker-compose", "exec", container_name, "bash", "-c", command],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            commit_count = int(result.stdout.strip())
+
+            # Assert that there are exactly 3 commits
+            self.assertEqual(commit_count, 3, f"Expected 3 commits, but found {commit_count}.")
+        except subprocess.CalledProcessError as e:
+            self.fail(f"Failed to count commits: {e.stderr.strip()}")
