@@ -269,3 +269,27 @@ class BaseTestEndToEnd:
             self.assertEqual(commit_count, 3, f"Expected 3 commits, but found {commit_count}.")
         except subprocess.CalledProcessError as e:
             self.fail(f"Failed to count commits: {e.stderr.strip()}")
+
+    def test_11_no_untracked_or_modified_files(self):
+        """Test that there are no untracked or modified files in the git directory."""
+        container_name = "commit-file-retrieval"  # Name of your container
+        content_directory = "/data/users/repositories/github_com_7db9a_chastler/contents"  # Path in the container
+
+        # Command to check the status of the git repository
+        command = f"git -C {content_directory} status --porcelain"
+
+        # Execute the command in the Docker container
+        try:
+            result = subprocess.run(
+                ["docker-compose", "exec", container_name, "bash", "-c", command],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            status_output = result.stdout.strip()
+
+            # Assert that the output is empty, meaning no untracked or modified files
+            self.assertEqual(status_output, "", "There are untracked or modified files in the git directory.")
+
+        except subprocess.CalledProcessError as e:
+            self.fail(f"Failed to check git status: {e.stderr.strip()}")
