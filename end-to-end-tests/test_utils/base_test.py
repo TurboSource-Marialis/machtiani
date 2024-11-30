@@ -293,3 +293,43 @@ class BaseTestEndToEnd:
 
         except subprocess.CalledProcessError as e:
             self.fail(f"Failed to check git status: {e.stderr.strip()}")
+
+    def test_12_tags_for_each_commit(self):
+        """Test that there is a tag for each commit in the content repo with the tag name being the commit OID."""
+        container_name = "commit-file-retrieval"  # Name of your container
+        repo_directory = "/data/users/repositories/github_com_7db9a_chastler/repo/git"
+        content_directory = "/data/users/repositories/github_com_7db9a_chastler/contents"
+
+        # Command to get the list of commits
+        command_commits = f"git -C {repo_directory} rev-list --all"
+        # Command to get the list of tags
+        command_tags = f"git -C {content_directory} tag"
+
+        # Execute the command in the Docker container
+        try:
+            result_commits = subprocess.run(
+                ["docker-compose", "exec", container_name, "bash", "-c", command_commits],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            commit_oids = {commit.strip() for commit in result_commits.stdout.strip().splitlines()}
+
+            result_tags = subprocess.run(
+                ["docker-compose", "exec", container_name, "bash", "-c", command_tags],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            tags = {tag.strip() for tag in result_tags.stdout.strip().splitlines()}
+
+            # Validate that commit_oids and tags are non-empty
+            self.assertTrue(commit_oids, "No commits were found in the repository.")
+            self.assertTrue(tags, "No tags were found in the repository.")
+
+            # Check that each tag has a corresponding commit OID
+            for tag in tags:
+                self.assertIn(tag, commit_oids, f"Expected a commit OID for tag {tag} but none was found.")
+
+        except subprocess.CalledProcessError as e:
+            self.fail(f"Failed to retrieve commits or tags: {e.stderr.strip()}")
