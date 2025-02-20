@@ -1,7 +1,7 @@
 import re
 import json
 from fastapi import HTTPException
-from app.utils import send_prompt_to_openai
+from app.utils import send_prompt_to_openai_streaming
 
 async def generate_filename(context: str, api_key: str) -> str:
     filename_prompt = (
@@ -15,8 +15,8 @@ async def generate_filename(context: str, api_key: str) -> str:
     response_tokens = []
 
     try:
-        # Asynchronously iterate over each token yielded by send_prompt_to_openai
-        async for token_json in send_prompt_to_openai(filename_prompt, api_key, model="gpt-4o-mini"):
+        # Asynchronously iterate over each token yielded by send_prompt_to_openai_streaming
+        async for token_json in send_prompt_to_openai_streaming(filename_prompt, api_key, model="gpt-4o-mini"):
             # Parse the JSON string to extract the token
             token_data = json.loads(token_json)
             token = token_data.get("token", "")

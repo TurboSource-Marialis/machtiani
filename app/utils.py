@@ -52,7 +52,7 @@ async def remove_duplicate_file_paths(file_paths: List[FilePathEntry]) -> List[F
             unique_paths[entry.path] = entry
     return list(unique_paths.values())
 
-async def send_prompt_to_openai(
+async def send_prompt_to_openai_streaming(
     prompt_text: str,
     api_key: str,
     model: str = "gpt-4o-mini",

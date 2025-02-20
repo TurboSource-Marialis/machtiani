@@ -9,7 +9,7 @@ from fastapi import HTTPException
 from app.utils import (
     aggregate_file_paths,
     remove_duplicate_file_paths,
-    send_prompt_to_openai,
+    send_prompt_to_openai_streaming,
     FileContentResponse,
     count_tokens,
     add_sys_path,
@@ -103,6 +103,7 @@ async def generate_response(
 
                 list_file_path_entry = await aggregate_file_paths(list_file_search_response)
                 list_file_path_entry = await remove_duplicate_file_paths(list_file_path_entry)
+
                 list_file_path_entry = [entry for entry in list_file_path_entry if entry.path not in ignore_files]
 
                 file_paths_payload = [entry.dict() for entry in list_file_path_entry]
@@ -150,7 +151,7 @@ async def generate_response(
 
                 # Collect tokens from streaming response
                 response_tokens = []
-                async for token_json in send_prompt_to_openai(summary_prompt, api_key, model):
+                async for token_json in send_prompt_to_openai_streaming(summary_prompt, api_key, model):
                     token_data = json.loads(token_json)
                     token = token_data.get("token", "")
                     response_tokens.append(token)
@@ -213,7 +214,7 @@ async def generate_response(
                 yield {"retrieved_file_paths": retrieved_file_paths}
 
             # Stream tokens from OpenAI response
-            async for token_json in send_prompt_to_openai(combined_prompt, api_key, model):
+            async for token_json in send_prompt_to_openai_streaming(combined_prompt, api_key, model):
                 yield json.loads(token_json)
 
     except httpx.RequestError as exc:
