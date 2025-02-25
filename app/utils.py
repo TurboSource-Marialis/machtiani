@@ -7,7 +7,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from langchain.schema import HumanMessage
-from typing import List
+from typing import List, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +51,19 @@ async def remove_duplicate_file_paths(file_paths: List[FilePathEntry]) -> List[F
         if entry.path not in unique_paths:
             unique_paths[entry.path] = entry
     return list(unique_paths.values())
+
+def separate_file_paths_by_type(file_search_responses: List[FileSearchResponse]) -> Tuple[List[FilePathEntry], List[FilePathEntry]]:
+    commit_file_paths = []
+    file_file_paths = []
+
+    for response in file_search_responses:
+        for file_path_entry in response.file_paths:
+            if response.path_type == 'commit':
+                commit_file_paths.append(FilePathEntry(path=file_path_entry.path))
+            elif response.path_type == 'file':
+                file_file_paths.append(FilePathEntry(path=file_path_entry.path))
+
+    return commit_file_paths, file_file_paths
 
 async def send_prompt_to_openai_streaming(
     prompt_text: str,

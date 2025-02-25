@@ -3,12 +3,13 @@ import json
 import re
 import os
 import logging
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from pydantic import SecretStr, HttpUrl
 from fastapi import HTTPException
 from app.utils import (
     aggregate_file_paths,
     remove_duplicate_file_paths,
+    separate_file_paths_by_type,
     send_prompt_to_openai_streaming,
     FileContentResponse,
     count_tokens,
@@ -101,17 +102,33 @@ async def generate_response(
                 response.raise_for_status()
                 list_file_search_response = [FileSearchResponse(**item) for item in response.json()]
 
-                list_file_path_entry = await aggregate_file_paths(list_file_search_response)
-                list_file_path_entry = await remove_duplicate_file_paths(list_file_path_entry)
+                # Separate file paths by type
+                commit_paths, file_paths = separate_file_paths_by_type(list_file_search_response)
 
-                list_file_path_entry = [entry for entry in list_file_path_entry if entry.path not in ignore_files]
+                # Get top 5 commit paths
+                top_commit_paths = commit_paths[:5]
+                logger.info(f"Top 5 commit paths before removing duplicates: {top_commit_paths}")
 
-                file_paths_payload = [entry.dict() for entry in list_file_path_entry]
+                # Get top 5 file paths
+                top_file_paths = file_paths[:5]
+                logger.info(f"Top 5 file paths before removing duplicates: {top_file_paths}")
+                list_file_path_entry = top_commit_paths.copy()
+                list_file_path_entry.extend(top_file_paths)
+                logger.info(f"list of file paths before removing duplicates: {list_file_path_entry}")
+                if list_file_path_entry:
+                    list_file_path_entry = await remove_duplicate_file_paths(list_file_path_entry)
+                    logger.info(f"list of file paths after removing duplicates: {list_file_path_entry}")
+                    list_file_path_entry = [entry for entry in list_file_path_entry if entry.path not in ignore_files]
+                    logger.info(f"list of file paths after transformation: {list_file_path_entry}")
+                    file_paths_payload = [entry.dict() for entry in list_file_path_entry]
+                else:
+                    file_paths_payload = []
                 logger.info(f"Payload for retrieve-file-contents: {file_paths_payload}")
 
                 if not file_paths_payload:
                     yield {"machtiani": "no files found"}
                     return
+
 
                 file_summaries = {}
                 file_paths_to_summarize = [entry["path"] for entry in file_paths_payload]
@@ -194,6 +211,15 @@ async def generate_response(
 
                 file_content_response = FileContentResponse(**content_response.json())
                 retrieved_file_paths = file_content_response.retrieved_file_paths
+
+                # Convert FilePathEntry objects to string paths and filter out duplicates
+                top_commit_paths_to_add = [entry.path for entry in top_commit_paths if entry.path not in retrieved_file_paths]
+
+                if top_commit_paths_to_add:
+                    logger.info(f"Top commit paths added: {top_commit_paths_to_add}")
+
+                # Prepend the unique commit paths to the retrieved_file_paths list
+                retrieved_file_paths = top_commit_paths_to_add + retrieved_file_paths
 
                 combined_prompt = f"{prompt}\n\nHere are the relevant files:\n"
                 for path, content in file_content_response.contents.items():
