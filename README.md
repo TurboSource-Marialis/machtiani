@@ -7,18 +7,19 @@ It's very usable but rough around the edges at the moment.
 
 ## How it Works
 
-Machtiani employs a clever document retrieval algorithm that reduces the total code file search to improve efficiency:
+Machtiani employs a high performance document retrieval algorithm that leverages git data. By avoiding file chunking, aligns the user query without a catastrophic loss in context. Furthermore, it amplifies the git history, thereby increasing the probability of finding matches.
 
 1. Find files related to indexed commit messages that are similar to the user prompt.
 2. Find files related to indexed file summaries that are similar to the user prompt.
 3. Eliminate unrelated files to the prompt via inference.
+
 
 This method has successfully yielded accurate and concise answers for open-source projects with over 1400 files checked into version control systems (VCS). However, users may experience long wait times, particularly when executing the `git-store` command. There have been instances where the match strength needed to be increased due to the prolonged processing time for all files.
 
 ## Limitations
 
 - The current implementation does not accurately account for input token usage, primarily due to recent additions in steps 2 and 3 above.
-- The application may appear to hang if it needs to process hundreds of files.
+- Has not been tested on projects with more than 4000 commits and 4000 files.
 
 To fully utilize Machtiani for effective document retrieval, it is essential to have concise, informative, and atomic Git commit messages. If your commit messages do not meet this criterion, we recommend using the CLI tool [aicommit](https://github.com/coder/aicommit), which is designed to assist in generating appropriate commit messages.
 
@@ -254,84 +255,4 @@ python -m unittest discover .
 
 Machtiani simplifies code retrieval and interaction with repositories through a command-line interface, utilizing language models for effective responses.
 
-## Todo
 
-- [x] High: handlePrompt doesn't handle many of the flags and arguments. Look at old code when in Execute or older handlePrompts to get it back in.
-- [x] Retrieve file content and add to prompt.
-- [x] Improve messaging when no files are retrieved but found.
-- [x] Warn CLI user if there are no retrieved files, suggesting to lower match strength.
-- [x] Add as a submodule [aicommit](https://github.com/coder/aicommit).
-- [x] Calculate and cap token usage.
-- [x] Server should not block the thread (async).
-- [x] End-to-end test coverage (strategic, not full).
-- [x] Refactor for code modularity and readability - first pass and low-hanging fruit
-- [x] Optional codehost key for optional private repo use.
-- [x] Mask key in construct_remote_url logging.
-- [x] Test using codehost without api key.
-- [x] Add endpoint to get HEAD of server.
-- [x] Cli makes sure its compatabile with server, otherwise it throws an error and instructs to update cli. (create a flag to silence).
-- [x] Barrier: Clean up cli for open sourcing to optional build cli without release.
-- [x] Write test, When trying to git-store an existing repo, it gives this not useful error
-
-      ```
-      Error getting token count: error getting token count: {"detail":""}
-      2024/11/11 20:29:23 Error adding repository: error getting token count: {"detail":""}
-      ```
-- [ ] Test help commands
-- [ ] Test flags
-- [x] Test compatibility stdout (natural part of running tests, as it will often fail after making a commit).
-- [x] Test chat file actually saved (add to setup and teardown too)
-- [x] Test using --file flag (Need a Setup method to use a prexisting chat)
-- [ ] Barrier: If remote url for machtiani (machtiani) is not present, cli should ask for the remote url and then add to remote.
-- [ ] High: ensure chat path doesn't have any `.` other than for `.md` extension.
-- [ ] Mid Filter commit embeddings per oids in branch so it works regardless of branch checked out.
-- [ ] Mid: Version the file summary embeddings and tag commits at HEAD of work tree of code project so it can be switch to reflect code project branch.
-- [ ] Mid: Test to ensure that no binaries are indexed or sought in retrieval results.
-- [ ] High: Improve output formatting (some spacing) and specific input tokens for estimates.
-- [ ] High: When passing incorrect branch in sync command, it gives unclear error to user
-      ```
-      Error getting token count: error getting token count: {"detail":"Internal Server Error"}
-      2024/11/21 12:46:51 Error handling git-sync: Error syncing repository: error getting token count: {"detail":"Internal Server Error"}
-      ```
-- [ ] High: When a user is not authorized to chat it gives unclear error to user
-
-      ```
-      2024/11/21 18:30:43 Error from API: An unexpected error occurred:
-      ````
-
-      On the server, the error is clear
-
-      ```
-      commit-file-retrieval  | INFO:     172.18.0.4:59360 - "POST /test-pull-access/?project_name=https%3A%2F%2Fgithub.com%2FturboSource-marialis%2Fmachtiani&codehost_api_key=&codehost_url=https%3A%2F%2Fgithub.com%2FturboSource-marialis%2Fmachtiani HTTP/1.1" 200 OK
-      machtiani              | ERROR:    Unexpected error occurred
-      machtiani              | Traceback (most recent call last):
-      machtiani              |   File "/app/app/services/generate_response_service.py", line 83, in generate_response
-      machtiani              |     raise HTTPException(status_code=403, detail="Pull access denied.")
-      machtiani              | fastapi.exceptions.HTTPException
-      ```
-
-- [ ] High: Even though the user isn't authorized, they can still call `machtiani status` on a repo.
-- [ ] High: When syncing an authorized url, the error is opaque
-
-    on cli:
-
-    ```
-    Error getting token count: error getting token count: {"detail":"Internal Server Error"}
-    2024/11/21 18:33:41 Error handling git-sync: Error syncing repository: error getting token count: {"detail":"Internal Server Error"}
-    ```
-  
-    on server
-
-    ```
-    commit-file-retrieval  | DEBUG:lib.utils.utilities:Using unauthenticated URL.
-    commit-file-retrieval  | DEBUG:git.cmd:Popen(['git', 'remote', 'set-url', '--', 'origin', 'https://github.com/turboSource-marialis/machtiani'], cwd=/data/users/repositories/github_com_turbosource-marialis_machtiani/repo/git, stdin=None, shell=False, universal_newlines=False)
-    commit-file-retrieval  | DEBUG:git.cmd:Popen(['git', 'fetch', '-v', '--', 'origin'], cwd=/data/users/repositories/github_com_turbosource-marialis_machtiani/repo/git, stdin=None, shell=False, universal_newlines=False)
-    commit-file-retrieval  | DEBUG:git.cmd:AutoInterrupt wait stderr: b"fatal: could not read Username for 'https://github.com': No such device or address"
-    commit-file-retrieval  | ERROR:lib.vcs.repo_manager:Git command failed: Cmd('git') failed due to: exit code(128)
-    commit-file-retrieval  |   cmdline: git fetch -v -- origin
-    commit-file-retrieval  |   stderr: 'fatal: could not read Username for 'https://github.com': No such device or address'
-    commit-file-retrieval  | ERROR:app.routes.count_tokens_fetch_and_checkout:An error occurred while processing token count: Cmd('git') failed due to: exit code(128)
-    commit-file-retrieval  |   cmdline: git fetch -v -- origin
-    commit-file-retrieval  |   stderr: 'fatal: could not read Username for 'https://github.com': No such device or address'
-    commit-file-retrieval  | INFO:     172.18.0.2:43212 - "POST /fetch-and-checkout/token-count HTTP/1.1" 500 Internal Server Error
-    ```
