@@ -48,13 +48,7 @@ Machtiani currently relies on OpenAI's `text-embedding-3-large` for embedding an
 
    You can override the global config per project by placing a `.machtiani-config.yml` into your git project's root directory.
 
-3. Add a `.env` file in `machtiani-commit-file-retrieval/`.
-
-   ```
-   OPENAI_API_KEY=<your_openai_api_key>
-   ```
-
-4. Build the cli and put in path.
+3. Build the cli and put in path.
 
    ```bash
    cd machtiani
@@ -68,13 +62,13 @@ Machtiani currently relies on OpenAI's `text-embedding-3-large` for embedding an
    ```
 
 
-5. Launch the application.
+4. Launch the application.
 
    ```bash
    docker-compose up --build --remove-orphans
    ```
 
-6. Put a project on machtiani.
+5. Put a project on machtiani.
 
   ```bash
 
@@ -83,10 +77,19 @@ Machtiani currently relies on OpenAI's `text-embedding-3-large` for embedding an
 
   Replace master with main, if that is the default branch.
 
-7. Chat with the project
+6. Chat with the project
 
    machtiani "Ask whatever you want here"
 
+7. Sync any new commits you pushed to your remote `origin` on Github.
+
+  ```bash
+  machtiani git-sync --branch-name master
+  ```
+
+  Replace master with main, if that is the default branch.
+
+  If you have local changes in you git that aren't pushed to Github, machtiani won't find changes to sync.
 
 ## Go CLI Usage
 
