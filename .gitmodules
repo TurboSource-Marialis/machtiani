@@ -7,6 +7,3 @@
 [submodule "machtiani-releases"]
 	path = machtiani-releases
 	url = https://github.com/TurboSource-Marialis/machtiani-releases
-[submodule "end-to-end-tests/data/git-projects/SWE-agent"]
-	path = end-to-end-tests/data/git-projects/SWE-agent
-	url = https://github.com/TurboSource-Marialis/SWE-agent
