@@ -21,23 +21,7 @@ This method has successfully yielded accurate and concise answers for open-sourc
 - The current implementation does not accurately account for input token usage, primarily due to recent additions in steps 2 and 3 above.
 - Has not been tested on projects with more than 4000 commits and 4000 files.
 
-To fully utilize Machtiani for effective document retrieval, it is essential to have concise, informative, and atomic Git commit messages. If your commit messages do not meet this criterion, we recommend using the CLI tool [aicommit](https://github.com/coder/aicommit), which is designed to assist in generating appropriate commit messages.
-
 Machtiani currently relies on OpenAI's `text-embedding-3-large` for embedding and uses `gpt-4o-mini` for inference by default. Users can optionally choose `gpt-4o` for inference by using the `--model` flag. Note that this API usage incurs costs. There is a cost estimator in the works, but users should be aware that for projects with several hundred commits to be indexed and a large number of retrieved files, this may incur higher OpenAI usage costs.
-
-It is important to note that Machtiani may not effectively handle repositories with a large number of commits, potentially limiting access to the full history of a repository.
-
-Additionally, while Machtiani aims to improve the relevance of retrieved files, there may still be instances where unrelated files are returned, requiring further refinement in the dynamic match-strength algorithm.
-
-## Upcoming Features to Look Forward To
-
-- [ ] Optional support for 'libre' hosted version.
-- [ ] Support open-source LLMs and other models (self-config).
-- [x] Add `aicommit` as a submodule to help generate better commit messages and even rewrite commits to Machtiani standards.
-- [x] Cost management to assess indexing costs.
-- [ ] Improve handling of file path changes in version control systems.
-- [x] Auto-save results in `.machtiani/chat/` with context-aware naming.
-- [ ] Enhance the user interface and experience.
 
 ## Quick Launch
 
@@ -71,32 +55,20 @@ Additionally, while Machtiani aims to improve the relevance of retrieved files, 
    docker-compose up --build --remove-orphans
    ```
 
-4. Build the Machtiani CLI in `machtiani/machtiani/`.
+4. Build the cli and put in path.
 
    ```bash
-    go build -o generate_ldflags generate_ldflags.go
-   ./build.sh
+   cd machtiani
+
+   go build \
+     -ldflags "$(go run generate_ldflags_local.go)" \
+     -o machtiani-cli \
+     ./cmd/machtiani
+
+   cp machtiani-cli /$HOME/.local/bin/machtiani
    ```
 
-5. Copy the CLI to a path that works for you.
 
-   ```bash
-   cp machtiani ~/.local/bin/
-   ```
-
-6. Optional: build the `aicommit` binary in `machtiani/aicommit/`.
-
-   ```bash
-   cd aicommit
-   go mod tidy
-   go build -o machtiani-aicommit-binary ./cmd/aicommit
-   ```
-
-7. Move the binary to a directory in your PATH.
-
-   ```bash
-   mv machtiani-aicommit-binary ~/.local/bin/
-   ```
 
 ## Go CLI Usage
 
@@ -249,10 +221,4 @@ To run all tests, you can still use:
 ```bash
 python -m unittest discover .
 ```
-
-
-## Conclusion
-
-Machtiani simplifies code retrieval and interaction with repositories through a command-line interface, utilizing language models for effective responses.
-
 
