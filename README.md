@@ -31,28 +31,27 @@ Machtiani currently relies on OpenAI's `text-embedding-3-large` for embedding an
    git clone --recurse-submodules <repo-url>.git machtiani
    ```
 
-2. Create a `.machtiani-config.yml` file in the project root directory.
+2. Create a `~/.machtiani-config.yml`.
 
    ```yaml
    environment:
      MODEL_API_KEY: "your_openapi_api_key"
    ```
 
-   If you want to work with private repos you have access to.
+   If you want to work with private repos you have access to, add `CODE_HOST_API_KEY`.
+
+   ```yaml
+   environment:
+     MODEL_API_KEY: "your_openapi_api_key"
+     CODE_HOST_API_KEY: "your_github_key"
+   ```
+
+   You can override the global config per project by placing a `.machtiani-config.yml` into your git project's root directory.
+
+3. Add a `.env` file in `machtiani-commit-file-retrieval/`.
 
    ```
-     CODE_HOST_API_KEY: "your_github_key_with_repo_scopes"
-   ```
-
-    Alternatively, you can place it in `~/.machtiani-config.yml`, but any `.machtiani-config.yml` placed in your Git project directory will override the one in `$HOME`.
-
-    ***Also, you'll have to add a `.env` file in `machtiani-commit-file-retrieval/`.***
-
-
-3. Launch the application in development (without the API Gateway):
-
-   ```bash
-   docker-compose up --build --remove-orphans
+   OPENAI_API_KEY=<your_openai_api_key>
    ```
 
 4. Build the cli and put in path.
@@ -68,6 +67,25 @@ Machtiani currently relies on OpenAI's `text-embedding-3-large` for embedding an
    cp machtiani-cli /$HOME/.local/bin/machtiani
    ```
 
+
+5. Launch the application.
+
+   ```bash
+   docker-compose up --build --remove-orphans
+   ```
+
+6. Put a project on machtiani.
+
+  ```bash
+
+   machtiani git-store --branch master
+  ```
+
+  Replace master with main, if that is the default branch.
+
+7. Chat with the project
+
+   machtiani "Ask whatever you want here"
 
 
 ## Go CLI Usage
