@@ -80,7 +80,7 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
         "project_name":   name,
         "vcs_type":       "git",
         "api_key":        apiKey,
-        "model_api_key":  openAIAPIKey,
+        "openai_api_key":  openAIAPIKey,
         "ignore_files":   ignoreFiles,
     }
 
@@ -162,7 +162,7 @@ func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiK
         "project_name":   name,
         "branch_name":    branchName,
         "api_key":       apiKey,
-        "model_api_key": openAIAPIKey,
+        "openai_api_key": openAIAPIKey,
         "ignore_files":  ignoreFiles,
     }
 
