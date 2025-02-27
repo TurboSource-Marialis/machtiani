@@ -39,5 +39,5 @@ else
   LD_FLAGS=$(./generate_ldflags)
 
   # Build the main application with ldflags
-  go build -ldflags "$LD_FLAGS" -o machtiani ./cmd/machtiani
+  go build -ldflags "$LD_FLAGS" -o machtiani-cli ./cmd/machtiani
 fi
