@@ -1,27 +1,102 @@
-
 # machtiani
 
-**Machtiani** is a command-line interface (CLI) tool designed to facilitate code chat and information retrieval from code repositories. It allows users to interact with their codebases by asking questions and retrieving relevant information from files in the project, utilizing language models for processing and generating responses. The aim is to support models aside from OpenAI, including open-source and self-hosted options.
+**Machtiani** is a command-line interface and local service to chat with git repositories, even if it has thousands of files and commits.
 
-It's very usable but rough around the edges at the moment.
+- Git strategy is o(n) time, so this will scale to enormous projects.
+- Currently, it's fast enough to work on projects that are as large as a few thousand files and commits.
+- We aim to optimize syncing and retrieval time by an order of magnitude, reaching for enormous projects.
+- It doesn't have an abundance of features (e.g. web search, multiple models), yet!
 
 ## How it Works
 
-Machtiani employs a high performance document retrieval algorithm that leverages git data. By avoiding file chunking, aligns the user query without a catastrophic loss in context. Furthermore, it amplifies the git history, thereby increasing the probability of finding matches.
+Let's use machtiani! Doing the following in the `machtiani-commit-file-retrieval` submodule of machtiani.
 
-1. Find files related to indexed commit messages that are similar to the user prompt.
-2. Find files related to indexed file summaries that are similar to the user prompt.
-3. Eliminate unrelated files to the prompt via inference.
+```
+$ pwd
+/home/david/projects/machtiani/machtiani-commit-file-retrieval
 
+$ machtiani --model gpt-4o \
+  "Explain how machtiani gets the correct context from files through the git history, \
+   and how is this different than common indexing strategies"
 
-This method has successfully yielded accurate and concise answers for open-source projects with over 1400 files checked into version control systems (VCS). However, users may experience long wait times, particularly when executing the `git-store` command. There have been instances where the match strength needed to be increased due to the prolonged processing time for all files.
+# User
+
+Explain how machtiani gets the correct context from files through the git history, and how is this different than common indexing strategies
+
+# Assistant
+
+The code you provided outlines a system built for handling Git commit data, generating embeddings for those commits, and finding the most relevant commits based on input queries. The key components of this system include:
+
+1. **Commit Embedding Generation**:
+   - The `CommitEmbeddingGenerator` class processes commit logs, filters out any commits that already have embeddings, and generates new embeddings for any newly identified commits. This class uses the OpenAI API to generate these embeddings based on commit messages, with the purpose of creating a searchable vector space for the commits.
+
+2. **Commit Embedding Matching**:
+   - The `CommitEmbeddingMatcher` class is responsible for searching through the generated embeddings to find the most relevant commits to a given input query. It uses cosine similarity to compare the embeddings of the input query against the stored commit embeddings, in order to rank and return the most similar commits.
+
+3. **File Summary Embedding**:
+   - The `FileSummaryEmbeddingGenerator` class extends the functionality by generating embeddings for file summaries. It retrieves file content from the repository, summarizes the content using OpenAI's language models, and then generates embeddings for these summaries. This provides a more granular level of searchability, focusing on the contents of files rather than just commit messages.
+
+4. **Git Commit Management**:
+   - The `GitCommitManager` class handles the extraction of commit data from the Git history, including commit messages, file changes, and diffs. It provides methods for amplifying commit messages, checking file deletion status, and counting tokens in files changed by commits.
+
+### How Machtiani Gets the Correct Context from Files through Git History:
+
+The system employs a few key strategies to ensure it captures the correct context from files through Git history:
+
+- **Commit Logs and Diffs**: By maintaining a list of commit logs and analyzing diffs between commits, the system can track changes at a file level. This allows it to capture the context of changes and their significance.
+
+- **Embedding Generation**: By generating embeddings for commit messages and file summaries, the system creates a semantic representation of the changes. This enables it to capture the meaning and context beyond just the textual content.
+
+- **File Content Summarization**: Summarizing file contents before embedding ensures that the system focuses on the key information, which is essential for capturing the context effectively.
+
+- **Filtering and Deduplication**: By filtering out already embedded commits and focusing on new changes, the system reduces redundancy and ensures that only relevant, new information is processed.
+
+### Difference from Common Indexing Strategies:
+
+- **Semantic Search**: Unlike traditional search and indexing strategies that rely on keyword matching, this system uses embeddings to perform semantic search. This allows it to find relevant content based on meaning rather than just exact keyword matches.
+
+- **Dynamic and Incremental Updates**: The system can dynamically update its index of embeddings as new commits are made, which contrasts with static indexing strategies that require re-indexing entire datasets.
+
+- **Contextual Understanding**: By using AI models to summarize and embed content, the system captures a deeper level of understanding about the context of changes, which is not typically achievable with simple text-based indexing.
+
+- **Focus on Changes**: The system emphasizes indexing changes rather than static content, which is particularly useful in a version-controlled environment where understanding the evolution of code is important.
+
+In summary, the system's use of embeddings, semantic search, and focus on dynamic, change-oriented indexing sets it apart from traditional indexing methods that prioritize static, keyword-based approaches.
+
+---
+
+# Retrieved File Paths
+
+- app/main.py
+- lib/indexer/commit_indexer.py
+- lib/search/commit_embedding_matcher.py
+- lib/indexer/file_summary_indexer.py
+- lib/vcs/git_commit_manager.py
+
+Response saved to .machtiani/chat/machtiani_context_retrieval_vs_indexing.md
+```
+
+A very reasonable response. We could ask probing questions into how the commits indexing strategy works, but I'll just add this:
+
+Machtiani actually reconstructs a full commit history when you put a project on it. So your thoughtful commits will only make it better, but it will work great regardless.
 
 ## Limitations
 
-- The current implementation does not accurately account for input token usage, primarily due to recent additions in steps 2 and 3 above.
-- Has not been tested on projects with more than 4000 commits and 4000 files.
+- Works only in the terminal - we want also a local web app.
+- Works only with OpenAI - we want this to work for any model with plugins.
+- Works only with Github - we want to expand to all codehosts, even local git servers.
+- Input token costs are off by 10-20% - we want it to be exact, not relying on generalized formula.
+- The largest project we tried was 4000 commits and 4000 files in git - we want these numbers to grow, rapidly.
 
-Machtiani currently relies on OpenAI's `text-embedding-3-large` for embedding and uses `gpt-4o-mini` for inference by default. Users can optionally choose `gpt-4o` for inference by using the `--model` flag. Note that this API usage incurs costs. There is a cost estimator in the works, but users should be aware that for projects with several hundred commits to be indexed and a large number of retrieved files, this may incur higher OpenAI usage costs.
+These are straightforward to overcome (e.g. support all git servers), doable with some work (e.g. optimize speed), or will get there with some support (e.g. web search).
+
+## Todo
+
+- [ ] Get it to work on any git-line codehost.
+- [ ] Increase store and sync speed by an order of magnitude (so even bigger, and bigger projects).
+- [ ] Increase response time by an order of magnitue.
+- [ ] Web retrieval.
+
 
 ## Quick Launch
 
@@ -71,7 +146,6 @@ Machtiani currently relies on OpenAI's `text-embedding-3-large` for embedding an
 5. Put a project on machtiani.
 
   ```bash
-
    machtiani git-store --branch master
   ```
 
@@ -79,7 +153,10 @@ Machtiani currently relies on OpenAI's `text-embedding-3-large` for embedding an
 
 6. Chat with the project
 
+
+  ```bash
    machtiani "Ask whatever you want here"
+   ```
 
 7. Sync any new commits you pushed to your remote `origin` on Github.
 
@@ -196,7 +273,7 @@ go.mod
 
 ### Output
 
-The CLI will print the response received and save the output to a temporary markdown file, which will be displayed in the terminal.
+The CLI will stream the response and save the chat in `.machtiani/chat/` in the directory you ran the prompt. It also gives a descriptive name to the chat file for you convenience
 
 ## Developer Section
 
@@ -219,7 +296,6 @@ python -m unittest test_end_to_end.py test_end_to_end_no_codehost_api_key.py
 - **Realistic Environment**: The tests are designed to execute in a realistic environment, mimicking actual user interactions with the CLI. This helps in identifying issues that may not be apparent in isolated unit tests.
 
 - **Validation of Core Features**: As it encompasses key functionalities, running this test ensures that the essential features of Machtiani are working as expected.
-
 
 This command prioritizes the most critical integration tests, ensuring that your core functionalities more cost effectively (only a single round of setup and teardown).
 
