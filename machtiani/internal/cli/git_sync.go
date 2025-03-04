@@ -6,15 +6,17 @@ import (
 
     "github.com/7db9a/machtiani/internal/api"
     "github.com/7db9a/machtiani/internal/utils"
+    "github.com/7db9a/machtiani/internal/git"
 )
 
-func handleGitSync(remoteURL, branchName string, apiKey *string, force bool, config utils.Config) error {
-    if remoteURL == "" || branchName == "" {
-        return fmt.Errorf("Error: all flags --remote and --branch-name must be provided.")
+func handleGitSync(remoteURL string, apiKey *string, force bool, config utils.Config) error {
+    // Get the current branch name
+    branchName, err := git.GetBranch()
+    if err != nil {
+        return fmt.Errorf("Error retrieving current branch name: %w", err)
     }
 
-
-    _, err := api.CheckStatus(remoteURL, apiKey)
+    _, err = api.CheckStatus(remoteURL, apiKey)
     if err != nil {
         if strings.Contains(err.Error(), "does not exist") {
             // If the repository doesn't exist, add it

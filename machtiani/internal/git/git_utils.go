@@ -42,3 +42,14 @@ func getRemoteURL(remoteName string) (string, error) {
     }
     return strings.TrimSpace(string(output)), nil
 }
+
+func GetBranch() (string, error) {
+    // Run the git command to get the current branch name
+    // FYI it returns 'HEAD' if not in a branch, if detached.
+    cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
+    output, err := cmd.Output()
+    if err != nil {
+        return "", fmt.Errorf("failed to get current branch name: %w", err)
+    }
+    return strings.TrimSpace(string(output)), nil
+}

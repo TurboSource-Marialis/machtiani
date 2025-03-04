@@ -20,7 +20,6 @@ func Execute() {
 
     fs := flag.NewFlagSet("machtiani", flag.ContinueOnError)
     remoteName := fs.String("remote", "origin", "Name of the remote repository")
-    branchName := fs.String("branch-name", "", "Branch name")
     forceFlag := fs.Bool("force", false, "Skip confirmation prompt and proceed with the operation.")
 
     compatible, message, err := api.GetInstallInfo()
@@ -60,7 +59,7 @@ func Execute() {
     case "git-sync":
         utils.ParseFlags(fs, os.Args[2:]) // Use the new helper function
         // Call the HandleGitSync function
-        if err := handleGitSync(remoteURL, *branchName, apiKey, *forceFlag, config); err != nil {
+        if err := handleGitSync(remoteURL, apiKey, *forceFlag, config); err != nil {
             log.Printf("Error handling git-sync: %v", err)
             os.Exit(1)
         }

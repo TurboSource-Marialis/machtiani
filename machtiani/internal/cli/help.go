@@ -27,18 +27,16 @@ func printHelp() {
     Subcommands:
 
     git-store:
-      Usage: machtiani git-store --branch <default_branch> --remote <remote_name> [--force]
+      Usage: machtiani git-store --remote <remote_name> [--force]
       Adds a repository to Machtiani system.
       Flags:
-        --branch string            Name of the default branch (required).
         --remote string            Name of the remote repository (default: "origin").
         --force                    Skip confirmation prompt.
 
     git-sync:
-      Usage: machtiani git-sync --branch <default_branch> --remote <remote_name> [--force]
+      Usage: machtiani git-sync --remote <remote_name> [--force]
       Syncs with a specific branch of the repository.
       Flags:
-        --branch string            Name of the branch (required).
         --remote string            Name of the remote repository (default: "origin").
         --force                    Skip confirmation prompt.
 
@@ -60,7 +58,7 @@ func printHelp() {
         machtiani "Add a new endpoint to get stats." --model gpt-4o --mode pure-chat --match-strength high
 
       Using the '--force' flag to skip confirmation:
-        machtiani git-store --branch master --force
+        machtiani git-store --force
 
     `
     fmt.Println(helpText)

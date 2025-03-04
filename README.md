@@ -146,7 +146,7 @@ These are straightforward to overcome (e.g. support all git servers), doable wit
 5. Put a project on machtiani.
 
   ```bash
-   machtiani git-store --branch master
+   machtiani git-store
   ```
 
   Replace master with main, if that is the default branch.
@@ -161,7 +161,7 @@ These are straightforward to overcome (e.g. support all git servers), doable wit
 7. Sync any new commits you pushed to your remote `origin` on Github.
 
   ```bash
-  machtiani git-sync --branch-name master
+  machtiani git-sync
   ```
 
   Replace master with main, if that is the default branch.
@@ -211,7 +211,7 @@ machtiani [flags] [prompt]
 4. **Using the `--force` flag to skip confirmation:**
 
    ```bash
-   machtiani git-store --branch master --force
+   machtiani git-store --force
    ```
 
 ### Different Modes
@@ -224,12 +224,12 @@ The `git-store` command allows you to add a repository to the Machtiani system.
 
 **Usage:**
 ```bash
-machtiani git-store --branch <default_branch> --remote <remote_name> [--force]
+machtiani git-store --remote <remote_name> [--force]
 ```
 
 **Example:**
 ```bash
-machtiani git-store --branch master --force
+machtiani git-store --force
 ```
 
 #### `git-sync`
@@ -238,12 +238,12 @@ The `git-sync` command is used to fetch and checkout a specific branch of the re
 
 **Usage:**
 ```bash
-machtiani git-sync --branch <default_branch> --remote <remote_name> [--force]
+machtiani git-sync --remote <remote_name> [--force]
 ```
 
 **Example:**
 ```bash
-machtiani git-sync --branch main --force
+machtiani git-sync --force
 ```
 
 ### `git-delete`

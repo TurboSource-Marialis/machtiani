@@ -71,7 +71,7 @@ class BaseTestEndToEnd:
 
     def test_01_run_machtiani_git_sync(self):
         time.sleep(5)
-        command = 'machtiani git-sync --branch-name "master" --force'
+        command = 'machtiani git-sync --force'
         stdout_normalized = self.run_machtiani_command(command)
 
         expected_output = [
@@ -128,7 +128,7 @@ class BaseTestEndToEnd:
             self.fail(f"Failed to check for .git directory: {e.stderr.strip()}")
 
     def test_03_run_machtiani_sync_command_not_ready(self):
-        command = 'machtiani git-sync --branch-name "master" --force'
+        command = 'machtiani git-sync --force'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
 
@@ -149,7 +149,7 @@ class BaseTestEndToEnd:
         self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_normalized))
 
     def test_05_run_machtiani_sync_command(self):
-        command = 'machtiani git-sync --branch-name "master" --force'
+        command = 'machtiani git-sync --force'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
 
@@ -171,7 +171,7 @@ class BaseTestEndToEnd:
         # Introduce a slight delay to allow for remote to be ready
         time.sleep(5)
         # Step 2: Run git_sync and assert the output
-        command = 'machtiani git-sync --branch-name "master" --force'
+        command = 'machtiani git-sync --force'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
 
@@ -215,7 +215,7 @@ class BaseTestEndToEnd:
         time.sleep(5)
 
         def run_sync():
-            command = 'machtiani git-sync --branch-name "master" --force'
+            command = 'machtiani git-sync --force'
             run_machtiani_command(command, self.directory)
 
         sync_thread = threading.Thread(target=run_sync)
