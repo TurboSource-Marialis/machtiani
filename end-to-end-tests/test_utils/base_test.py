@@ -69,9 +69,9 @@ class BaseTestEndToEnd:
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         return clean_output(stdout_machtiani)
 
-    def test_01_run_machtiani_git_store(self):
+    def test_01_run_machtiani_git_sync(self):
         time.sleep(5)
-        command = 'machtiani git-store --branch-name "master" --force'
+        command = 'machtiani git-sync --branch-name "master" --force'
         stdout_normalized = self.run_machtiani_command(command)
 
         expected_output = [
@@ -234,20 +234,7 @@ class BaseTestEndToEnd:
         # Step 5: Wait for the sync thread to finish
         sync_thread.join()
 
-    def test_09_run_machtiani_git_store_existing_project(self):
-        """Test running git-store on an already added project."""
-        command = 'machtiani git-store --branch-name "master" --force'
-
-        # Run git-store for the first time
-        stdout_normalized = self.run_machtiani_command(command)
-
-        # Now run git-store again to check for existing project response
-        stdout_normalized_second_run = self.run_machtiani_command(command)
-
-        # Check if the output contains the expected message
-        self.assertTrue(any("The project already exists!" in line for line in stdout_normalized), "Expected message about existing project not found in output.")
-
-    def test_10_commit_messages_count(self):
+    def test_09_commit_messages_count(self):
         """Test that there are exactly 3 git commit messages in the content directory."""
         container_name = "commit-file-retrieval"  # Name of your container
         content_directory = "/data/users/repositories/github_com_7db9a_chastler/contents"  # Path in the container
@@ -270,7 +257,7 @@ class BaseTestEndToEnd:
         except subprocess.CalledProcessError as e:
             self.fail(f"Failed to count commits: {e.stderr.strip()}")
 
-    def test_11_no_untracked_or_modified_files(self):
+    def test_10_no_untracked_or_modified_files(self):
         """Test that there are no untracked or modified files in the git directory."""
         container_name = "commit-file-retrieval"  # Name of your container
         content_directory = "/data/users/repositories/github_com_7db9a_chastler/contents"  # Path in the container
@@ -294,7 +281,7 @@ class BaseTestEndToEnd:
         except subprocess.CalledProcessError as e:
             self.fail(f"Failed to check git status: {e.stderr.strip()}")
 
-    def test_12_tags_for_each_commit(self):
+    def test_11_tags_for_each_commit(self):
         """Test that there is a tag for each commit in the content repo with the tag name being the commit OID."""
         container_name = "commit-file-retrieval"  # Name of your container
         repo_directory = "/data/users/repositories/github_com_7db9a_chastler/repo/git"

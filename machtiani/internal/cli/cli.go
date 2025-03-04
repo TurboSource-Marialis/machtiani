@@ -57,12 +57,6 @@ func Execute() {
     case "status":
         handleStatus(&config, remoteURL, apiKey)
         return // Exit after handling status
-    case "git-store":
-        // Parse flags for git-store
-        utils.ParseFlags(fs, os.Args[2:]) // Use the new helper function
-        // Call the new function to handle git-store
-        handleGitStore(remoteURL, apiKey, *forceFlag, config)
-        return // Exit after handling git-store
     case "git-sync":
         utils.ParseFlags(fs, os.Args[2:]) // Use the new helper function
         // Call the HandleGitSync function

@@ -86,12 +86,6 @@ class Setup:
             else:
                 print(f"Warning: {no_code_host_key_config_path} does not exist. No configuration file copied.")
 
-    def run_git_store(self):
-        """Run 'machtiani git-store --branch-name "master" --force' in the specified git directory."""
-        command = 'machtiani git-store --branch-name "master" --force'
-        stdout, stderr = run_machtiani_command(command, self.git_directory)
-        return clean_output(stdout), clean_output(stderr)
-
     def fetch_latest_branches(self):
         """Fetch the latest branches from the remote repository."""
         return get_latest_branches(self.git_directory)
