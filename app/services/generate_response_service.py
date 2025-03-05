@@ -97,6 +97,7 @@ async def generate_response(
                     "model": model,
                     "match_strength": match_strength,
                     "api_key": api_key,
+                    "ignore_files": ignore_files,
                 }
                 response = await client.post(infer_file_url, json=params)
                 response.raise_for_status()
