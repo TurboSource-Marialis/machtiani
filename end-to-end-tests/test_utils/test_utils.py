@@ -4,6 +4,7 @@ import time
 import yaml
 import re
 import shutil
+from datetime import datetime
 
 class Teardown:
     def __init__(self, git_directory):
@@ -281,7 +282,11 @@ def wait_for_status_incomplete(command, directory, max_wait_time=30, interval=1)
 
     return False
 
-
+def create_elapsed_time_filename(elapsed_time):
+    """Create a filename based on the elapsed time."""
+    formatted_time = f"{elapsed_time:.2f}".replace('.', '_')
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    return f"time_elapsed_{formatted_time}_seconds_{timestamp}.txt"
 def append_future_features_to_chat_file(base_directory):
     """Append future features to the only file in the .machtiani/chat/ directory."""
     chat_directory = os.path.join(base_directory, '.machtiani', 'chat')

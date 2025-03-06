@@ -3,6 +3,7 @@ import os
 import time
 import threading
 import subprocess
+from datetime import datetime
 from test_utils.test_utils import (
     Teardown,
     Setup,
@@ -10,6 +11,7 @@ from test_utils.test_utils import (
     run_machtiani_command,
     wait_for_status_complete,
     wait_for_status_incomplete,
+    create_elapsed_time_filename,
     append_future_features_to_chat_file,
 
 )
@@ -72,6 +74,8 @@ class BaseTestEndToEnd:
     def test_01_run_machtiani_git_sync(self):
         time.sleep(5)
         command = 'machtiani git-sync --force'
+
+
         stdout_normalized = self.run_machtiani_command(command)
 
         expected_output = [
@@ -97,7 +101,34 @@ class BaseTestEndToEnd:
 
         self.assertFalse(any("Operation is locked for project 'github_com_7db9a_chastler'" in line for line in stdout_normalized))
 
-    def test_03_run_machtiani_prompt_command(self):
+    def test_03_time_elapsed_until_first_sync_complete(self):
+        # Start timing
+        start_time = time.time()
+
+        status_command = 'machtiani status'
+        wait_for_status_complete(status_command, self.directory)
+
+        # End timing
+        end_time = time.time()
+
+        total_time_elapsed = end_time - start_time
+        print(f"Total time elapsed for running machtiani git-sync: {total_time_elapsed:.2f} seconds")
+
+        # Save the elapsed time to a file
+        filename = create_elapsed_time_filename(total_time_elapsed)
+        file_path = os.path.join(self.directory, filename)
+
+        with open(file_path, 'w') as f:
+            f.write(f"Test executed on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+            f.write(f"Total time elapsed for running machtiani git-sync: {total_time_elapsed:.2f} seconds\n")
+
+        print(f"Elapsed time written to file: {file_path}")
+
+        # Assert that the elapsed time is between 10 seconds and 20 seconds
+        self.assertGreaterEqual(total_time_elapsed, 10, "The command took less than 10 seconds.")
+        self.assertLessEqual(total_time_elapsed, 20, "The command took more than 20 seconds.")
+
+    def test_04_run_machtiani_prompt_command(self):
         status_command = 'machtiani status'
         wait_for_status_complete(status_command, self.directory)
         time.sleep(3)
@@ -111,7 +142,7 @@ class BaseTestEndToEnd:
         self.assertFalse(any("video" in line for line in stdout_normalized))
         self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_normalized))
 
-    def test_04_run_machtiani_sync_command(self):
+    def test_05_run_machtiani_sync_command(self):
         command = 'machtiani git-sync --force'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
@@ -127,7 +158,7 @@ class BaseTestEndToEnd:
         expected_output = [line.strip() for line in expected_output if line.strip()]
         self.assertEqual(stdout_normalized, expected_output)
 
-    def test_05_sync_new_commits_and_prompt_command(self):
+    def test_06_sync_new_commits_and_prompt_command(self):
         # Step 1: Force push `feature` branch to `master`
         self.setup.force_push("feature", "master")
 
@@ -159,7 +190,7 @@ class BaseTestEndToEnd:
         self.assertFalse(any("--force" in line for line in stdout_prompt_normalized))
         self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_prompt_normalized))
 
-    def test_06_run_machtiani_prompt_file_flag_command(self):
+    def test_07_run_machtiani_prompt_file_flag_command(self):
         chat_file_path = append_future_features_to_chat_file(self.directory)
         command = f"machtiani --file {chat_file_path}"
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
@@ -170,7 +201,7 @@ class BaseTestEndToEnd:
         self.assertTrue(any("ategorization" in line for line in stdout_normalized))
         self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_normalized))
 
-    def test_07_run_machtiani_status_with_lock(self):
+    def test_08_run_machtiani_status_with_lock(self):
         # Step 1: Force push `feature2` branch to `master`
         self.setup.force_push("feature2", "master")
 
