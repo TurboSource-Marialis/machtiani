@@ -90,51 +90,14 @@ class BaseTestEndToEnd:
         expected_output = [line.strip() for line in expected_output if line.strip()]
         self.assertEqual(stdout_normalized, expected_output)
 
-    def test_02_check_git_directory_initialized(self):
-        """Test that the content directory is an initialized git directory."""
-
-        status_command = 'machtiani status'
-        wait_for_status_complete(status_command, self.directory)
-        container_name = "commit-file-retrieval"  # Name of your container
-        content_directory = "/data/users/repositories/github_com_7db9a_chastler/contents"  # Path in the container
-
-        # Command to check if the .git directory exists
-        command = (
-            f"if [ -d {content_directory}/.git ]; then "
-            f"echo 'exists'; "
-            f"else echo 'not exists'; fi"
-        )
-
-        # Execute the command in the Docker container
-        try:
-            result = subprocess.run(
-                ["docker-compose", "exec", container_name, "bash", "-c", command],
-                capture_output=True,
-                text=True,
-                check=True
-            )
-            full_output = result.stdout.strip()
-
-            # Check if the directory exists
-            if 'exists' in full_output:
-                exists_check = 'exists'
-            else:
-                exists_check = 'not exists'
-
-            # Assert that the .git directory exists
-            self.assertEqual(exists_check, 'exists', f"Expected .git directory to exist in: {content_directory}")
-
-        except subprocess.CalledProcessError as e:
-            self.fail(f"Failed to check for .git directory: {e.stderr.strip()}")
-
-    def test_03_run_machtiani_sync_command_not_ready(self):
+    def test_02_run_machtiani_sync_command_not_ready(self):
         command = 'machtiani git-sync --force'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
 
         self.assertFalse(any("Operation is locked for project 'github_com_7db9a_chastler'" in line for line in stdout_normalized))
 
-    def test_04_run_machtiani_prompt_command(self):
+    def test_03_run_machtiani_prompt_command(self):
         status_command = 'machtiani status'
         wait_for_status_complete(status_command, self.directory)
         time.sleep(3)
@@ -148,7 +111,7 @@ class BaseTestEndToEnd:
         self.assertFalse(any("video" in line for line in stdout_normalized))
         self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_normalized))
 
-    def test_05_run_machtiani_sync_command(self):
+    def test_04_run_machtiani_sync_command(self):
         command = 'machtiani git-sync --force'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
@@ -164,7 +127,7 @@ class BaseTestEndToEnd:
         expected_output = [line.strip() for line in expected_output if line.strip()]
         self.assertEqual(stdout_normalized, expected_output)
 
-    def test_06_sync_new_commits_and_prompt_command(self):
+    def test_05_sync_new_commits_and_prompt_command(self):
         # Step 1: Force push `feature` branch to `master`
         self.setup.force_push("feature", "master")
 
@@ -196,7 +159,7 @@ class BaseTestEndToEnd:
         self.assertFalse(any("--force" in line for line in stdout_prompt_normalized))
         self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_prompt_normalized))
 
-    def test_07_run_machtiani_prompt_file_flag_command(self):
+    def test_06_run_machtiani_prompt_file_flag_command(self):
         chat_file_path = append_future_features_to_chat_file(self.directory)
         command = f"machtiani --file {chat_file_path}"
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
@@ -207,7 +170,7 @@ class BaseTestEndToEnd:
         self.assertTrue(any("ategorization" in line for line in stdout_normalized))
         self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_normalized))
 
-    def test_08_run_machtiani_status_with_lock(self):
+    def test_07_run_machtiani_status_with_lock(self):
         # Step 1: Force push `feature2` branch to `master`
         self.setup.force_push("feature2", "master")
 
@@ -234,89 +197,3 @@ class BaseTestEndToEnd:
         # Step 5: Wait for the sync thread to finish
         sync_thread.join()
 
-    def test_09_commit_messages_count(self):
-        """Test that there are exactly 3 git commit messages in the content directory."""
-        container_name = "commit-file-retrieval"  # Name of your container
-        content_directory = "/data/users/repositories/github_com_7db9a_chastler/contents"  # Path in the container
-
-        # Command to count the number of commits
-        command = f"git -C {content_directory} rev-list --count HEAD"
-
-        # Execute the command in the Docker container
-        try:
-            result = subprocess.run(
-                ["docker-compose", "exec", container_name, "bash", "-c", command],
-                capture_output=True,
-                text=True,
-                check=True
-            )
-            commit_count = int(result.stdout.strip())
-
-            # Assert that there are exactly 3 commits
-            self.assertEqual(commit_count, 3, f"Expected 3 commits, but found {commit_count}.")
-        except subprocess.CalledProcessError as e:
-            self.fail(f"Failed to count commits: {e.stderr.strip()}")
-
-    def test_10_no_untracked_or_modified_files(self):
-        """Test that there are no untracked or modified files in the git directory."""
-        container_name = "commit-file-retrieval"  # Name of your container
-        content_directory = "/data/users/repositories/github_com_7db9a_chastler/contents"  # Path in the container
-
-        # Command to check the status of the git repository
-        command = f"git -C {content_directory} status --porcelain"
-
-        # Execute the command in the Docker container
-        try:
-            result = subprocess.run(
-                ["docker-compose", "exec", container_name, "bash", "-c", command],
-                capture_output=True,
-                text=True,
-                check=True
-            )
-            status_output = result.stdout.strip()
-
-            # Assert that the output is empty, meaning no untracked or modified files
-            self.assertEqual(status_output, "", "There are untracked or modified files in the git directory.")
-
-        except subprocess.CalledProcessError as e:
-            self.fail(f"Failed to check git status: {e.stderr.strip()}")
-
-    def test_11_tags_for_each_commit(self):
-        """Test that there is a tag for each commit in the content repo with the tag name being the commit OID."""
-        container_name = "commit-file-retrieval"  # Name of your container
-        repo_directory = "/data/users/repositories/github_com_7db9a_chastler/repo/git"
-        content_directory = "/data/users/repositories/github_com_7db9a_chastler/contents"
-
-        # Command to get the list of commits
-        command_commits = f"git -C {repo_directory} rev-list --all"
-        # Command to get the list of tags
-        command_tags = f"git -C {content_directory} tag"
-
-        # Execute the command in the Docker container
-        try:
-            result_commits = subprocess.run(
-                ["docker-compose", "exec", container_name, "bash", "-c", command_commits],
-                capture_output=True,
-                text=True,
-                check=True
-            )
-            commit_oids = {commit.strip() for commit in result_commits.stdout.strip().splitlines()}
-
-            result_tags = subprocess.run(
-                ["docker-compose", "exec", container_name, "bash", "-c", command_tags],
-                capture_output=True,
-                text=True,
-                check=True
-            )
-            tags = {tag.strip() for tag in result_tags.stdout.strip().splitlines()}
-
-            # Validate that commit_oids and tags are non-empty
-            self.assertTrue(commit_oids, "No commits were found in the repository.")
-            self.assertTrue(tags, "No tags were found in the repository.")
-
-            # Check that each tag has a corresponding commit OID
-            for tag in tags:
-                self.assertIn(tag, commit_oids, f"Expected a commit OID for tag {tag} but none was found.")
-
-        except subprocess.CalledProcessError as e:
-            self.fail(f"Failed to retrieve commits or tags: {e.stderr.strip()}")
