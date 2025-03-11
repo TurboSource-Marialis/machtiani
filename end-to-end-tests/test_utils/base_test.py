@@ -1,5 +1,6 @@
 import unittest
 import os
+import json
 import time
 import threading
 import subprocess
@@ -128,7 +129,52 @@ class BaseTestEndToEnd:
         self.assertGreaterEqual(total_time_elapsed, 10, "The command took less than 10 seconds.")
         self.assertLessEqual(total_time_elapsed, 20, "The command took more than 20 seconds.")
 
-    def test_04_run_machtiani_prompt_command(self):
+    def test_04_confirm_commits_embeddings_structure(self):
+        # Copy the file from the docker container
+        subprocess.run(
+            "docker cp commit-file-retrieval:/data/users/repositories/github_com_7db9a_chastler/commits/embeddings/commits_embeddings.json .",
+            shell=True,
+            check=True
+        )
+
+        # Load the JSON file
+        with open('commits_embeddings.json', 'r') as file:
+            commits_embeddings = json.load(file)
+
+        # Define the expected structure
+        expected_structure = {
+            "c5b3a81463c7d3a188ec60523c0f68c23e93a5dc": {
+                "messages": list,
+                "embeddings": list,
+            },
+            "879ce80f348263a2580cd38623ee4e80ae69caac": {
+                "messages": list,
+                "embeddings": list,
+            },
+            "f0d14de7547e2911f262762efa7ea20ada16a2f6": {
+                "messages": list,
+                "embeddings": list,
+            },
+        }
+
+        # Check that the keys are correct
+        self.assertEqual(set(commits_embeddings.keys()), set(expected_structure.keys()))
+
+        # Check each commit's structure
+        for commit_oid, expected_commit_structure in expected_structure.items():
+            commit_data = commits_embeddings[commit_oid]
+
+            # Check that the messages are a list
+            self.assertIsInstance(commit_data['messages'], list)
+
+            # Check that the embeddings are a list and each embedding is a list of floats
+            self.assertIsInstance(commit_data['embeddings'], list)
+            for embedding in commit_data['embeddings']:
+                self.assertIsInstance(embedding, list)
+                for value in embedding:
+                    self.assertIsInstance(value, float)
+
+    def test_05_run_machtiani_prompt_command(self):
         status_command = 'machtiani status'
         wait_for_status_complete(status_command, self.directory)
         time.sleep(3)
@@ -142,7 +188,7 @@ class BaseTestEndToEnd:
         self.assertFalse(any("video" in line for line in stdout_normalized))
         self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_normalized))
 
-    def test_05_run_machtiani_sync_command(self):
+    def test_06_run_machtiani_sync_command(self):
         command = 'machtiani git-sync --force'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
@@ -158,7 +204,7 @@ class BaseTestEndToEnd:
         expected_output = [line.strip() for line in expected_output if line.strip()]
         self.assertEqual(stdout_normalized, expected_output)
 
-    def test_06_sync_new_commits_and_prompt_command(self):
+    def test_07_sync_new_commits_and_prompt_command(self):
         # Step 1: Force push `feature` branch to `master`
         self.setup.force_push("feature", "master")
 
@@ -190,7 +236,7 @@ class BaseTestEndToEnd:
         self.assertFalse(any("--force" in line for line in stdout_prompt_normalized))
         self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_prompt_normalized))
 
-    def test_07_run_machtiani_prompt_file_flag_command(self):
+    def test_08_run_machtiani_prompt_file_flag_command(self):
         chat_file_path = append_future_features_to_chat_file(self.directory)
         command = f"machtiani --file {chat_file_path}"
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
@@ -201,7 +247,7 @@ class BaseTestEndToEnd:
         self.assertTrue(any("ategorization" in line for line in stdout_normalized))
         self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_normalized))
 
-    def test_08_run_machtiani_status_with_lock(self):
+    def test_09_run_machtiani_status_with_lock(self):
         # Step 1: Force push `feature2` branch to `master`
         self.setup.force_push("feature2", "master")
 
