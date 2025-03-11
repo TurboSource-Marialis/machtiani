@@ -382,5 +382,17 @@ class BaseTestEndToEnd:
             },
         }
 
+        # Assert that the last messages and embeddings item in `7cedcb5363ab0ffd3829e7c1363c059c85d83762`
+        # is the same as the last messages and embeddings item in `4dfefe7d5605812e49a3f7e76ab43edb77b932f6`
+        self.assertEqual(
+            commits_embeddings["7cedcb5363ab0ffd3829e7c1363c059c85d83762"]["messages"][-1],
+            commits_embeddings["4dfefe7d5605812e49a3f7e76ab43edb77b932f6"]["messages"][-1]
+        )
+        self.assertEqual(
+            commits_embeddings["7cedcb5363ab0ffd3829e7c1363c059c85d83762"]["embeddings"][-1],
+            commits_embeddings["4dfefe7d5605812e49a3f7e76ab43edb77b932f6"]["embeddings"][-1]
+        )
+
         # Check that the keys are correct
         self.assertEqual(set(commits_embeddings.keys()), set(expected_structure.keys()))
+
