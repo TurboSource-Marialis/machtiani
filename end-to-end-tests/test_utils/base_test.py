@@ -279,8 +279,7 @@ class BaseTestEndToEnd:
         self.teardown_end_to_end()
         self.setup_end_to_end()
 
-        # Step 2: Checkout the `feature2` branch
-        self.setup.checkout_branch("feature2")
+        self.setup.force_push("feature2", "master")
 
         # Introduce a slight delay to allow for remote to be ready
         time.sleep(5)
@@ -294,8 +293,8 @@ class BaseTestEndToEnd:
             "Using remote URL: https://github.com/7db9a/chastler.git",
             "Ignoring files based on .machtiani.ignore:",
             "poetry.lock",
-            "Estimated embedding tokens: 25",
-            "Estimated inference tokens: 1429",
+            "Estimated embedding tokens: 59",
+            "Estimated inference tokens: 1446",
             "VCSType.git repository added successfully",
             "",
             "---",
@@ -342,3 +341,46 @@ class BaseTestEndToEnd:
         # Assert that the elapsed time is between 10 seconds and 20 seconds
         self.assertGreaterEqual(total_time_elapsed, 10, "The command took less than 10 seconds.")
         self.assertLessEqual(total_time_elapsed, 20, "The command took more than 20 seconds.")
+
+    def test_13_confirm_commits_embeddings_structure(self):
+        # Copy the file from the docker container
+        subprocess.run(
+            "docker cp commit-file-retrieval:/data/users/repositories/github_com_7db9a_chastler/commits/embeddings/commits_embeddings.json .",
+            shell=True,
+            check=True
+        )
+
+        # Load the JSON file
+        with open('commits_embeddings.json', 'r') as file:
+            commits_embeddings = json.load(file)
+
+        # Define the expected structure
+        expected_structure = {
+            "c5b3a81463c7d3a188ec60523c0f68c23e93a5dc": {
+                "messages": list,
+                "embeddings": list,
+            },
+            "879ce80f348263a2580cd38623ee4e80ae69caac": {
+                "messages": list,
+                "embeddings": list,
+            },
+            "f0d14de7547e2911f262762efa7ea20ada16a2f6": {
+                "messages": list,
+                "embeddings": list,
+            },
+            "7078ecda662103319304730ecdd31ec01b6ce786": {
+                "messages": list,
+                "embeddings": list,
+            },
+            "7cedcb5363ab0ffd3829e7c1363c059c85d83762": {
+                "messages": list,
+                "embeddings": list,
+            },
+            "4dfefe7d5605812e49a3f7e76ab43edb77b932f6": {
+                "messages": list,
+                "embeddings": list,
+            },
+        }
+
+        # Check that the keys are correct
+        self.assertEqual(set(commits_embeddings.keys()), set(expected_structure.keys()))
