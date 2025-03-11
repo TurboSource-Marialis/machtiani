@@ -274,3 +274,71 @@ class BaseTestEndToEnd:
         # Step 5: Wait for the sync thread to finish
         sync_thread.join()
 
+    def test_10_sync_feature2_branch(self):
+        # Step 1: Clean up before starting the test
+        self.teardown_end_to_end()
+        self.setup_end_to_end()
+
+        # Step 2: Checkout the `feature2` branch
+        self.setup.checkout_branch("feature2")
+
+        # Introduce a slight delay to allow for remote to be ready
+        time.sleep(5)
+
+        # Step 3: Run git_sync and assert the output
+        command = 'machtiani git-sync --force'
+        stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
+        stdout_normalized = clean_output(stdout_machtiani)
+
+        expected_output = [
+            "Using remote URL: https://github.com/7db9a/chastler.git",
+            "Ignoring files based on .machtiani.ignore:",
+            "poetry.lock",
+            "Estimated embedding tokens: 25",
+            "Estimated inference tokens: 1429",
+            "VCSType.git repository added successfully",
+            "",
+            "---",
+            "Your repo is getting added to machtiani is in progress!",
+            "Please check back by running `machtiani status` to see if it completed."
+        ]
+
+        expected_output = [line.strip() for line in expected_output if line.strip()]
+        self.assertEqual(stdout_normalized, expected_output)
+
+        # Step 4: Clean up after the test
+        self.teardown_end_to_end()
+
+    def test_11_run_machtiani_sync_command_not_ready(self):
+        command = 'machtiani git-sync --force'
+        stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
+        stdout_normalized = clean_output(stdout_machtiani)
+
+        self.assertFalse(any("Operation is locked for project 'github_com_7db9a_chastler'" in line for line in stdout_normalized))
+
+    def test_12_time_elapsed_until_first_sync_complete(self):
+        # Start timing
+        start_time = time.time()
+
+        status_command = 'machtiani status'
+        wait_for_status_complete(status_command, self.directory)
+
+        # End timing
+        end_time = time.time()
+
+        total_time_elapsed = end_time - start_time
+        print(f"Total time elapsed for running machtiani git-sync: {total_time_elapsed:.2f} seconds")
+
+        # Save the elapsed time to a file
+        filename = create_elapsed_time_filename(total_time_elapsed)
+        file_path = os.path.join(self.directory, filename)
+
+        with open(file_path, 'w') as f:
+            f.write(f"Test executed on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+            f.write(f"Total time elapsed for running machtiani git-sync: {total_time_elapsed:.2f} seconds\n")
+
+        print(f"Elapsed time written to file: {file_path}")
+
+        # Assert that the elapsed time is between 10 seconds and 20 seconds
+        self.assertGreaterEqual(total_time_elapsed, 10, "The command took less than 10 seconds.")
+        self.assertLessEqual(total_time_elapsed, 20, "The command took more than 20 seconds.")
