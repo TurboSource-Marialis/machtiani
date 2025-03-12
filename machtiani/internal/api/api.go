@@ -234,7 +234,7 @@ func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiK
     }
 }
 
-func DeleteStore(projectName string, codehostURL string, ignoreFiles []string, vcsType string, apiKey *string, openaiAPIKey *string, repoManagerURL string, force bool) (DeleteStoreResponse, error) {
+func DeleteStore(projectName string, codehostURL string, vcsType string, apiKey *string, repoManagerURL string, force bool) (DeleteStoreResponse, error) {
     config, _, err := utils.LoadConfigAndIgnoreFiles()
     if err != nil {
         return DeleteStoreResponse{}, err
@@ -248,10 +248,8 @@ func DeleteStore(projectName string, codehostURL string, ignoreFiles []string, v
         data := map[string]interface{}{
             "project_name":   projectName,
             "codehost_url":   codehostURL,
-            "ignore_files":    ignoreFiles,
             "vcs_type":       vcsType,
             "api_key":        apiKey,
-            "openai_api_key": openaiAPIKey,
         }
 
         jsonData, err := json.Marshal(data)
