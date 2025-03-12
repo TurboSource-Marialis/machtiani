@@ -344,6 +344,8 @@ class BaseTestEndToEnd:
 
     def test_13_confirm_commits_embeddings_structure(self):
         # Copy the file from the docker container
+        time.sleep(5)
+
         subprocess.run(
             "docker cp commit-file-retrieval:/data/users/repositories/github_com_7db9a_chastler/commits/embeddings/commits_embeddings.json .",
             shell=True,
