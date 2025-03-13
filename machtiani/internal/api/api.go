@@ -301,8 +301,8 @@ func DeleteStore(projectName string, codehostURL string, vcsType string, apiKey 
 }
 
 type GenerateResponseResult struct {
-    OpenAIResponse     string   `json:"openai_response"`
-    RawResponse     string   `json:"openai_response"`
+    LlmModelResponse     string   `json:"llm_model_response"`
+    RawResponse     string   `json:"llm_model_response"`
     RetrievedFilePaths []string `json:"retrieved_file_paths"`
 }
 
@@ -554,7 +554,7 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
     }
 
     return &GenerateResponseResult{
-        OpenAIResponse:      completeResponse.String(),
+        LlmModelResponse:      completeResponse.String(),
         RawResponse:         rawResponse.String(), // Include rawResponse
         RetrievedFilePaths: retrievedFilePaths,
     }, nil

@@ -177,16 +177,16 @@ async def generate_response(
                     token = token_data.get("token", "")
                     response_tokens.append(token)
 
-                openai_response = ''.join(response_tokens)
+                llm_model_response = ''.join(response_tokens)
 
-                match = re.search(r"---\s*(.*?)\s*---", openai_response, re.DOTALL)
+                match = re.search(r"---\s*(.*?)\s*---", llm_model_response, re.DOTALL)
 
                 if match:
                     relevant_file_paths_str = match.group(1).strip()
                     relevant_file_paths = [line.lstrip("/").strip() for line in relevant_file_paths_str.splitlines() if line.strip()]
                     logger.info(f"Relevant file paths returned from OpenAI: {relevant_file_paths}")
                 else:
-                    logger.error(f"Failed to extract relevant paths from OpenAI response: {openai_response}")
+                    logger.error(f"Failed to extract relevant paths from OpenAI response: {llm_model_response}")
                     yield {"error": "Invalid response format from OpenAI API."}
                     return
 
