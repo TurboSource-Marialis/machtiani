@@ -16,8 +16,11 @@ from app.utils import (
     add_sys_path,
     check_token_limit,
 )
-from utils.enums import (
+from lib.utils.enums import (
     SearchMode,
+)
+
+from app.models.responses import (
     FileSearchResponse,
 )
 

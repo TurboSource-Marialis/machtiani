@@ -23,16 +23,19 @@ class add_sys_path:
         sys.path = self.original_sys_path
 
 # Update the path to correctly point to machtiani-commit-file-retrieval/lib
-path_to_add = os.path.abspath('/app/machtiani-commit-file-retrieval/lib')
+path_to_add = os.path.abspath('/app/machtiani-commit-file-retrieval')
 logger.info("Adding to sys.path: %s", path_to_add)
 
 # Use the context manager to handle imports
 try:
     with add_sys_path(path_to_add):
-        from utils.enums import (
+        from lib.utils.enums import (
             FilePathEntry,
-            FileSearchResponse,
             FileContentResponse
+        )
+
+        from app.models.responses import (
+            FileSearchResponse
         )
     logger.info("Imports successful.")
 except ModuleNotFoundError as e:
