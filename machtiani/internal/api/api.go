@@ -38,7 +38,7 @@ type AddRepositoryResponse struct {
     Message        string `json:"message"`
     FullPath       string `json:"full_path"`
     ApiKeyProvided bool   `json:"api_key_provided"`
-    OpenAiApiKeyProvided bool   `json:"llm_model_api_key_provided"`
+    LlmModelApiKeyProvided bool   `json:"llm_model_api_key_provided"`
 }
 
 
@@ -143,7 +143,7 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
             Message:              "Operation aborted by user",
             FullPath:             "Operation aborted",
             ApiKeyProvided:       false,
-            OpenAiApiKeyProvided: false,
+            LlmModelApiKeyProvided: false,
         }
         return abortedResponse, nil
     }
