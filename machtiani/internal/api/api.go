@@ -335,7 +335,7 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
         "mode":             mode,
         "model":            model,
         "match_strength":   matchStrength,
-        "api_key":          config.Environment.ModelAPIKey,
+        "llm_model_api_key":          config.Environment.ModelAPIKey,
         "codehost_api_key": config.Environment.CodeHostAPIKey,
         "codehost_url":     codehostURL,
         "ignore_files":     ignoreFiles,

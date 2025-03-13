@@ -1,18 +1,19 @@
 package cli
-import (
-    "encoding/json"
-    "fmt"
-    "io/ioutil"
-    "log"
-    "net/http"
-    "net/url"
-    "path"
-    "strings"
 
-    "github.com/7db9a/machtiani/internal/api"
-    "github.com/7db9a/machtiani/internal/utils"
-    "github.com/charmbracelet/glamour"
-    "github.com/spf13/pflag"
+import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"net/url"
+	"path"
+	"strings"
+
+	"github.com/7db9a/machtiani/internal/api"
+	"github.com/7db9a/machtiani/internal/utils"
+	"github.com/charmbracelet/glamour"
+	"github.com/spf13/pflag"
 )
 
 var (
@@ -121,7 +122,7 @@ func handleAPIResponse(prompt, openaiResponse string, retrievedFilePaths []strin
     //}
 }
 
-func generateFilename(context string, apiKey string) (string, error) {
+func generateFilename(context string, llmModelApiKey string) (string, error) {
     config, err := utils.LoadConfig()
     if err != nil {
         log.Fatalf("Error loading config: %v", err)
@@ -132,7 +133,7 @@ func generateFilename(context string, apiKey string) (string, error) {
         return "", fmt.Errorf("MACHTIANI_URL environment variable is not set")
     }
 
-    url := fmt.Sprintf("%s/generate-filename?context=%s&api_key=%s", endpoint, url.QueryEscape(context), url.QueryEscape(apiKey))
+    url := fmt.Sprintf("%s/generate-filename?context=%s&llm_model_api_key=%s", endpoint, url.QueryEscape(context), url.QueryEscape(llmModelApiKey))
 
     req, err := http.NewRequest("GET", url, nil)
     if err != nil {

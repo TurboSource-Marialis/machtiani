@@ -48,7 +48,7 @@ async def generate_response(
     mode: str,
     model: str,
     match_strength: str,
-    api_key: str,
+    llm_model_api_key: str,
     codehost_api_key: Optional[SecretStr],
     codehost_url: HttpUrl,
     ignore_files: List[str],
@@ -99,7 +99,7 @@ async def generate_response(
                     "mode": mode,
                     "model": model,
                     "match_strength": match_strength,
-                    "api_key": api_key,
+                    "llm_model_api_key": llm_model_api_key,
                     "ignore_files": ignore_files,
                 }
                 response = await client.post(infer_file_url, json=params)
@@ -172,7 +172,7 @@ async def generate_response(
 
                 # Collect tokens from streaming response
                 response_tokens = []
-                async for token_json in send_prompt_to_openai_streaming(summary_prompt, api_key, model):
+                async for token_json in send_prompt_to_openai_streaming(summary_prompt, llm_model_api_key, model):
                     token_data = json.loads(token_json)
                     token = token_data.get("token", "")
                     response_tokens.append(token)
@@ -244,7 +244,7 @@ async def generate_response(
                 yield {"retrieved_file_paths": retrieved_file_paths}
 
             # Stream tokens from OpenAI response
-            async for token_json in send_prompt_to_openai_streaming(combined_prompt, api_key, model):
+            async for token_json in send_prompt_to_openai_streaming(combined_prompt, llm_model_api_key, model):
                 yield json.loads(token_json)
 
     except httpx.RequestError as exc:

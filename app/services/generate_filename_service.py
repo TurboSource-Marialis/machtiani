@@ -3,7 +3,7 @@ import json
 from fastapi import HTTPException
 from app.utils import send_prompt_to_openai_streaming
 
-async def generate_filename(context: str, api_key: str) -> str:
+async def generate_filename(context: str, llm_model_api_key: str) -> str:
     filename_prompt = (
         f"Generate a unique filename for the following context: '{context}'.\n"
         "Respond ONLY with the filename in snake_case, wrapped in <filename> and </filename> tags.\n"
@@ -16,7 +16,7 @@ async def generate_filename(context: str, api_key: str) -> str:
 
     try:
         # Asynchronously iterate over each token yielded by send_prompt_to_openai_streaming
-        async for token_json in send_prompt_to_openai_streaming(filename_prompt, api_key, model="gpt-4o-mini"):
+        async for token_json in send_prompt_to_openai_streaming(filename_prompt, llm_model_api_key, model="gpt-4o-mini"):
             # Parse the JSON string to extract the token
             token_data = json.loads(token_json)
             token = token_data.get("token", "")
