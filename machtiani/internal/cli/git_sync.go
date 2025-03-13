@@ -1,12 +1,12 @@
 package cli
 
 import (
-    "fmt"
-    "strings"
+	"fmt"
+	"strings"
 
-    "github.com/7db9a/machtiani/internal/api"
-    "github.com/7db9a/machtiani/internal/utils"
-    "github.com/7db9a/machtiani/internal/git"
+	"github.com/7db9a/machtiani/internal/api"
+	"github.com/7db9a/machtiani/internal/git"
+	"github.com/7db9a/machtiani/internal/utils"
 )
 
 func handleGitSync(remoteURL string, apiKey *string, force bool, config utils.Config) error {
@@ -16,7 +16,7 @@ func handleGitSync(remoteURL string, apiKey *string, force bool, config utils.Co
         return fmt.Errorf("Error retrieving current branch name: %w", err)
     }
 
-    _, err = api.CheckStatus(remoteURL, apiKey)
+    _, err = api.CheckStatus(remoteURL)
     if err != nil {
         if strings.Contains(err.Error(), "does not exist") {
             // If the repository doesn't exist, add it

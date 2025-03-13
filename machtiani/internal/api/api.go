@@ -628,7 +628,7 @@ func getTokenCount(endpoint string, buffer *bytes.Buffer) (int, int, error) {
     return tokenCountResponse.EmbeddingTokens, tokenCountResponse.InferenceTokens, nil
 }
 
-func CheckStatus(codehostURL string, apiKey *string) (StatusResponse, error) {
+func CheckStatus(codehostURL string) (StatusResponse, error) {
     config, _, err := utils.LoadConfigAndIgnoreFiles()
     if err != nil {
         return StatusResponse{}, err
@@ -641,9 +641,6 @@ func CheckStatus(codehostURL string, apiKey *string) (StatusResponse, error) {
 
     // Prepare the request URL
     statusURL := fmt.Sprintf("%s/status?codehost_url=%s", repoManagerURL, codehostURL)
-    if apiKey != nil {
-        statusURL += fmt.Sprintf("&api_key=%s", *apiKey)
-    }
 
     // Create the HTTP GET request
     req, err := http.NewRequest("GET", statusURL, nil)

@@ -1,17 +1,17 @@
 package cli
 
 import (
-    "fmt"
-    "log"
-    "time"
+	"fmt"
+	"log"
+	"time"
 
-    "github.com/7db9a/machtiani/internal/api"
-    "github.com/7db9a/machtiani/internal/utils"
+	"github.com/7db9a/machtiani/internal/api"
+	"github.com/7db9a/machtiani/internal/utils"
 )
 
-func handleStatus(config *utils.Config, remoteURL string, apiKey *string) {
+func handleStatus(config *utils.Config, remoteURL string) {
     // Call CheckStatus
-    statusResponse, err := api.CheckStatus(remoteURL, apiKey)
+    statusResponse, err := api.CheckStatus(remoteURL)
     if err != nil {
         log.Fatalf("Error checking status: %v", err)
     }

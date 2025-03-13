@@ -53,7 +53,7 @@ func Execute() {
 	command := os.Args[1]
 	switch command {
 	case "status":
-		handleStatus(&config, remoteURL, apiKey)
+		handleStatus(&config, remoteURL)
 		return // Exit after handling status
 	case "git-sync":
 		utils.ParseFlags(fs, os.Args[2:]) // Use the new helper function
