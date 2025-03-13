@@ -1,19 +1,19 @@
 package api
 
 import (
-    "strings"
-    "encoding/json"
-    "fmt"
-    "bytes"
-    "log"
-    "net/http"
-    "io"
-    "io/ioutil"
-    "time"
-    "sync"
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"strings"
+	"sync"
+	"time"
 
-    "github.com/7db9a/machtiani/internal/utils"
-    "github.com/charmbracelet/glamour"
+	"github.com/7db9a/machtiani/internal/utils"
+	"github.com/charmbracelet/glamour"
 )
 var (
     HeadOID    string = "none"
@@ -38,7 +38,7 @@ type AddRepositoryResponse struct {
     Message        string `json:"message"`
     FullPath       string `json:"full_path"`
     ApiKeyProvided bool   `json:"api_key_provided"`
-    OpenAiApiKeyProvided bool   `json:"openai_api_key_provided"`
+    OpenAiApiKeyProvided bool   `json:"llm_model_api_key_provided"`
 }
 
 
@@ -80,7 +80,7 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
         "project_name":   name,
         "vcs_type":       "git",
         "api_key":        apiKey,
-        "openai_api_key":  openAIAPIKey,
+        "llm_model_api_key":  openAIAPIKey,
         "ignore_files":   ignoreFiles,
     }
 
@@ -162,7 +162,7 @@ func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiK
         "project_name":   name,
         "branch_name":    branchName,
         "api_key":       apiKey,
-        "openai_api_key": openAIAPIKey,
+        "llm_model_api_key": openAIAPIKey,
         "ignore_files":  ignoreFiles,
     }
 
