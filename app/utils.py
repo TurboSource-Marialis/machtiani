@@ -31,11 +31,11 @@ try:
     with add_sys_path(path_to_add):
         from lib.utils.enums import (
             FilePathEntry,
-            FileContentResponse
         )
 
         from app.models.responses import (
-            FileSearchResponse
+            FileSearchResponse,
+            FileContentResponse
         )
     logger.info("Imports successful.")
 except ModuleNotFoundError as e:
