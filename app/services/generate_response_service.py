@@ -100,6 +100,7 @@ async def generate_response(
                     "model": model,
                     "match_strength": match_strength,
                     "llm_model_api_key": llm_model_api_key,
+                    "embeddings_model_api_key": llm_model_api_key, # We will change it to refer to embedding_model_api_key
                     "ignore_files": ignore_files,
                 }
                 response = await client.post(infer_file_url, json=params)
