@@ -3,44 +3,29 @@ import json
 import re
 import os
 import logging
-from typing import List, Optional, Tuple
+from typing import List, Optional
 from pydantic import SecretStr, HttpUrl
 from fastapi import HTTPException
 from app.utils import (
     aggregate_file_paths,
     remove_duplicate_file_paths,
     separate_file_paths_by_type,
-    send_prompt_to_openai_streaming,
     FileContentResponse,
+    FileSearchResponse,
+    SearchMode,
     count_tokens,
     add_sys_path,
     check_token_limit,
 )
-from lib.utils.enums import (
-    SearchMode,
-)
+from lib.ai.llm_model import LlmModel
 
-from app.models.responses import (
-    FileSearchResponse,
-)
+logger = logging.getLogger("uvicorn")
 
 # Define token limits for different models
 TOKEN_LIMITS = {
     "gpt-4o": 128000,
     "gpt-4o-mini": 128000,
 }
-
-# Add the path to sys.path for importing custom modules
-path_to_add = os.path.abspath('/app/machtiani-commit-file-retrieval/lib')
-logger = logging.getLogger("uvicorn")
-logger.info("Adding to sys.path: %s", path_to_add)
-
-try:
-    with add_sys_path(path_to_add):
-        logger.info("Imports successful.")
-except ModuleNotFoundError as e:
-    logger.error(f"ModuleNotFoundError: {e}")
-    logger.error("Failed to import the module. Please check the paths and directory structure.")
 
 async def generate_response(
     prompt: str,
@@ -171,9 +156,12 @@ async def generate_response(
                     f"Example format:\n---\n/path/to/relevant_file1\n/path/to/relevant_file2\n---"
                 )
 
+                # Instantiate LlmModel
+                llm_model = LlmModel(api_key=llm_model_api_key)
+
                 # Collect tokens from streaming response
                 response_tokens = []
-                async for token_json in send_prompt_to_openai_streaming(summary_prompt, llm_model_api_key, model):
+                async for token_json in llm_model.send_prompt_streaming(summary_prompt, model):
                     token_data = json.loads(token_json)
                     token = token_data.get("token", "")
                     response_tokens.append(token)
@@ -245,7 +233,7 @@ async def generate_response(
                 yield {"retrieved_file_paths": retrieved_file_paths}
 
             # Stream tokens from OpenAI response
-            async for token_json in send_prompt_to_openai_streaming(combined_prompt, llm_model_api_key, model):
+            async for token_json in llm_model.send_prompt_streaming(combined_prompt, model):
                 yield json.loads(token_json)
 
     except httpx.RequestError as exc:
@@ -257,4 +245,3 @@ async def generate_response(
     except Exception as e:
         logger.exception("Unexpected error occurred")
         yield {"error": f"An unexpected error occurred: {str(e)}"}
-

@@ -1,7 +1,26 @@
 import re
+import os
 import json
+import logging
 from fastapi import HTTPException
-from app.utils import send_prompt_to_openai_streaming
+from app.utils import add_sys_path
+
+# Update the path to correctly point to machtiani-commit-file-retrieval/lib
+path_to_add = os.path.abspath('/app/machtiani-commit-file-retrieval')
+logger = logging.getLogger("uvicorn")
+logger.info("Adding to sys.path: %s", path_to_add)
+
+# Use the context manager to handle imports
+try:
+    with add_sys_path(path_to_add):
+        from lib.ai.llm_model import (
+            LlmModel,
+        )
+    logger.info("Imports successful.")
+except ModuleNotFoundError as e:
+    logger.error(f"ModuleNotFoundError: {e}")
+    logger.error("Failed to import the module. Please check the paths and directory structure.")
+
 
 async def generate_filename(context: str, llm_model_api_key: str) -> str:
     filename_prompt = (
@@ -15,8 +34,11 @@ async def generate_filename(context: str, llm_model_api_key: str) -> str:
     response_tokens = []
 
     try:
+        # Instantiate LlmModel
+        llm_model = LlmModel(api_key=llm_model_api_key)
+
         # Asynchronously iterate over each token yielded by send_prompt_to_openai_streaming
-        async for token_json in send_prompt_to_openai_streaming(filename_prompt, llm_model_api_key, model="gpt-4o-mini"):
+        async for token_json in llm_model.send_prompt_streaming(filename_prompt):
             # Parse the JSON string to extract the token
             token_data = json.loads(token_json)
             token = token_data.get("token", "")
@@ -39,4 +61,3 @@ async def generate_filename(context: str, llm_model_api_key: str) -> str:
     else:
         # If no valid filename is found, raise an HTTP exception
         raise HTTPException(status_code=400, detail="Invalid response format from OpenAI API.")
-

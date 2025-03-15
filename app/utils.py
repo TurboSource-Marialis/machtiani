@@ -3,10 +3,6 @@ import os
 import asyncio
 import json
 import logging
-from langchain_core.prompts import PromptTemplate
-from langchain_openai import ChatOpenAI
-from langchain.callbacks import AsyncIteratorCallbackHandler
-from langchain.schema import HumanMessage
 from typing import List, Tuple
 
 logger = logging.getLogger(__name__)
@@ -31,11 +27,15 @@ try:
     with add_sys_path(path_to_add):
         from lib.utils.enums import (
             FilePathEntry,
+            SearchMode,
         )
 
         from app.models.responses import (
             FileSearchResponse,
             FileContentResponse
+        )
+        from lib.ai.llm_model import (
+            LlmModel,
         )
     logger.info("Imports successful.")
 except ModuleNotFoundError as e:
@@ -67,44 +67,6 @@ def separate_file_paths_by_type(file_search_responses: List[FileSearchResponse])
                 file_file_paths.append(FilePathEntry(path=file_path_entry.path))
 
     return commit_file_paths, file_file_paths
-
-async def send_prompt_to_openai_streaming(
-    prompt_text: str,
-    api_key: str,
-    model: str = "gpt-4o-mini",
-    timeout: int = 3600,
-    max_retries: int = 5,
-):
-    # Define the prompt template
-    prompt = PromptTemplate(input_variables=["input_text"], template="{input_text}")
-
-    # Initialize the callback handler for streaming
-    callback = AsyncIteratorCallbackHandler()
-
-    # Initialize the ChatOpenAI model with streaming enabled
-    openai_llm = ChatOpenAI(
-        openai_api_key=api_key,
-        model=model,
-        request_timeout=timeout,
-        max_retries=max_retries,
-        streaming=True,
-        callbacks=[callback],
-    )
-
-    # Format the input text using the prompt template
-    input_text = prompt.format(input_text=prompt_text)
-    messages = [HumanMessage(content=input_text)]
-
-    # Start the asynchronous generation process
-    generation_task = asyncio.create_task(openai_llm.agenerate(messages=[messages]))
-
-    # Iterate over the streaming tokens
-    async for token in callback.aiter():
-        # Yield each token as a JSON-formatted string
-        yield json.dumps({"token": token})
-
-    # Await the completion of the generation task
-    await generation_task
 
 async def count_tokens(text: str) -> int:
     return len(text) // 4 + 1
