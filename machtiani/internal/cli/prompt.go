@@ -86,7 +86,7 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
 
     // Generate a filename if necessary
     if filename == "" || filename == "." {
-        filename, err = generateFilename(prompt, config.Environment.ModelAPIKey)
+        filename, err = generateFilename(prompt, config.Environment.ModelAPIKey, config.Environment.ModelBaseURL)
         if err != nil {
             log.Fatalf("Error generating filename: %v", err)
         }
@@ -122,18 +122,18 @@ func handleAPIResponse(prompt, openaiResponse string, retrievedFilePaths []strin
     //}
 }
 
-func generateFilename(context string, llmModelApiKey string) (string, error) {
+func generateFilename(context string, llmModelApiKey string, llmModelBaseUrl string) (string, error) {
     config, err := utils.LoadConfig()
     if err != nil {
         log.Fatalf("Error loading config: %v", err)
     }
-
     endpoint := MachtianiURL
+
     if endpoint == "" {
         return "", fmt.Errorf("MACHTIANI_URL environment variable is not set")
     }
 
-    url := fmt.Sprintf("%s/generate-filename?context=%s&llm_model_api_key=%s", endpoint, url.QueryEscape(context), url.QueryEscape(llmModelApiKey))
+    url := fmt.Sprintf("%s/generate-filename?context=%s&llm_model_api_key=%s&llm_model_base_url=%s", endpoint, url.QueryEscape(context), url.QueryEscape(llmModelApiKey), url.QueryEscape(llmModelBaseUrl))
 
     req, err := http.NewRequest("GET", url, nil)
     if err != nil {

@@ -57,7 +57,7 @@ type StatusResponse struct {
 }
 
 
-func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey string, repoManagerURL string, force bool) (AddRepositoryResponse, error) {
+func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey string, repoManagerURL string, llmModelBaseURL string, force bool) (AddRepositoryResponse, error) {
     config, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
     if err != nil {
         return AddRepositoryResponse{}, err
@@ -81,6 +81,7 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
         "vcs_type":       "git",
         "api_key":        apiKey,
         "llm_model_api_key":  openAIAPIKey,
+        "llm_model_base_url": llmModelBaseURL,
         "ignore_files":   ignoreFiles,
     }
 
@@ -163,6 +164,7 @@ func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiK
         "branch_name":    branchName,
         "api_key":       apiKey,
         "llm_model_api_key": openAIAPIKey,
+        "llm_model_base_url": config.Environment.ModelBaseURL,
         "ignore_files":  ignoreFiles,
     }
 
@@ -330,15 +332,16 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
     }
 
     payload := map[string]interface{}{
-        "prompt":           prompt,
-        "project":          project,
-        "mode":             mode,
-        "model":            model,
-        "match_strength":   matchStrength,
-        "llm_model_api_key":          config.Environment.ModelAPIKey,
-        "codehost_api_key": config.Environment.CodeHostAPIKey,
-        "codehost_url":     codehostURL,
-        "ignore_files":     ignoreFiles,
+        "prompt":             prompt,
+        "project":            project,
+        "mode":               mode,
+        "model":              model,
+        "match_strength":     matchStrength,
+        "llm_model_api_key":  config.Environment.ModelAPIKey,
+        "llm_model_base_url": config.Environment.ModelBaseURL,
+        "codehost_api_key":   config.Environment.CodeHostAPIKey,
+        "codehost_url":       codehostURL,
+        "ignore_files":       ignoreFiles,
     }
 
     payloadBytes, err := json.Marshal(payload)

@@ -41,7 +41,7 @@ func handleGitSync(remoteURL string, apiKey *string, force bool, config utils.Co
 }
 
 func addRepo(remoteURL string, apiKey *string, force bool, config utils.Config) error {
-    response, err := api.AddRepository(remoteURL, remoteURL, apiKey, config.Environment.ModelAPIKey, api.RepoManagerURL, force)
+    response, err := api.AddRepository(remoteURL, remoteURL, apiKey, config.Environment.ModelAPIKey, api.RepoManagerURL, config.Environment.ModelBaseURL, force)
     if err != nil {
         return fmt.Errorf("Error adding repository: %w", err)
     }

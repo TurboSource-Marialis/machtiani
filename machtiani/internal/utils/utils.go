@@ -1,19 +1,19 @@
 package utils
 
 import (
-    "fmt"
-    "io/ioutil"
-    "os"
-    "path/filepath"
 	"bufio"
+	"flag"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
-    "log"
-    "flag"
-    "time"
-    "os/exec"
+	"time"
 
-    "gopkg.in/yaml.v2"
-    "github.com/7db9a/machtiani/internal/git"
+	"github.com/7db9a/machtiani/internal/git"
+	"gopkg.in/yaml.v2"
 )
 
 func CreateTempMarkdownFile(content string, filename string) (string, error) {
@@ -52,6 +52,7 @@ func IsDryRunEnabled() bool {
 type Config struct {
     Environment struct {
         ModelAPIKey          string `yaml:"MODEL_API_KEY"`
+        ModelBaseURL          string `yaml:"MODEL_BASE_URL"`
         MachtianiURL         string `yaml:"MACHTIANI_URL"`
         RepoManagerURL       string `yaml:"MACHTIANI_REPO_MANAGER_URL"`
         CodeHostURL          string `yaml:"CODE_HOST_URL"`
@@ -91,6 +92,12 @@ func LoadConfig() (Config, error) {
     // Check for the environment variable and prioritize it
     if envAPIKey := os.Getenv("MODEL_API_KEY"); envAPIKey != "" {
         config.Environment.ModelAPIKey = envAPIKey
+    }
+
+    // Determine the LLM Model Base URL, defaulting if not set
+    llmModelBaseURL := config.Environment.ModelBaseURL
+    if llmModelBaseURL == "" {
+        config.Environment.ModelBaseURL = "https://api.openai.com/v1"
     }
 
     return config, nil

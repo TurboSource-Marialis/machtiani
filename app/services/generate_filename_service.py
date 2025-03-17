@@ -2,6 +2,7 @@ import re
 import os
 import json
 import logging
+from pydantic import HttpUrl
 from fastapi import HTTPException
 from app.utils import add_sys_path
 
@@ -22,7 +23,7 @@ except ModuleNotFoundError as e:
     logger.error("Failed to import the module. Please check the paths and directory structure.")
 
 
-async def generate_filename(context: str, llm_model_api_key: str) -> str:
+async def generate_filename(context: str, llm_model_api_key: str, llm_model_base_url: HttpUrl) -> str:
     filename_prompt = (
         f"Generate a unique filename for the following context: '{context}'.\n"
         "Respond ONLY with the filename in snake_case, wrapped in <filename> and </filename> tags.\n"
@@ -35,7 +36,7 @@ async def generate_filename(context: str, llm_model_api_key: str) -> str:
 
     try:
         # Instantiate LlmModel
-        llm_model = LlmModel(api_key=llm_model_api_key)
+        llm_model = LlmModel(api_key=llm_model_api_key, base_url=str(llm_model_base_url))
 
         # Asynchronously iterate over each token yielded by send_prompt_to_openai_streaming
         async for token_json in llm_model.send_prompt_streaming(filename_prompt):

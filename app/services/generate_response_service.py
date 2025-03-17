@@ -34,10 +34,12 @@ async def generate_response(
     model: str,
     match_strength: str,
     llm_model_api_key: str,
+    llm_model_base_url: HttpUrl,
     codehost_api_key: Optional[SecretStr],
     codehost_url: HttpUrl,
     ignore_files: List[str],
 ):
+
     if model not in TOKEN_LIMITS:
         yield {"error": "Invalid model selected. Choose either 'gpt-4o' or 'gpt-4o-mini'."}
         return
@@ -85,6 +87,7 @@ async def generate_response(
                     "model": model,
                     "match_strength": match_strength,
                     "llm_model_api_key": llm_model_api_key,
+                    "llm_model_base_url": str(llm_model_base_url),
                     "embeddings_model_api_key": llm_model_api_key, # We will change it to refer to embedding_model_api_key
                     "ignore_files": ignore_files,
                 }
@@ -157,11 +160,11 @@ async def generate_response(
                 )
 
                 # Instantiate LlmModel
-                llm_model = LlmModel(api_key=llm_model_api_key)
+                llm_model = LlmModel(api_key=llm_model_api_key, base_url=str(llm_model_base_url))
 
                 # Collect tokens from streaming response
                 response_tokens = []
-                async for token_json in llm_model.send_prompt_streaming(summary_prompt, model):
+                async for token_json in llm_model.send_prompt_streaming(summary_prompt):
                     token_data = json.loads(token_json)
                     token = token_data.get("token", "")
                     response_tokens.append(token)
@@ -233,7 +236,7 @@ async def generate_response(
                 yield {"retrieved_file_paths": retrieved_file_paths}
 
             # Stream tokens from OpenAI response
-            async for token_json in llm_model.send_prompt_streaming(combined_prompt, model):
+            async for token_json in llm_model.send_prompt_streaming(combined_prompt):
                 yield json.loads(token_json)
 
     except httpx.RequestError as exc:
