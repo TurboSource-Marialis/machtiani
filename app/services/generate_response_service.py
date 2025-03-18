@@ -76,6 +76,9 @@ async def generate_response(
             if not pull_access_data.get('pull_access', False):
                 raise HTTPException(status_code=403, detail="Pull access denied.")
 
+            # Instantiate LlmModel
+            llm_model = LlmModel(api_key=llm_model_api_key, base_url=str(llm_model_base_url))
+
             if mode == SearchMode.pure_chat:
                 combined_prompt = prompt
                 retrieved_file_paths = []
@@ -158,9 +161,6 @@ async def generate_response(
                     f"Encapsulate the relevant paths between `---` markers.\n"
                     f"Example format:\n---\n/path/to/relevant_file1\n/path/to/relevant_file2\n---"
                 )
-
-                # Instantiate LlmModel
-                llm_model = LlmModel(api_key=llm_model_api_key, base_url=str(llm_model_base_url))
 
                 # Collect tokens from streaming response
                 response_tokens = []
