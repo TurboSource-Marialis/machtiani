@@ -342,6 +342,7 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
         "codehost_api_key":   config.Environment.CodeHostAPIKey,
         "codehost_url":       codehostURL,
         "ignore_files":       ignoreFiles,
+        "llm_model_base_url_other": config.Environment.ModelBaseURLOther,
     }
 
     payloadBytes, err := json.Marshal(payload)

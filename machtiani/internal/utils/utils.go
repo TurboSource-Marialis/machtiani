@@ -52,7 +52,8 @@ func IsDryRunEnabled() bool {
 type Config struct {
     Environment struct {
         ModelAPIKey          string `yaml:"MODEL_API_KEY"`
-        ModelBaseURL          string `yaml:"MODEL_BASE_URL"`
+        ModelBaseURL         string `yaml:"MODEL_BASE_URL"`
+        ModelBaseURLOther    string `yaml:"MODEL_BASE_URL_OTHER"`
         MachtianiURL         string `yaml:"MACHTIANI_URL"`
         RepoManagerURL       string `yaml:"MACHTIANI_REPO_MANAGER_URL"`
         CodeHostURL          string `yaml:"CODE_HOST_URL"`

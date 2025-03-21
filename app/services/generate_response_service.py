@@ -38,6 +38,7 @@ async def generate_response(
     codehost_api_key: Optional[SecretStr],
     codehost_url: HttpUrl,
     ignore_files: List[str],
+    llm_model_base_url_other: Optional[str] = None,
 ):
 
     if model not in TOKEN_LIMITS:

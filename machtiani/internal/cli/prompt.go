@@ -133,7 +133,7 @@ func generateFilename(context string, llmModelApiKey string, llmModelBaseUrl str
         return "", fmt.Errorf("MACHTIANI_URL environment variable is not set")
     }
 
-    url := fmt.Sprintf("%s/generate-filename?context=%s&llm_model_api_key=%s&llm_model_base_url=%s", endpoint, url.QueryEscape(context), url.QueryEscape(llmModelApiKey), url.QueryEscape(llmModelBaseUrl))
+    url := fmt.Sprintf("%s/generate-filename?context=%s&llm_model_api_key=%s&llm_model_base_url=%s&llm_model_base_url_other=%s", endpoint, url.QueryEscape(context), url.QueryEscape(llmModelApiKey), url.QueryEscape(llmModelBaseUrl), url.QueryEscape(config.Environment.ModelBaseURLOther))
 
     req, err := http.NewRequest("GET", url, nil)
     if err != nil {

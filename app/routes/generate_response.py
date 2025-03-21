@@ -19,6 +19,7 @@ async def generate_response_route(
     codehost_api_key: Optional[SecretStr] = Body(..., description="Code host API key for authentication"),
     codehost_url: HttpUrl = Body(..., description="Code host URL for the repository"),
     ignore_files: List[str] = Body(..., description="List of file paths to ignore"),
+    llm_model_base_url_other: Optional[str] = Body(None, description="Optional other LLM base url"),
 ):
     async def event_stream():
         async for response in generate_response(
@@ -32,6 +33,7 @@ async def generate_response_route(
             codehost_api_key,
             codehost_url,
             ignore_files,
+            llm_model_base_url_other,
         ):
             yield json.dumps(response) + '\n'
 
