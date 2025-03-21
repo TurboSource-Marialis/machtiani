@@ -24,7 +24,7 @@ except ModuleNotFoundError as e:
     logger.error("Failed to import the module. Please check the paths and directory structure.")
 
 
-async def generate_filename(context: str, llm_model_api_key: str, llm_model_base_url: HttpUrl, llm_model_base_url_other: Optional[str] = None) -> str:
+async def generate_filename(context: str, llm_model_api_key: str, llm_model_base_url: HttpUrl, llm_model_base_url_other: Optional[str] = None, llm_model_api_key_other: Optional[str] = None) -> str:
     filename_prompt = (
         f"Generate a unique filename for the following context: '{context}'.\n"
         "Respond ONLY with the filename in snake_case, wrapped in <filename> and </filename> tags.\n"

@@ -39,6 +39,7 @@ async def generate_response(
     codehost_url: HttpUrl,
     ignore_files: List[str],
     llm_model_base_url_other: Optional[str] = None,
+    llm_model_api_key_other: Optional[str] = None,
 ):
 
     if model not in TOKEN_LIMITS:
@@ -77,9 +78,17 @@ async def generate_response(
             if not pull_access_data.get('pull_access', False):
                 raise HTTPException(status_code=403, detail="Pull access denied.")
 
-            # Instantiate LlmModel
+            # Safely determine which API key to use
             llm_model_base_url_to_use = llm_model_base_url_other if llm_model_base_url_other is not None else llm_model_base_url
-            llm_model = LlmModel(api_key=llm_model_api_key, base_url=str(llm_model_base_url_to_use))
+
+            # Only use llm_model_api_key_other if it has a valid string value
+            if llm_model_api_key_other and isinstance(llm_model_api_key_other, str) and llm_model_api_key_other.strip():
+                llm_model_api_key_to_use = llm_model_api_key_other
+            else:
+                llm_model_api_key_to_use = llm_model_api_key
+
+            # Initialize LlmModel with the selected API key
+            llm_model = LlmModel(api_key=llm_model_api_key_to_use, base_url=str(llm_model_base_url_to_use))
 
             if mode == SearchMode.pure_chat:
                 combined_prompt = prompt

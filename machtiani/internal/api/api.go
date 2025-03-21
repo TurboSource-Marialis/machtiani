@@ -338,6 +338,7 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
         "model":              model,
         "match_strength":     matchStrength,
         "llm_model_api_key":  config.Environment.ModelAPIKey,
+        "llm_model_api_key_other": config.Environment.ModelAPIKeyOther,
         "llm_model_base_url": config.Environment.ModelBaseURL,
         "codehost_api_key":   config.Environment.CodeHostAPIKey,
         "codehost_url":       codehostURL,
