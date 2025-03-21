@@ -398,3 +398,22 @@ class BaseTestEndToEnd:
         # Check that the keys are correct
         self.assertEqual(set(commits_embeddings.keys()), set(expected_structure.keys()))
 
+    def test_14_check_commit_messages_and_embeddings_count(self):
+        # Copy the file from the docker container
+        subprocess.run(
+            "docker cp commit-file-retrieval:/data/users/repositories/github_com_7db9a_chastler/commits/embeddings/commits_embeddings.json .",
+            shell=True,
+            check=True
+        )
+
+        # Load the JSON file
+        with open('commits_embeddings.json', 'r') as file:
+            commits_embeddings = json.load(file)
+
+        # Check that each commit has the same number of messages as embeddings
+        for commit_oid, commit_data in commits_embeddings.items():
+            messages_count = len(commit_data['messages'])
+            embeddings_count = len(commit_data['embeddings'])
+
+            self.assertEqual(messages_count, embeddings_count,
+                             f"Commit {commit_oid} has {messages_count} messages but {embeddings_count} embeddings.")
