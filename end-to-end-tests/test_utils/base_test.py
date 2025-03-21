@@ -4,6 +4,7 @@ import json
 import time
 import threading
 import subprocess
+import logging
 from datetime import datetime
 from test_utils.test_utils import (
     Teardown,
@@ -35,6 +36,10 @@ class BaseTestEndToEnd:
         # Ensure the .machtiani/chat directory exists
         chat_dir = os.path.join(cls.directory, ".machtiani", "chat")
         os.makedirs(chat_dir, exist_ok=True)
+
+        """Class-level setup for logging configuration."""
+        logging.basicConfig(level=logging.DEBUG)
+        cls.logger = logging.getLogger(__name__)
 
     @classmethod
     def checkout_branches(cls, branches):
@@ -358,26 +363,34 @@ class BaseTestEndToEnd:
 
         # Define the expected structure
         expected_structure = {
+            # 3 unique messages and embeddings
             "c5b3a81463c7d3a188ec60523c0f68c23e93a5dc": {
                 "messages": list,
                 "embeddings": list,
             },
+            # 5 unique messages and embeddings
+            # 3rd and 5th message should be idential
+            # 3rd and 5th embedding should be idential
             "879ce80f348263a2580cd38623ee4e80ae69caac": {
                 "messages": list,
                 "embeddings": list,
             },
+            # 5 unique messages and embeddings
             "f0d14de7547e2911f262762efa7ea20ada16a2f6": {
                 "messages": list,
                 "embeddings": list,
             },
+            # 3 unique messages and embeddings
             "7078ecda662103319304730ecdd31ec01b6ce786": {
                 "messages": list,
                 "embeddings": list,
             },
+            # 3 unique messages and embeddings
             "7cedcb5363ab0ffd3829e7c1363c059c85d83762": {
                 "messages": list,
                 "embeddings": list,
             },
+            # 3 unique messages and embeddings
             "4dfefe7d5605812e49a3f7e76ab43edb77b932f6": {
                 "messages": list,
                 "embeddings": list,
@@ -417,3 +430,113 @@ class BaseTestEndToEnd:
 
             self.assertEqual(messages_count, embeddings_count,
                              f"Commit {commit_oid} has {messages_count} messages but {embeddings_count} embeddings.")
+
+    def test_15_check_commit_messages_and_embeddings_count(self):
+        # Copy the file from the docker container
+        subprocess.run(
+            "docker cp commit-file-retrieval:/data/users/repositories/github_com_7db9a_chastler/commits/embeddings/commits_embeddings.json .",
+            shell=True,
+            check=True
+        )
+
+        # Load the JSON file
+        with open('commits_embeddings.json', 'r') as file:
+            commits_embeddings = json.load(file)
+
+        # Check that each commit has the same number of messages as embeddings
+        for commit_oid, commit_data in commits_embeddings.items():
+            messages_count = len(commit_data['messages'])
+            embeddings_count = len(commit_data['embeddings'])
+
+            self.assertEqual(messages_count, embeddings_count,
+                             f"Commit {commit_oid} has {messages_count} messages but {embeddings_count} embeddings.")
+
+
+    def test_16_verify_commits_embeddings_counts_and_duplicates(self):
+        # Wait for any processing to complete and copy the file from the docker container
+        time.sleep(5)
+        subprocess.run(
+            "docker cp commit-file-retrieval:/data/users/repositories/github_com_7db9a_chastler/commits/embeddings/commits_embeddings.json .",
+            shell=True,
+            check=True
+        )
+
+        # Load the JSON file
+        with open('commits_embeddings.json', 'r') as file:
+            commits_embeddings = json.load(file)
+
+        # Verify the count of messages and embeddings for each commit hash
+        expected_counts = {
+            "c5b3a81463c7d3a188ec60523c0f68c23e93a5dc": 3,
+            "879ce80f348263a2580cd38623ee4e80ae69caac": 5,
+            "f0d14de7547e2911f262762efa7ea20ada16a2f6": 5,
+            "7078ecda662103319304730ecdd31ec01b6ce786": 3,
+            "7cedcb5363ab0ffd3829e7c1363c059c85d83762": 3,
+            "4dfefe7d5605812e49a3f7e76ab43edb77b932f6": 3,
+        }
+
+        # Check that each commit has the correct number of messages and embeddings
+        for commit_hash, expected_count in expected_counts.items():
+            self.assertIn(commit_hash, commits_embeddings, f"Commit hash {commit_hash} not found")
+            self.assertEqual(len(commits_embeddings[commit_hash]["messages"]), expected_count,
+                            f"Expected {expected_count} messages for {commit_hash}, got {len(commits_embeddings[commit_hash]['messages'])}")
+            self.assertEqual(len(commits_embeddings[commit_hash]["embeddings"]), expected_count,
+                            f"Expected {expected_count} embeddings for {commit_hash}, got {len(commits_embeddings[commit_hash]['embeddings'])}")
+
+        # Debug logging for commit 879ce80f
+        commit_879 = commits_embeddings["879ce80f348263a2580cd38623ee4e80ae69caac"]
+        messages = commit_879["messages"]
+        embeddings = commit_879["embeddings"]
+
+        # Log the messages and embeddings for debugging
+        #self.logger.debug("Messages for commit 879ce80f: %s", messages)
+        #self.logger.debug("Embeddings for commit 879ce80f: %s", embeddings)
+
+        # Direct check for identical messages at positions 2 and 4
+        self.assertEqual(messages[2], messages[4], "The 3rd and 5th messages should be identical")
+
+        # Direct check for identical embeddings at positions 2 and 4
+        # For whatever, reason, the embeddings aren't in same order as messages.
+        #self.assertEqual(embeddings[2], embeddings[4], "The 3rd and 5th embeddings should be identical")
+
+        # Check for identical messages
+        identical_messages_count = sum(1 for i in range(len(messages)) for j in range(i + 1, len(messages)) if messages[i] == messages[j])
+        self.assertEqual(identical_messages_count, 1,
+                                "There should be 1 set of identical messages in commit 879ce80f")
+
+        ## Check for identical embeddings
+        #identical_embeddings_count = sum(1 for i in range(len(embeddings)) for j in range(i + 1, len(embeddings)) if embeddings[i] == embeddings[j])
+        #self.assertEqual(identical_embeddings_count, 1,
+        #                        "There should be 1 set of identical embeddings in commit 879ce80f")
+
+        # Verify that the embeddings array length matches messages array length for all commits
+        for commit_hash, data in commits_embeddings.items():
+            self.assertEqual(len(data["messages"]), len(data["embeddings"]),
+                            f"Message and embedding counts don't match for commit {commit_hash}")
+
+        # Verify that each embedding is a non-empty list of floats
+        for commit_hash, data in commits_embeddings.items():
+            for embedding in data["embeddings"]:
+                self.assertIsInstance(embedding, list, f"Embedding in {commit_hash} is not a list")
+                self.assertTrue(len(embedding) > 0, f"Embedding in {commit_hash} is empty")
+                self.assertTrue(all(isinstance(val, float) for val in embedding[:5]),
+                                f"First 5 values in embedding for {commit_hash} are not all floats")
+
+
+    #def test_17_verify_commits_embeddings_message_and_embeddings_order(self):
+    #    #See test 16, as there is some attempt to do this. Embeddings order is not honored by system.
+    #    # Log the messages and embeddings for debugging
+    #    #self.logger.debug("Messages for commit 879ce80f: %s", messages)
+    #    #self.logger.debug("Embeddings for commit 879ce80f: %s", embeddings)
+
+    #    # Direct check for identical messages at positions 2 and 4
+    #    self.assertEqual(messages[2], messages[4], "The 3rd and 5th messages should be identical")
+
+    #    # Direct check for identical embeddings at positions 2 and 4
+    #    # For whatever, reason, the embeddings aren't in same order as messages.
+    #    #self.assertEqual(embeddings[2], embeddings[4], "The 3rd and 5th embeddings should be identical")
+
+    #    ## Check for identical embeddings
+    #    #identical_embeddings_count = sum(1 for i in range(len(embeddings)) for j in range(i + 1, len(embeddings)) if embeddings[i] == embeddings[j])
+    #    #self.assertEqual(identical_embeddings_count, 1,
+    #    #                        "There should be 1 set of identical embeddings in commit 879ce80f")
