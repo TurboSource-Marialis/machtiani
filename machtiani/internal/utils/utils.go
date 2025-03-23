@@ -183,10 +183,10 @@ func GetProjectOrDefault(projectFlag *string) (string, error) {
 }
 
 func ValidateFlags(modelFlag, matchStrengthFlag, modeFlag *string) {
-    model := *modelFlag
-    if model != "gpt-4o" && model != "gpt-4o-mini" {
-        log.Fatalf("Error: Invalid model selected. Choose either 'gpt-4o' or 'gpt-4o-mini'.")
-    }
+    //model := *modelFlag
+    //if model != "gpt-4o" && model != "gpt-4o-mini" {
+    //    log.Fatalf("Error: Invalid model selected. Choose either 'gpt-4o' or 'gpt-4o-mini'.")
+    //}
 
     matchStrength := *matchStrengthFlag
     if matchStrength != "high" && matchStrength != "mid" && matchStrength != "low" {

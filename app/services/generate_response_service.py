@@ -22,10 +22,7 @@ from lib.ai.llm_model import LlmModel
 logger = logging.getLogger("uvicorn")
 
 # Define token limits for different models
-TOKEN_LIMITS = {
-    "gpt-4o": 128000,
-    "gpt-4o-mini": 128000,
-}
+MAX_TOKENS = 128000
 
 async def generate_response(
     prompt: str,
@@ -42,15 +39,11 @@ async def generate_response(
     llm_model_api_key_other: Optional[str] = None,
 ):
 
-    if model not in TOKEN_LIMITS:
-        yield {"error": "Invalid model selected. Choose either 'gpt-4o' or 'gpt-4o-mini'."}
-        return
-
     if match_strength not in ["high", "mid", "low"]:
         yield {"error": "Invalid match strength selected. Choose either 'high', 'mid', or 'low'."}
         return
 
-    if not await check_token_limit(prompt, model, TOKEN_LIMITS):
+    if not await check_token_limit(prompt, model, MAX_TOKENS):
         error_message = (
             f"Prompt token limit exceeded for the selected model. "
             f"Limit: {max_tokens}, Count: {token_count}. "
@@ -81,31 +74,36 @@ async def generate_response(
             # Safely determine which API key to use
             llm_model_base_url_to_use = llm_model_base_url_other if llm_model_base_url_other is not None else llm_model_base_url
 
+
             # Only use llm_model_api_key_other if it has a valid string value
             if llm_model_api_key_other and isinstance(llm_model_api_key_other, str) and llm_model_api_key_other.strip():
                 llm_model_api_key_to_use = llm_model_api_key_other
+                if model == 'reason':
+                    model = "deepseek-reasoner"
             else:
                 llm_model_api_key_to_use = llm_model_api_key
+                if model == 'reason':
+                    model = "o3-mini"
 
             # Initialize LlmModel with the selected API key
-            llm_model = LlmModel(api_key=llm_model_api_key_to_use, base_url=str(llm_model_base_url_to_use))
+            llm_model = LlmModel(api_key=llm_model_api_key_to_use, base_url=str(llm_model_base_url_to_use), model=model)
 
             if mode == SearchMode.pure_chat:
                 combined_prompt = prompt
                 retrieved_file_paths = []
             else:
-                params = {
+                infer_params = {
                     "prompt": prompt,
                     "project": project,
                     "mode": mode,
-                    "model": model,
+                    "model": "gpt-4o-mini", # model not actuall needed as infer uses a method of GitCommitManager where its not needed. It only needs to do embeddings.
                     "match_strength": match_strength,
                     "llm_model_api_key": llm_model_api_key,
                     "llm_model_base_url": str(llm_model_base_url),
                     "embeddings_model_api_key": llm_model_api_key, # We will change it to refer to embedding_model_api_key
                     "ignore_files": ignore_files,
                 }
-                response = await client.post(infer_file_url, json=params)
+                response = await client.post(infer_file_url, json=infer_params)
                 response.raise_for_status()
                 list_file_search_response = [FileSearchResponse(**item) for item in response.json()]
 
@@ -232,7 +230,7 @@ async def generate_response(
                 for path, content in file_content_response.contents.items():
                     combined_prompt += f"\n--- {path} ---\n{content}\n"
 
-            if not await check_token_limit(combined_prompt, model, TOKEN_LIMITS):
+            if not await check_token_limit(combined_prompt, model, MAX_TOKENS):
                 error_message = (
                     f"Token limit exceeded for the selected model. "
                     f"Limit: {max_tokens}, Count: {token_count}. "
