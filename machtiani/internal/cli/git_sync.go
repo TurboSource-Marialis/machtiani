@@ -9,7 +9,7 @@ import (
 	"github.com/7db9a/machtiani/internal/utils"
 )
 
-func handleGitSync(remoteURL string, apiKey *string, force bool, config utils.Config) error {
+func handleGitSync(remoteURL string, apiKey *string, force bool, config utils.Config, headCommitHash string) error {
     // Get the current branch name
     branchName, err := git.GetBranch()
     if err != nil {
@@ -20,7 +20,7 @@ func handleGitSync(remoteURL string, apiKey *string, force bool, config utils.Co
     if err != nil {
         if strings.Contains(err.Error(), "does not exist") {
             // If the repository doesn't exist, add it
-            if err := addRepo(remoteURL, apiKey, force, config); err != nil {
+            if err := addRepo(remoteURL, apiKey, force, config, headCommitHash); err != nil {
                 return fmt.Errorf("Error adding repository: %w", err)
             } else {
                 return nil
@@ -30,7 +30,7 @@ func handleGitSync(remoteURL string, apiKey *string, force bool, config utils.Co
         }
     }
 
-    message, err := api.FetchAndCheckoutBranch(remoteURL, remoteURL, branchName, apiKey, config.Environment.ModelAPIKey, force)
+    message, err := api.FetchAndCheckoutBranch(remoteURL, remoteURL, branchName, apiKey, config.Environment.ModelAPIKey, force, headCommitHash)
     if err != nil {
         return fmt.Errorf("Error syncing repository: %w", err)
     }
@@ -40,8 +40,8 @@ func handleGitSync(remoteURL string, apiKey *string, force bool, config utils.Co
     return nil
 }
 
-func addRepo(remoteURL string, apiKey *string, force bool, config utils.Config) error {
-    response, err := api.AddRepository(remoteURL, remoteURL, apiKey, config.Environment.ModelAPIKey, api.RepoManagerURL, config.Environment.ModelBaseURL, force)
+func addRepo(remoteURL string, apiKey *string, force bool, config utils.Config, headCommitHash string) error {
+    response, err := api.AddRepository(remoteURL, remoteURL, apiKey, config.Environment.ModelAPIKey, api.RepoManagerURL, config.Environment.ModelBaseURL, force, headCommitHash)
     if err != nil {
         return fmt.Errorf("Error adding repository: %w", err)
     }

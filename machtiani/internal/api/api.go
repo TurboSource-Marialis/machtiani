@@ -57,7 +57,7 @@ type StatusResponse struct {
 }
 
 
-func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey string, repoManagerURL string, llmModelBaseURL string, force bool) (AddRepositoryResponse, error) {
+func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey string, repoManagerURL string, llmModelBaseURL string, force bool, headCommitHash string) (AddRepositoryResponse, error) {
     config, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
     if err != nil {
         return AddRepositoryResponse{}, err
@@ -83,6 +83,7 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
         "llm_model_api_key":  openAIAPIKey,
         "llm_model_base_url": llmModelBaseURL,
         "ignore_files":   ignoreFiles,
+        "head": headCommitHash,
     }
 
     // Convert data to JSON
@@ -151,7 +152,7 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
 }
 
 // FetchAndCheckoutBranch sends a request to fetch and checkout a branch.
-func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiKey *string, openAIAPIKey string, force bool) (string, error) {
+func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiKey *string, openAIAPIKey string, force bool, headCommitHash string) (string, error) {
     config, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
     if err != nil {
         return "", err
@@ -166,6 +167,7 @@ func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiK
         "llm_model_api_key": openAIAPIKey,
         "llm_model_base_url": config.Environment.ModelBaseURL,
         "ignore_files":  ignoreFiles,
+        "head": headCommitHash,
     }
 
     jsonData, err := json.Marshal(data)
@@ -320,7 +322,7 @@ func init() {
     })
 }
 
-func GenerateResponse(prompt, project, mode, model, matchStrength string, force bool) (*GenerateResponseResult, error) {
+func GenerateResponse(prompt, project, mode, model, matchStrength string, force bool, headCommitHash string) (*GenerateResponseResult, error) {
     config, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
     if err != nil {
         log.Fatalf("Error loading config: %v", err)
@@ -343,13 +345,16 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
         "codehost_api_key":   config.Environment.CodeHostAPIKey,
         "codehost_url":       codehostURL,
         "ignore_files":       ignoreFiles,
+        "head_commit_hash": headCommitHash,
         "llm_model_base_url_other": config.Environment.ModelBaseURLOther,
     }
 
+    // Log the payload being sent
     payloadBytes, err := json.Marshal(payload)
     if err != nil {
         return nil, fmt.Errorf("failed to marshal JSON: %w", err)
     }
+    log.Printf("Sending payload: %s", string(payloadBytes)) // Debug log
 
     endpoint := MachtianiURL
 
@@ -378,6 +383,16 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
         return nil, fmt.Errorf("failed to make API request: %w", err)
     }
     defer resp.Body.Close()
+
+    // Log the response status code
+    log.Printf("Received response status code: %d", resp.StatusCode) // Debug log
+
+    // Check for 422 Unprocessable Entity
+    if resp.StatusCode == http.StatusUnprocessableEntity {
+        body, _ := ioutil.ReadAll(resp.Body)
+        log.Printf("Response body: %s", body) // Log the response body for debugging
+        return nil, fmt.Errorf("unprocessable entity: %s", body)
+    }
 
     // Initialize variables
     var completeResponse strings.Builder
@@ -495,7 +510,6 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
                         if err := renderMarkdown(trimmedBlock); err != nil {
                             // Log the error and continue
                             log.Printf("Error rendering block: %v", err)
-                            // Optionally, you can choose to return the error instead of continuing
                         }
 
                         // Append to complete response
@@ -535,7 +549,6 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
         trimmedContent = strings.ReplaceAll(trimmedContent, "\r\n", "\n")
         if err := renderMarkdown(trimmedContent); err != nil {
             log.Printf("Error rendering remaining content: %v", err)
-            // Optionally, you can choose to return the error or continue
         }
         completeResponse.WriteString(trimmedContent)
     }
@@ -554,7 +567,6 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
         // Render the Markdown so it appears in the stream
         if err := renderMarkdown(retrievedFilePathsMarkdown); err != nil {
             log.Printf("Error rendering retrieved file paths: %v", err)
-            // You can choose to handle the error differently if needed
         }
     }
 

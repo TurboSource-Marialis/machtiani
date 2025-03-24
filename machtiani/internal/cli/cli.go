@@ -58,7 +58,11 @@ func Execute() {
 	case "git-sync":
 		utils.ParseFlags(fs, os.Args[2:]) // Use the new helper function
 		// Call the HandleGitSync function
-		if err := handleGitSync(remoteURL, apiKey, *forceFlag, config); err != nil {
+		headCommitHash, err := git.GetHeadCommitHash()
+		if err != nil {
+			log.Printf("Error getting HEAD commit hash: %v", err) // Log error but continue
+		}
+		if err := handleGitSync(remoteURL, apiKey, *forceFlag, config, headCommitHash); err != nil {
 			log.Printf("Error handling git-sync: %v", err)
 			os.Exit(1)
 		}
@@ -80,7 +84,11 @@ func Execute() {
 	default:
 		startTime := time.Now() // Start the timer here
 		args := os.Args[1:]
-		handlePrompt(args, &config, &remoteURL, apiKey)
+		headCommitHash, err := git.GetHeadCommitHash()
+		if err != nil {
+			log.Printf("Error getting HEAD commit hash: %v", err) // Log error but continue
+		}
+		handlePrompt(args, &config, &remoteURL, apiKey, headCommitHash)
 		duration := time.Since(startTime)
 		fmt.Printf("Total response handling took %s\n", duration) // Print total duration
 		return

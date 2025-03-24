@@ -32,7 +32,7 @@ const (
     API_GATEWAY_HOST_KEY = "X-RapidAPI-Key"
 )
 
-func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey *string) {
+func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey *string, headCommitHash string) {
     fs := pflag.NewFlagSet("machtiani", pflag.ContinueOnError)
     modelFlag := fs.String("model", defaultModel, "Model to use (options: gpt-4o, gpt-4o-mini)")
     matchStrengthFlag := fs.String("match-strength", defaultMatchStrength, "Match strength (options: high, mid, low)")
@@ -40,6 +40,8 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
     fileFlag := fs.String("file", "", "Path to the markdown file")
     forceFlag := fs.Bool("force", false, "Force the operation")
     verboseFlag := fs.Bool("verbose", false, "Enable verbose output")
+
+    fmt.Printf("Git HEAD Commit Hash: %s\n", headCommitHash) // Print commit hash
 
     // Parse the flags from args
     err := fs.Parse(args)
@@ -67,7 +69,7 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
     }
 
     // Call GenerateResponse to get the streamed response
-    result, err := api.GenerateResponse(prompt, *remoteURL, *modeFlag, *modelFlag, *matchStrengthFlag, *forceFlag)
+    result, err := api.GenerateResponse(prompt, *remoteURL, *modeFlag, *modelFlag, *matchStrengthFlag, *forceFlag, headCommitHash)
     if err != nil {
         log.Fatalf("Error making API call: %v", err)
     }

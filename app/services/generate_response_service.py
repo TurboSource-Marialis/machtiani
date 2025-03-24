@@ -35,9 +35,13 @@ async def generate_response(
     codehost_api_key: Optional[SecretStr],
     codehost_url: HttpUrl,
     ignore_files: List[str],
+    head_commit_hash: str,
     llm_model_base_url_other: Optional[str] = None,
     llm_model_api_key_other: Optional[str] = None,
 ):
+
+    logger.debug("Begin generate_response service")
+    logger.debug(f"Input parameters: prompt ({len(prompt)} chars), project: {project}, mode: {mode}, model: {model}, match_strength: {match_strength}")
 
     if match_strength not in ["high", "mid", "low"]:
         yield {"error": "Invalid match strength selected. Choose either 'high', 'mid', or 'low'."}
@@ -65,9 +69,11 @@ async def generate_response(
                 'codehost_api_key': codehost_api_key.get_secret_value() if codehost_api_key else None,
                 'codehost_url': codehost_url
             }
+            logger.debug("Calling pull access check with params: %s", params)
             pull_access_response = await client.post(test_pull_access_url, params=params)
             pull_access_response.raise_for_status()
             pull_access_data = pull_access_response.json()
+            logger.debug("Pull access response: %s", pull_access_data)
             if not pull_access_data.get('pull_access', False):
                 raise HTTPException(status_code=403, detail="Pull access denied.")
 
@@ -86,6 +92,7 @@ async def generate_response(
                     model = "o3-mini"
 
             # Initialize LlmModel with the selected API key
+            logger.debug(f"Using LLM model URL: {llm_model_base_url_to_use} and API key: {llm_model_api_key_to_use}")
             llm_model = LlmModel(api_key=llm_model_api_key_to_use, base_url=str(llm_model_base_url_to_use), model=model)
 
             if mode == SearchMode.pure_chat:
@@ -102,10 +109,14 @@ async def generate_response(
                     "llm_model_base_url": str(llm_model_base_url),
                     "embeddings_model_api_key": llm_model_api_key, # We will change it to refer to embedding_model_api_key
                     "ignore_files": ignore_files,
+                    "head": head_commit_hash,
                 }
+
+                logger.debug("Calling infer-file with params: %s", infer_params)
                 response = await client.post(infer_file_url, json=infer_params)
                 response.raise_for_status()
                 list_file_search_response = [FileSearchResponse(**item) for item in response.json()]
+                logger.debug("Response from infer-file: %s", list_file_search_response)
 
                 # Separate file paths by type
                 commit_paths, file_paths = separate_file_paths_by_type(list_file_search_response)

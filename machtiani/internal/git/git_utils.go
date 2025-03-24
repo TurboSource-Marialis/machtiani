@@ -1,6 +1,8 @@
 package git
 
 import (
+	"bytes"
+	"errors"
     "os/exec"
     "strings"
     "fmt"
@@ -52,4 +54,27 @@ func GetBranch() (string, error) {
         return "", fmt.Errorf("failed to get current branch name: %w", err)
     }
     return strings.TrimSpace(string(output)), nil
+}
+
+// GetHeadCommitHash returns the current HEAD commit hash of the git repository.
+func GetHeadCommitHash() (string, error) {
+	cmd := exec.Command("git", "rev-parse", "HEAD")
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	if err != nil {
+		// Check if the error is related to not being in a git repository
+		if strings.Contains(stderr.String(), "not a git repository") {
+			return "", errors.New("not a git repository")
+		}
+		return "", fmt.Errorf("failed to execute git rev-parse HEAD: %w, stderr: %s", err, stderr.String())
+	}
+
+	commitHash := strings.TrimSpace(stdout.String())
+	if commitHash == "" {
+		return "", errors.New("empty commit hash returned from git rev-parse HEAD")
+	}
+	return commitHash, nil
 }
