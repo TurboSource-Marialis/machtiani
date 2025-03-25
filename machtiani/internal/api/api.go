@@ -354,7 +354,6 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
     if err != nil {
         return nil, fmt.Errorf("failed to marshal JSON: %w", err)
     }
-    log.Printf("Sending payload: %s", string(payloadBytes)) // Debug log
 
     endpoint := MachtianiURL
 
@@ -383,9 +382,6 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
         return nil, fmt.Errorf("failed to make API request: %w", err)
     }
     defer resp.Body.Close()
-
-    // Log the response status code
-    log.Printf("Received response status code: %d", resp.StatusCode) // Debug log
 
     // Check for 422 Unprocessable Entity
     if resp.StatusCode == http.StatusUnprocessableEntity {
