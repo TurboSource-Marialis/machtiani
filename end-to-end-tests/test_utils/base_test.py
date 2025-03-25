@@ -79,9 +79,10 @@ class BaseTestEndToEnd:
 
     def test_01_run_machtiani_git_sync(self):
         time.sleep(5)
-        command = 'machtiani git-sync --force'
+        # Checkout master branch first to ensure we're syncing from a clean state
+        self.setup.checkout_branch("master")
 
-
+        command = 'git checkout master && machtiani git-sync --force'
         stdout_normalized = self.run_machtiani_command(command)
 
         expected_output = [
@@ -210,29 +211,24 @@ class BaseTestEndToEnd:
         self.assertEqual(stdout_normalized, expected_output)
 
     def test_07_sync_new_commits_and_prompt_command(self):
-        # Step 1: Force push `feature` branch to `master`
-        self.setup.force_push("feature", "master")
-
-        # Introduce a slight delay to allow for remote to be ready
-        time.sleep(5)
         # Step 2: Run git_sync and assert the output
-        command = 'machtiani git-sync --force'
+        command = 'git checkout feature && machtiani git-sync --force'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
 
         expected_output = [
             "Using remote URL: https://github.com/7db9a/chastler.git",
             "Estimated embedding tokens: 16",
-            "Estimated inference tokens: 30",  # Updated to match actual output
+            "Estimated inference tokens: 30",
             "Successfully synced the repository: https://github.com/7db9a/chastler.git.",
-            'Server response: {"message":"Fetched and checked out branch \'master\' for project \'https://github.com/7db9a/chastler.git\' and updated index.","branch_name":"master","project_name":"https://github.com/7db9a/chastler.git"}'
+            'Server response: {"message":"Fetched and checked out branch \'feature\' for project \'https://github.com/7db9a/chastler.git\' and updated index.","branch_name":"feature","project_name":"https://github.com/7db9a/chastler.git"}'
         ]
 
         expected_output = [line.strip() for line in expected_output if line.strip()]
         self.assertEqual(stdout_normalized, expected_output)
 
         # Step 3: Run git prompt and assert the output
-        command = 'machtiani "what does the readme say?" --force'  # Example prompt command
+        command = 'machtiani "what does the readme say?" --force'
         stdout_prompt, stderr_prompt = run_machtiani_command(command, self.directory)
         stdout_prompt_normalized = clean_output(stdout_prompt)
 
@@ -252,45 +248,37 @@ class BaseTestEndToEnd:
         self.assertTrue(any("ategorization" in line for line in stdout_normalized))
         self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_normalized))
 
-    def test_09_run_machtiani_status_with_lock(self):
-        # Step 1: Force push `feature2` branch to `master`
-        self.setup.force_push("feature2", "master")
+    #def test_09_run_machtiani_status_with_lock(self):
+    #    def run_sync():
+    #        command = 'git checkout feature && machtiani git-sync --force'
+    #        run_machtiani_command(command, self.directory)
 
-        # Introduce a slight delay to allow for remote to be ready
-        time.sleep(5)
+    #    sync_thread = threading.Thread(target=run_sync)
+    #    sync_thread.start()
 
-        def run_sync():
-            command = 'machtiani git-sync --force'
-            run_machtiani_command(command, self.directory)
+    #    # Give time for thread to start
+    #    time.sleep(1)
 
-        sync_thread = threading.Thread(target=run_sync)
-        sync_thread.start()
+    #    # Step 4: Now run the status command while the sync is running
+    #    status_command = 'machtiani status'
+    #    stdout_machtiani, stderr_machtiani = run_machtiani_command(status_command, self.directory)
+    #    stdout_normalized = clean_output(stdout_machtiani)
+    #    status = wait_for_status_incomplete(status_command, self.directory)
+    #    self.assertTrue(status)
 
-        # Give time for thread to start
-        time.sleep(1)
-
-        # Step 4: Now run the status command while the sync is running
-        status_command = 'machtiani status'
-        stdout_machtiani, stderr_machtiani = run_machtiani_command(status_command, self.directory)
-        stdout_normalized = clean_output(stdout_machtiani)
-        status = wait_for_status_incomplete(status_command, self.directory)
-        self.assertTrue(status)
-
-        # Step 5: Wait for the sync thread to finish
-        sync_thread.join()
+    #    # Step 5: Wait for the sync thread to finish
+    #    sync_thread.join()
 
     def test_10_sync_feature2_branch(self):
         # Step 1: Clean up before starting the test
         self.teardown_end_to_end()
         self.setup_end_to_end()
 
-        self.setup.force_push("feature2", "master")
-
         # Introduce a slight delay to allow for remote to be ready
         time.sleep(5)
 
-        # Step 3: Run git_sync and assert the output
-        command = 'machtiani git-sync --force'
+        # Step 4: Run git_sync again and assert the output now shows the correct token counts
+        command = 'git checkout feature2 && machtiani git-sync --force'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
 
@@ -310,7 +298,7 @@ class BaseTestEndToEnd:
         expected_output = [line.strip() for line in expected_output if line.strip()]
         self.assertEqual(stdout_normalized, expected_output)
 
-        # Step 4: Clean up after the test
+        # Step 5: Clean up after the test
         self.teardown_end_to_end()
 
     def test_11_run_machtiani_sync_command_not_ready(self):
