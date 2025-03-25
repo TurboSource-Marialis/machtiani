@@ -41,8 +41,6 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
     forceFlag := fs.Bool("force", false, "Force the operation")
     verboseFlag := fs.Bool("verbose", false, "Enable verbose output")
 
-    fmt.Printf("Git HEAD Commit Hash: %s\n", headCommitHash) // Print commit hash
-
     // Parse the flags from args
     err := fs.Parse(args)
     if err != nil {
