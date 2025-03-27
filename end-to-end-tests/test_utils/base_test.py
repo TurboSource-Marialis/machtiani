@@ -6,6 +6,7 @@ import threading
 import subprocess
 import logging
 from datetime import datetime
+from sentence_transformers import SentenceTransformer, util
 from test_utils.test_utils import (
     Teardown,
     Setup,
@@ -510,8 +511,77 @@ class BaseTestEndToEnd:
                 self.assertTrue(all(isinstance(val, float) for val in embedding[:5]),
                                 f"First 5 values in embedding for {commit_hash} are not all floats")
 
+    def test_18_verify_commit_messages_reasonableness(self):
+        # Copy the file from the docker container
+        subprocess.run(
+            "docker cp commit-file-retrieval:/data/users/repositories/github_com_7db9a_chastler/commits/embeddings/commits_embeddings.json .",
+            shell=True,
+            check=True
+        )
 
-    #def test_17_verify_commits_embeddings_message_and_embeddings_order(self):
+        # Load the JSON file
+        with open('commits_embeddings.json', 'r') as file:
+            commits_embeddings = json.load(file)
+
+        # Define the expected messages for each commit
+        expected_messages = {
+            "c5b3a81463c7d3a188ec60523c0f68c23e93a5dc": [
+                "Basic video method signatures for video library.",
+                "Add Video class with methods for MP4 file processing",
+                "The `Video` class is designed to handle MP4 video files."
+            ],
+            "879ce80f348263a2580cd38623ee4e80ae69caac": [
+                "Add some more project scaffolding.",
+                "Add initial project setup with Poetry, including dependencies and configuration",
+                "eddf150cd15072ba4a8474209ec090fedd4d79e4",
+                "The `pyproject.toml` file describes a Python project named \"chastler,\"",
+                "eddf150cd15072ba4a8474209ec090fedd4d79e4"
+            ],
+            "f0d14de7547e2911f262762efa7ea20ada16a2f6": [
+                "Initial commit",
+                "Remove unnecessary files: .gitignore, LICENSE, and README.md.",
+                "This `.gitignore` file is designed to exclude various types of files and directories",
+                "The MIT License allows anyone to use, copy, modify, merge, publish, distribute, sublicense, and sell the software for free",
+                "The README.md for \"chastler\" provides an overview of the project"
+            ],
+            "7078ecda662103319304730ecdd31ec01b6ce786": [
+                "Add placeholder audio module.",
+                "Add placeholder for audio in lib/video/audio.py",
+                "The file `lib/video/audio.py` appears to be a placeholder for audio functionality"
+            ],
+            "7cedcb5363ab0ffd3829e7c1363c059c85d83762": [
+                "Explain project is not ready in readme.",
+                "Update README.md to reflect project status: clarify that the project has not been started yet.",
+                "The README.md indicates that the \"chastler\" project has not been initiated yet."
+            ],
+            "4dfefe7d5605812e49a3f7e76ab43edb77b932f6": [
+                "Add project aim to README -  filter video content, using AI/ML.",
+                "Add project description to README.md for clarity on functionality",
+                "The README.md for the \"chastler\" project indicates that the project has not been initiated yet."
+            ]
+        }
+
+        # Initialize the Sentence-BERT model
+        model = SentenceTransformer('data/all-MiniLM-L6-v2')
+        # Compare messages using cosine similarity
+        for commit_oid, expected_msgs in expected_messages.items():
+            actual_msgs = commits_embeddings[commit_oid]["messages"]
+            for expected_msg, actual_msg in zip(expected_msgs, actual_msgs):
+                # Encode the messages into embeddings
+                expected_embedding = model.encode(expected_msg)
+                actual_embedding = model.encode(actual_msg)
+
+                # Calculate cosine similarity
+                similarity = util.cos_sim(expected_embedding, actual_embedding)
+
+                # Assert that the similarity is above a certain threshold (e.g., 0.5)
+                self.assertGreaterEqual(similarity.item(), 0.5,
+                                       f"Message similarity for commit {commit_oid} is below the threshold. Expected: {expected_msg}, Actual: {actual_msg}")
+
+        # Clean up the copied file
+        os.remove('commits_embeddings.json')
+
+    #def test_18_verify_commits_embeddings_message_and_embeddings_order(self):
     #    #See test 16, as there is some attempt to do this. Embeddings order is not honored by system.
     #    # Log the messages and embeddings for debugging
     #    #self.logger.debug("Messages for commit 879ce80f: %s", messages)

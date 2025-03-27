@@ -281,6 +281,26 @@ The CLI will stream the response and save the chat in `.machtiani/chat/` in the 
 
 This project includes several end-to-end tests that validate the functionality of the Machtiani commands, with `test_end_to_end.py` serving as the **defacto test** for the application.
 
+#### Setup
+
+1. Make sure you have `git lfs` installed.
+
+You can use your systems package manager or whatever is best for you.
+
+Make sure to run after doing the above.
+
+`git lfs install`
+
+1. Install `all-MiniLM-L6-v2` into `end-to-end-tests/data/`
+
+```
+cd end-to-end-tests/data
+git clone https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2
+```
+It's distilled Sentence-BERT embedding model. And will work just fine on cpus on a laptop.
+
+This is used to help test whether generated git messages by machtiani are in the ballpark of being correct using a cosine similarity threshold. For example, I once had error messages instead of actual messages produced by the LLM because of a faulty module one time, and didn't realize it for a couple days.
+
 #### Running the Defacto Tests
 
 To run the end-to-end test suite from inside `end-to-end-tests` directory:
