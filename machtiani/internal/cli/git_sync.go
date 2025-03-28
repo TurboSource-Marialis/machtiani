@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/7db9a/machtiani/internal/api"
@@ -9,7 +10,7 @@ import (
 	"github.com/7db9a/machtiani/internal/utils"
 )
 
-func handleGitSync(remoteURL string, apiKey *string, force bool, config utils.Config, headCommitHash string) error {
+func handleGitSync(remoteURL string, apiKey *string, force bool, config utils.Config, headCommitHash string, useMockLLM bool) error {
     // Get the current branch name
     branchName, err := git.GetBranch()
     if err != nil {
@@ -20,7 +21,9 @@ func handleGitSync(remoteURL string, apiKey *string, force bool, config utils.Co
     if err != nil {
         if strings.Contains(err.Error(), "does not exist") {
             // If the repository doesn't exist, add it
-            if err := addRepo(remoteURL, apiKey, force, config, headCommitHash); err != nil {
+
+            log.Printf("[DEBUG] cli.handleGitSync: Repository does not exist, calling addRepo. useMockLLM is NOT passed to addRepo.\n") // DEBUG PRINT (Clarification)
+            if err := addRepo(remoteURL, apiKey, force, config, headCommitHash, useMockLLM); err != nil {
                 return fmt.Errorf("Error adding repository: %w", err)
             } else {
                 return nil
@@ -30,7 +33,8 @@ func handleGitSync(remoteURL string, apiKey *string, force bool, config utils.Co
         }
     }
 
-    message, err := api.FetchAndCheckoutBranch(remoteURL, remoteURL, branchName, apiKey, config.Environment.ModelAPIKey, force, headCommitHash)
+    message, err := api.FetchAndCheckoutBranch(remoteURL, remoteURL, branchName, apiKey, config.Environment.ModelAPIKey, force, headCommitHash, useMockLLM)
+    log.Printf("[DEBUG] cli.handleGitSync: Calling api.FetchAndCheckoutBranch with useMockLLM = %v\n", useMockLLM) // DEBUG PRINT
     if err != nil {
         return fmt.Errorf("Error syncing repository: %w", err)
     }
@@ -40,8 +44,9 @@ func handleGitSync(remoteURL string, apiKey *string, force bool, config utils.Co
     return nil
 }
 
-func addRepo(remoteURL string, apiKey *string, force bool, config utils.Config, headCommitHash string) error {
-    response, err := api.AddRepository(remoteURL, remoteURL, apiKey, config.Environment.ModelAPIKey, api.RepoManagerURL, config.Environment.ModelBaseURL, force, headCommitHash)
+func addRepo(remoteURL string, apiKey *string, force bool, config utils.Config, headCommitHash string, useMockLLM bool) error {
+    log.Printf("[DEBUG] cli.addRepo: Received useMockLLM = %v (Note: This function currently does not seem to use this flag for the AddRepository API call)\n", useMockLLM) // DEBUG PRINT
+    response, err := api.AddRepository(remoteURL, remoteURL, apiKey, config.Environment.ModelAPIKey, api.RepoManagerURL, config.Environment.ModelBaseURL, force, headCommitHash, useMockLLM)
     if err != nil {
         return fmt.Errorf("Error adding repository: %w", err)
     }

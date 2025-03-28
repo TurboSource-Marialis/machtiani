@@ -57,12 +57,13 @@ type StatusResponse struct {
 }
 
 
-func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey string, repoManagerURL string, llmModelBaseURL string, force bool, headCommitHash string) (AddRepositoryResponse, error) {
+func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey string, repoManagerURL string, llmModelBaseURL string, force bool, headCommitHash string, useMockLLM bool) (AddRepositoryResponse, error) {
     config, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
     if err != nil {
         return AddRepositoryResponse{}, err
     }
 
+    log.Printf("[DEBUG] api.AddRespoistory: Received useMockLLM = %v\n", useMockLLM) // DEBUG PRINT
     fmt.Println() // Prints a new line
     fmt.Println("Ignoring files based on .machtiani.ignore:")
     if len(ignoreFiles) == 0 {
@@ -84,7 +85,10 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
         "llm_model_base_url": llmModelBaseURL,
         "ignore_files":   ignoreFiles,
         "head": headCommitHash,
+        "use_mock_llm": useMockLLM,
     }
+
+    log.Printf("[DEBUG] api.AddRepository: Data payload being sent: %+v\n", data) // DEBUG PRINT
 
     // Convert data to JSON
     jsonData, err := json.Marshal(data)
@@ -152,11 +156,13 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
 }
 
 // FetchAndCheckoutBranch sends a request to fetch and checkout a branch.
-func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiKey *string, openAIAPIKey string, force bool, headCommitHash string) (string, error) {
+func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiKey *string, openAIAPIKey string, force bool, headCommitHash string, useMockLLM bool) (string, error) {
     config, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
     if err != nil {
         return "", err
     }
+
+    log.Printf("[DEBUG] api.FetchAndCheckoutBranch: Received useMockLLM = %v\n", useMockLLM) // DEBUG PRINT
 
     // Prepare the data to be sent in the request
     data := map[string]interface{}{
@@ -168,7 +174,10 @@ func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiK
         "llm_model_base_url": config.Environment.ModelBaseURL,
         "ignore_files":  ignoreFiles,
         "head": headCommitHash,
+        "use_mock_llm": useMockLLM,
     }
+
+    log.Printf("[DEBUG] api.FetchAndCheckoutBranch: Data payload being sent: %+v\n", data) // DEBUG PRINT
 
     jsonData, err := json.Marshal(data)
     if err != nil {
