@@ -51,7 +51,6 @@ func Execute() {
 		return // Exit after printing help
 	}
 
-	log.Printf("[DEBUG] cli.Execute: Parsed dryRun flag = %v\n", *dryRun) // DEBUG PRINT
 
 	command := os.Args[1]
 	switch command {
@@ -66,7 +65,6 @@ func Execute() {
 			log.Printf("Error getting HEAD commit hash: %v", err) // Log error but continue
 		}
 
-		log.Printf("[DEBUG] cli.Execute: Calling handleGitSync with useMockLLM = %v\n", *dryRun) // DEBUG PRINT
         if err := handleGitSync(remoteURL, apiKey, *forceFlag, config, headCommitHash, *dryRun); err != nil {
 			log.Printf("Error handling git-sync: %v", err)
 			os.Exit(1)

@@ -63,7 +63,6 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
         return AddRepositoryResponse{}, err
     }
 
-    log.Printf("[DEBUG] api.AddRespoistory: Received useMockLLM = %v\n", useMockLLM) // DEBUG PRINT
     fmt.Println() // Prints a new line
     fmt.Println("Ignoring files based on .machtiani.ignore:")
     if len(ignoreFiles) == 0 {
@@ -88,7 +87,6 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
         "use_mock_llm": useMockLLM,
     }
 
-    log.Printf("[DEBUG] api.AddRepository: Data payload being sent: %+v\n", data) // DEBUG PRINT
 
     // Convert data to JSON
     jsonData, err := json.Marshal(data)
@@ -162,7 +160,6 @@ func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiK
         return "", err
     }
 
-    log.Printf("[DEBUG] api.FetchAndCheckoutBranch: Received useMockLLM = %v\n", useMockLLM) // DEBUG PRINT
 
     // Prepare the data to be sent in the request
     data := map[string]interface{}{
@@ -177,7 +174,6 @@ func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiK
         "use_mock_llm": useMockLLM,
     }
 
-    log.Printf("[DEBUG] api.FetchAndCheckoutBranch: Data payload being sent: %+v\n", data) // DEBUG PRINT
 
     jsonData, err := json.Marshal(data)
     if err != nil {
