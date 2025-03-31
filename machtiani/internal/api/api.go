@@ -74,27 +74,19 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
         }
     }
 
-    // Prepare the data to be sent in the request
-    data := map[string]interface{}{
+    countTokenRequestData := map[string]interface{}{
         "codehost_url":   codeURL,
         "project_name":   name,
-        "vcs_type":       "git",
-        "api_key":        apiKey,
-        "llm_model_api_key":  openAIAPIKey,
-        "llm_model_base_url": llmModelBaseURL,
-        "ignore_files":   ignoreFiles,
-        "head": headCommitHash,
-        "use_mock_llm": useMockLLM,
     }
 
 
     // Convert data to JSON
-    jsonData, err := json.Marshal(data)
+    countTokenRequestJson, err := json.Marshal(countTokenRequestData)
     if err != nil {
         return AddRepositoryResponse{}, fmt.Errorf("error marshaling JSON: %w", err)
     }
 
-    tokenCountEmbedding, tokenCountInference, err := getTokenCount(fmt.Sprintf("%s/add-repository/", repoManagerURL), bytes.NewBuffer(jsonData))
+    tokenCountEmbedding, tokenCountInference, err := getTokenCount(fmt.Sprintf("%s/add-repository/", repoManagerURL), bytes.NewBuffer(countTokenRequestJson))
     if err != nil {
         fmt.Printf("Error getting token count: %v\n", err)
         return AddRepositoryResponse{}, err
@@ -108,8 +100,26 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
     // Check if the user wants to proceed or if force is enabled
     if force || confirmProceed() {
 
+        addRepositoryRequestData := map[string]interface{}{
+            "codehost_url":   codeURL,
+            "project_name":   name,
+            "vcs_type":       "git",
+            "api_key":        apiKey,
+            "llm_model_api_key":  openAIAPIKey,
+            "llm_model_base_url": llmModelBaseURL,
+            "ignore_files":   ignoreFiles,
+            "head": headCommitHash,
+            "use_mock_llm": useMockLLM,
+        }
+
+        // Convert data to JSON
+        addRepositoryRequestJson, err := json.Marshal(addRepositoryRequestData)
+        if err != nil {
+            return AddRepositoryResponse{}, fmt.Errorf("error marshaling JSON: %w", err)
+        }
+
         // Proceed with sending the POST request
-        req, err := http.NewRequest("POST", fmt.Sprintf("%s/add-repository/", repoManagerURL), bytes.NewBuffer(jsonData))
+        req, err := http.NewRequest("POST", fmt.Sprintf("%s/add-repository/", repoManagerURL), bytes.NewBuffer(addRepositoryRequestJson))
         if err != nil {
             return AddRepositoryResponse{}, fmt.Errorf("error creating request: %w", err)
         }
@@ -160,22 +170,13 @@ func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiK
         return "", err
     }
 
-
-    // Prepare the data to be sent in the request
-    data := map[string]interface{}{
+    countTokenRequestData := map[string]interface{}{
         "codehost_url":   codeURL,
         "project_name":   name,
-        "branch_name":    branchName,
-        "api_key":       apiKey,
-        "llm_model_api_key": openAIAPIKey,
-        "llm_model_base_url": config.Environment.ModelBaseURL,
-        "ignore_files":  ignoreFiles,
-        "head": headCommitHash,
-        "use_mock_llm": useMockLLM,
     }
 
 
-    jsonData, err := json.Marshal(data)
+    countTokenRequestJson, err := json.Marshal(countTokenRequestData)
     if err != nil {
         return "", fmt.Errorf("error marshaling JSON: %w", err)
     }
@@ -185,7 +186,7 @@ func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiK
         return "", fmt.Errorf("MACHTIANI_REPO_MANAGER_URL environment variable is not set")
     }
 
-    tokenCountEmbedding, tokenCountInference , err := getTokenCount(fmt.Sprintf("%s/fetch-and-checkout/", repoManagerURL), bytes.NewBuffer(jsonData))
+    tokenCountEmbedding, tokenCountInference , err := getTokenCount(fmt.Sprintf("%s/fetch-and-checkout/", repoManagerURL), bytes.NewBuffer(countTokenRequestJson))
     if err != nil {
         fmt.Printf("Error getting token count: %v\n", err)
         return "", err
@@ -201,7 +202,24 @@ func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiK
         done := make(chan bool)
         go utils.Spinner(done)
 
-        req, err := http.NewRequest("POST", fmt.Sprintf("%s/fetch-and-checkout/", repoManagerURL), bytes.NewBuffer(jsonData))
+        fetchAndCheckoutBranchRequestData := map[string]interface{}{
+            "codehost_url":   codeURL,
+            "project_name":   name,
+            "branch_name":    branchName,
+            "api_key":       apiKey,
+            "llm_model_api_key": openAIAPIKey,
+            "llm_model_base_url": config.Environment.ModelBaseURL,
+            "ignore_files":  ignoreFiles,
+            "head": headCommitHash,
+            "use_mock_llm": useMockLLM,
+        }
+
+        fetchAndCheckoutBranchRequestJson, err := json.Marshal(fetchAndCheckoutBranchRequestData)
+        if err != nil {
+            return "", fmt.Errorf("error marshaling JSON: %w", err)
+        }
+
+        req, err := http.NewRequest("POST", fmt.Sprintf("%s/fetch-and-checkout/", repoManagerURL), bytes.NewBuffer(fetchAndCheckoutBranchRequestJson))
         if err != nil {
             return "", fmt.Errorf("error creating request: %w", err)
         }
