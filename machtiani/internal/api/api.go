@@ -77,6 +77,8 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
     countTokenRequestData := map[string]interface{}{
         "codehost_url":   codeURL,
         "project_name":   name,
+        "vcs_type":       "git",
+        "api_key":        apiKey,
     }
 
 
@@ -173,7 +175,10 @@ func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiK
     countTokenRequestData := map[string]interface{}{
         "codehost_url":   codeURL,
         "project_name":   name,
+        "vcs_type":       "git",
+        "api_key":        apiKey,
     }
+
 
 
     countTokenRequestJson, err := json.Marshal(countTokenRequestData)
