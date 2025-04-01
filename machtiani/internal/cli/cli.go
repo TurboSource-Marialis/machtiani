@@ -21,7 +21,6 @@ func Execute() {
 	fs := flag.NewFlagSet("machtiani", flag.ContinueOnError)
 	remoteName := fs.String("remote", "origin", "Name of the remote repository")
 	forceFlag := fs.Bool("force", false, "Skip confirmation prompt and proceed with the operation.")
-    dryRun := fs.Bool("dry-run", false, "Run in dry mode using mock LLM")
 
 	compatible, message, err := api.GetInstallInfo()
 	if err != nil {
@@ -65,7 +64,7 @@ func Execute() {
 			log.Printf("Error getting HEAD commit hash: %v", err) // Log error but continue
 		}
 
-        if err := handleGitSync(remoteURL, apiKey, *forceFlag, config, headCommitHash, *dryRun); err != nil {
+        if err := handleGitSync(remoteURL, apiKey, *forceFlag, config, headCommitHash); err != nil {
 			log.Printf("Error handling git-sync: %v", err)
 			os.Exit(1)
 		}

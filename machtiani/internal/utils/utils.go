@@ -233,3 +233,11 @@ func GetCodehostURLFromCurrentRepository() (string, error) {
     return codehostURL, nil
 }
 
+
+// confirmProceed prompts the user for confirmation to proceed
+func ConfirmProceed() bool {
+	var response string
+	fmt.Print("Do you wish to proceed? (y/n): ")
+	fmt.Scanln(&response)
+	return strings.ToLower(response) == "y"
+}

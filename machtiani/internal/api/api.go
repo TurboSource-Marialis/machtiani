@@ -57,7 +57,7 @@ type StatusResponse struct {
 }
 
 // EstimateTokenCount calls the token-count endpoint and returns embedding and inference token counts.
-func EstimateTokenCount(codeURL string, name string, apiKey *string, repoManagerURL string) (int, int, error) {
+func EstimateTokenCount(codeURL string, name string, apiKey *string) (int, int, error) {
 	countTokenRequestData := map[string]interface{}{
 		"codehost_url": codeURL,
 		"project_name": name,
@@ -65,6 +65,10 @@ func EstimateTokenCount(codeURL string, name string, apiKey *string, repoManager
 		"api_key":      apiKey,
 	}
 
+	repoManagerURL := RepoManagerURL
+	if repoManagerURL == "" {
+		return 0, 0, fmt.Errorf("MACHTIANI_REPO_MANAGER_URL environment variable is not set")
+	}
 	// Convert data to JSON
 	countTokenRequestJson, err := json.Marshal(countTokenRequestData)
 	if err != nil {
@@ -76,9 +80,6 @@ func EstimateTokenCount(codeURL string, name string, apiKey *string, repoManager
 		return 0, 0, fmt.Errorf("error getting token count: %w", err)
 	}
 
-	// Print the token counts separately
-	fmt.Printf("Estimated embedding tokens: %d\n", tokenCountEmbedding)
-	fmt.Printf("Estimated inference tokens: %d\n", tokenCountInference)
 
 	return tokenCountEmbedding, tokenCountInference, nil
 }
@@ -232,7 +233,7 @@ func DeleteStore(projectName string, codehostURL string, vcsType string, apiKey 
 		return DeleteStoreResponse{}, err
 	}
 
-	if force || confirmProceed() {
+	if force || utils.ConfirmProceed() {
 		done := make(chan bool)
 		go utils.Spinner(done)
 
@@ -735,14 +736,6 @@ func GetInstallInfo() (bool, string, error) {
 	}
 
 	return returnedHeadOID == HeadOID, message, nil
-}
-
-// confirmProceed prompts the user for confirmation to proceed
-func confirmProceed() bool {
-	var response string
-	fmt.Print("Do you wish to proceed? (y/n): ")
-	fmt.Scanln(&response)
-	return strings.ToLower(response) == "y"
 }
 
 type SpinnerController struct {
