@@ -34,6 +34,8 @@ func handleGitSync(remoteURL string, apiKey *string, force bool, config utils.Co
 	        fmt.Printf("Estimated embedding tokens: %d\n", tokenCountEmbedding)
 	        fmt.Printf("Estimated inference tokens: %d\n", tokenCountInference)
 
+            handleGitDelete(remoteURL, remoteURL, "git", apiKey, true, config)
+
             if force || utils.ConfirmProceed() {
                 if err := addRepo(remoteURL, apiKey, force, config, headCommitHash, false); err != nil {
                     return fmt.Errorf("Error adding repository: %w", err)
@@ -54,9 +56,16 @@ func handleGitSync(remoteURL string, apiKey *string, force bool, config utils.Co
     _, err = api.FetchAndCheckoutBranch(remoteURL, remoteURL, branchName, apiKey, config.Environment.ModelAPIKey, force, headCommitHash, true)
     if err != nil {
         return fmt.Errorf("Error syncing repository: %w", err)
-    } else {
-        api.EstimateTokenCount(remoteURL, remoteURL, apiKey)
     }
+
+    tokenCountEmbedding, tokenCountInference, err := api.EstimateTokenCount(remoteURL, remoteURL, apiKey)
+
+	if err != nil {
+	    return fmt.Errorf("error getting token count: %w", err)
+	}
+	// Print the token counts separately
+	fmt.Printf("Estimated embedding tokens: %d\n", tokenCountEmbedding)
+	fmt.Printf("Estimated inference tokens: %d\n", tokenCountInference)
 
     if force || utils.ConfirmProceed() {
         message, err := api.FetchAndCheckoutBranch(remoteURL, remoteURL, branchName, apiKey, config.Environment.ModelAPIKey, force, headCommitHash, false)
