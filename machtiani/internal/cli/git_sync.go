@@ -21,6 +21,7 @@ func handleGitSync(remoteURL string, apiKey *string, force bool, config utils.Co
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") {
 			// If the repository doesn't exist, add it
+	        startTime := time.Now()
 			if err := addRepo(remoteURL, apiKey, force, config, headCommitHash, true); err != nil {
 				return fmt.Errorf("Error adding repository: %w", err)
 			}
@@ -36,6 +37,8 @@ func handleGitSync(remoteURL string, apiKey *string, force bool, config utils.Co
 			}
 			fmt.Printf("Estimated embedding tokens: %d\n", tokenCountEmbedding)
 			fmt.Printf("Estimated inference tokens: %d\n", tokenCountInference)
+	        elapsedTime := time.Since(startTime)
+	        fmt.Printf("Time taken to estimate token count: %s\n", elapsedTime)
 
 			handleGitDelete(remoteURL, remoteURL, "git", apiKey, true, config)
 
