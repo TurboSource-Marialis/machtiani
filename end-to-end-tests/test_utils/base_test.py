@@ -39,7 +39,7 @@ class BaseTestEndToEnd:
         os.makedirs(chat_dir, exist_ok=True)
 
         """Class-level setup for logging configuration."""
-        logging.basicConfig(level=logging.DEBUG)
+        #logging.basicConfig(level=logging.DEBUG)
         cls.logger = logging.getLogger(__name__)
 
     @classmethod

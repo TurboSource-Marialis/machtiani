@@ -19,7 +19,7 @@ from app.utils import (
 )
 from lib.ai.llm_model import LlmModel
 
-logger = logging.getLogger("uvicorn")
+logger = logging.getLogger(__name__)
 
 # Define token limits for different models
 MAX_TOKENS = 128000

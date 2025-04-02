@@ -8,7 +8,7 @@ services:
       - "5071:5071"
     volumes:
       - ./data:/data
-    command: ["poetry", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "5071", "--workers", "4"]
+    command: ["poetry", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "5071", "--workers", "4", "--log-level", "critical"]
     depends_on:
       - commit-file-retrieval
 
@@ -20,7 +20,7 @@ services:
       - "5070:5070"
     volumes:
       - commit_file_retrieval:/data
-    command: ["poetry", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "5070", "--timeout-keep-alive", "1200", "--workers", "4"]
+    command: ["poetry", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "5070", "--timeout-keep-alive", "1200", "--workers", "4", "--log-level", "critical"]
 
 volumes:
   commit_file_retrieval:

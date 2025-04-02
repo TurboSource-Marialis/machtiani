@@ -9,7 +9,7 @@ from app.utils import add_sys_path
 
 # Update the path to correctly point to machtiani-commit-file-retrieval/lib
 path_to_add = os.path.abspath('/app/machtiani-commit-file-retrieval')
-logger = logging.getLogger("uvicorn")
+logger = logging.getLogger(__name__)
 logger.info("Adding to sys.path: %s", path_to_add)
 
 # Use the context manager to handle imports
