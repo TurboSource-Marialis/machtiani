@@ -21,6 +21,7 @@ func Execute() {
 	fs := flag.NewFlagSet("machtiani", flag.ContinueOnError)
 	remoteName := fs.String("remote", "origin", "Name of the remote repository")
 	forceFlag := fs.Bool("force", false, "Skip confirmation prompt and proceed with the operation.")
+    verboseFlag := fs.Bool("verbose", false, "Print verbose output including timing information.") // Added verbose flag
 
 	compatible, message, err := api.GetInstallInfo()
 	if err != nil {
@@ -64,7 +65,7 @@ func Execute() {
 			log.Printf("Error getting HEAD commit hash: %v", err) // Log error but continue
 		}
 
-        if err := handleGitSync(remoteURL, apiKey, *forceFlag, config, headCommitHash); err != nil {
+        if err := handleGitSync(remoteURL, apiKey, *forceFlag, *verboseFlag, config, headCommitHash); err != nil { // Pass verboseFlag
 			log.Printf("Error handling git-sync: %v", err)
 			os.Exit(1)
 		}

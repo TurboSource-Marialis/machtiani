@@ -10,7 +10,9 @@ import (
 	"github.com/7db9a/machtiani/internal/utils"
 )
 
-func handleGitSync(remoteURL string, apiKey *string, force bool, config utils.Config, headCommitHash string) error {
+func handleGitSync(remoteURL string, apiKey *string, force bool, verbose bool, config utils.Config, headCommitHash string) error {
+    // Start timer
+    startTime := time.Now()
 	// Get the current branch name
 	branchName, err := git.GetBranch()
 	if err != nil {
@@ -57,6 +59,12 @@ func handleGitSync(remoteURL string, apiKey *string, force bool, config utils.Co
             _, err = api.DeleteStore(remoteURL, remoteURL, "git", apiKey, api.RepoManagerURL, true)
             if err != nil {
                 return fmt.Errorf("Error deleting store: %v", err)
+            }
+
+            // Print timing if verbose flag is set, before the prompt/force check
+            if verbose {
+                duration := time.Since(startTime)
+                fmt.Printf("Time to 'count tokens' point: %s\n", duration)
             }
 
 		    if force || utils.ConfirmProceed() {
