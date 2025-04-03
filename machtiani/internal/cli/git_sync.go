@@ -16,31 +16,50 @@ func handleGitSync(remoteURL string, apiKey *string, force bool, config utils.Co
 	if err != nil {
 		return fmt.Errorf("Error retrieving current branch name: %w", err)
 	}
+	config, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
+	if err != nil {
+		return fmt.Errorf("Error retrieving ignore files: %w", err)
+	}
 
 	_, err = api.CheckStatus(remoteURL)
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") {
 			// If the repository doesn't exist, add it
+
+	       fmt.Println() // Prints a new line
+	       fmt.Println("Ignoring files based on .machtiani.ignore:")
+           if len(ignoreFiles) == 0 {
+               fmt.Println("No files to ignore.")
+           } else {
+               fmt.Println() // Prints another new line
+               for _, path := range ignoreFiles {
+                   fmt.Println(path)
+               }
+           }
+
 	        response, err := api.AddRepository(remoteURL, remoteURL, apiKey, config.Environment.ModelAPIKey, api.RepoManagerURL, config.Environment.ModelBaseURL, force, headCommitHash, true)
 	        if err != nil {
-	            return fmt.Errorf("Error adding repository: %w", err)
+                return fmt.Errorf("Error adding repository: %w", err)
 	        }
 
-			// Wait for the repository to be confirmed as added
-			if err := waitForRepoConfirmation(remoteURL, apiKey, remoteURL); err != nil {
-				return fmt.Errorf("Error waiting for repository confirmation: %w", err)
-			}
+		    // Wait for the repository to be confirmed as added
+		    if err := waitForRepoConfirmation(remoteURL, apiKey, remoteURL); err != nil {
+                return fmt.Errorf("Error waiting for repository confirmation: %w", err)
+		    }
 
-			tokenCountEmbedding, tokenCountInference, err := api.EstimateTokenCount(remoteURL, remoteURL, apiKey)
-			if err != nil {
-				return fmt.Errorf("error getting token count: %w", err)
-			}
-			fmt.Printf("Estimated embedding tokens: %d\n", tokenCountEmbedding)
-			fmt.Printf("Estimated inference tokens: %d\n", tokenCountInference)
+		    tokenCountEmbedding, tokenCountInference, err := api.EstimateTokenCount(remoteURL, remoteURL, apiKey)
+		    if err != nil {
+                return fmt.Errorf("error getting token count: %w", err)
+		    }
+		    fmt.Printf("Estimated embedding tokens: %d\n", tokenCountEmbedding)
+		    fmt.Printf("Estimated inference tokens: %d\n", tokenCountInference)
 
-			handleGitDelete(remoteURL, remoteURL, "git", apiKey, true, config)
+            _, err = api.DeleteStore(remoteURL, remoteURL, "git", apiKey, api.RepoManagerURL, true)
+            if err != nil {
+                return fmt.Errorf("Error deleting store: %v", err)
+            }
 
-			if force || utils.ConfirmProceed() {
+		    if force || utils.ConfirmProceed() {
 
 	            response, err = api.AddRepository(remoteURL, remoteURL, apiKey, config.Environment.ModelAPIKey, api.RepoManagerURL, config.Environment.ModelBaseURL, force, headCommitHash, false)
 	            if err != nil {
@@ -52,9 +71,9 @@ func handleGitSync(remoteURL string, apiKey *string, force bool, config utils.Co
 	            fmt.Println("Your repo is getting added to machtiani is in progress!")
 	            fmt.Println("Please check back by running `machtiani status` to see if it completed.")
 	            return nil
-			} else {
-				return nil
-			}
+		    } else {
+                return nil
+		    }
 		} else {
 			return fmt.Errorf("Error checking repository status: %w", err)
 		}

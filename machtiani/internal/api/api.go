@@ -85,34 +85,23 @@ func EstimateTokenCount(codeURL string, name string, apiKey *string) (int, int, 
 }
 
 func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey string, repoManagerURL string, llmModelBaseURL string, force bool, headCommitHash string, useMockLLM bool) (AddRepositoryResponse, error) {
-	config, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
-	if err != nil {
-		return AddRepositoryResponse{}, err
-	}
+    // Load config and ignore files first
+    config, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
+    if err != nil {
+        return AddRepositoryResponse{}, err
+    }
 
-	fmt.Println() // Prints a new line
-	fmt.Println("Ignoring files based on .machtiani.ignore:")
-	if len(ignoreFiles) == 0 {
-		fmt.Println("No files to ignore.")
-	} else {
-		fmt.Println() // Prints another new line
-		for _, path := range ignoreFiles {
-			fmt.Println(path)
-		}
-	}
-
-	addRepositoryRequestData := map[string]interface{}{
-		"codehost_url":    codeURL,
-		"project_name":    name,
-		"vcs_type":        "git",
-		"api_key":         apiKey,
-		"llm_model_api_key": openAIAPIKey,
-		"llm_model_base_url": llmModelBaseURL,
-		"ignore_files":    ignoreFiles,
-		"head":            headCommitHash,
-		"use_mock_llm":    useMockLLM,
-	}
-
+    addRepositoryRequestData := map[string]interface{}{
+        "codehost_url":    codeURL,
+        "project_name":    name,
+        "vcs_type":        "git",
+        "api_key":         apiKey,
+        "llm_model_api_key": openAIAPIKey,
+        "llm_model_base_url": llmModelBaseURL,
+        "ignore_files":    ignoreFiles,
+        "head":            headCommitHash,
+        "use_mock_llm":    useMockLLM,
+    }
 	// Convert data to JSON
 	addRepositoryRequestJson, err := json.Marshal(addRepositoryRequestData)
 	if err != nil {
