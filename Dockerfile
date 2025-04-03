@@ -31,6 +31,4 @@ COPY pyproject.toml poetry.lock ./
 # Install Python dependencies via Poetry
 RUN poetry install --no-root --no-dev
 
-# Copy the rest of the application code
-COPY . .
-
+RUN git config --global --add safe.directory /app\

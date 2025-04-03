@@ -2,26 +2,42 @@ version: '3.8'
 
 services:
   machtiani:
-    build: .
+    build:
+      context: . # Build context is the current directory
+      dockerfile: Dockerfile # Explicitly state Dockerfile (optional but clear)
     container_name: machtiani
     ports:
       - "5071:5071"
     volumes:
+      # Mount the source code from the host's current directory (.)
+      # into the container's /app directory (WORKDIR)
+      - ./:/app
+      # Keep the existing data volume
       - ./data:/data
-    command: ["poetry", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "5071", "--workers", "4", "--log-level", "critical"]
+    # Add PYTHONUNBUFFERED for immediate log output if not set in Dockerfile
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: ["poetry", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "5071", "--reload", "--log-level", "critical"] # Added --reload and changed log-level for development
     depends_on:
       - commit-file-retrieval
 
   commit-file-retrieval:
     build:
-      context: ./machtiani-commit-file-retrieval
+      context: ./machtiani-commit-file-retrieval # Build context is the subdirectory
+      dockerfile: Dockerfile # Explicitly state Dockerfile (optional but clear)
     container_name: commit-file-retrieval
     ports:
       - "5070:5070"
     volumes:
+      # Mount the source code from the host's subdirectory
+      # into the container's /app directory (WORKDIR)
+      - ./machtiani-commit-file-retrieval:/app
+      # Keep the existing named volume for data
       - commit_file_retrieval:/data
-    command: ["poetry", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "5070", "--timeout-keep-alive", "1200", "--workers", "4", "--log-level", "critical"]
+    # Add PYTHONUNBUFFERED for immediate log output if not set in Dockerfile
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: ["poetry", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "5070", "--reload", "--log-level", "critical"] # Added --reload and changed log-level for development
 
 volumes:
-  commit_file_retrieval:
-
+  commit_file_retrieval: # Keep the named volume definition
