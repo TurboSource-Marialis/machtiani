@@ -90,8 +90,8 @@ class BaseTestEndToEnd:
             "Using remote URL: https://github.com/7db9a/chastler.git",
             "Ignoring files based on .machtiani.ignore:",
             "poetry.lock",
-            "Estimated embedding tokens: 25",
-            "Estimated inference tokens: 1429",
+            "Estimated embedding tokens: 3000",
+            "Estimated inference tokens: 10396",
             "VCSType.git repository added successfully",
             "",
             "---",
@@ -219,8 +219,8 @@ class BaseTestEndToEnd:
 
         expected_output = [
             "Using remote URL: https://github.com/7db9a/chastler.git",
-            "Estimated embedding tokens: 16",
-            "Estimated inference tokens: 30",
+            "Estimated embedding tokens: 1000",
+            "Estimated inference tokens: 85",
             "Successfully synced the repository: https://github.com/7db9a/chastler.git.",
             'Server response: {"message":"Fetched and checked out branch \'feature\' for project \'https://github.com/7db9a/chastler.git\' and updated index.","branch_name":"feature","project_name":"https://github.com/7db9a/chastler.git"}'
         ]
@@ -287,8 +287,8 @@ class BaseTestEndToEnd:
             "Using remote URL: https://github.com/7db9a/chastler.git",
             "Ignoring files based on .machtiani.ignore:",
             "poetry.lock",
-            "Estimated embedding tokens: 59",
-            "Estimated inference tokens: 1446",
+            "Estimated embedding tokens: 6000",
+            "Estimated inference tokens: 10605",
             "VCSType.git repository added successfully",
             "",
             "---",

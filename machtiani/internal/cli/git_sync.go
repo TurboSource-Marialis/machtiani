@@ -21,10 +21,10 @@ func handleGitSync(remoteURL string, apiKey *string, force bool, config utils.Co
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") {
 			// If the repository doesn't exist, add it
-	        startTime := time.Now()
-			if err := addRepo(remoteURL, apiKey, force, config, headCommitHash, true); err != nil {
-				return fmt.Errorf("Error adding repository: %w", err)
-			}
+	        response, err := api.AddRepository(remoteURL, remoteURL, apiKey, config.Environment.ModelAPIKey, api.RepoManagerURL, config.Environment.ModelBaseURL, force, headCommitHash, true)
+	        if err != nil {
+	            return fmt.Errorf("Error adding repository: %w", err)
+	        }
 
 			// Wait for the repository to be confirmed as added
 			if err := waitForRepoConfirmation(remoteURL, apiKey, remoteURL); err != nil {
@@ -37,17 +37,21 @@ func handleGitSync(remoteURL string, apiKey *string, force bool, config utils.Co
 			}
 			fmt.Printf("Estimated embedding tokens: %d\n", tokenCountEmbedding)
 			fmt.Printf("Estimated inference tokens: %d\n", tokenCountInference)
-	        elapsedTime := time.Since(startTime)
-	        fmt.Printf("Time taken to estimate token count: %s\n", elapsedTime)
 
 			handleGitDelete(remoteURL, remoteURL, "git", apiKey, true, config)
 
 			if force || utils.ConfirmProceed() {
-				if err := addRepo(remoteURL, apiKey, force, config, headCommitHash, false); err != nil {
-					return fmt.Errorf("Error adding repository: %w", err)
-				} else {
-					return nil
-				}
+
+	            response, err = api.AddRepository(remoteURL, remoteURL, apiKey, config.Environment.ModelAPIKey, api.RepoManagerURL, config.Environment.ModelBaseURL, force, headCommitHash, false)
+	            if err != nil {
+	                return fmt.Errorf("Error adding repository: %w", err)
+	            }
+
+	            fmt.Println(response.Message)
+	            fmt.Println("---")
+	            fmt.Println("Your repo is getting added to machtiani is in progress!")
+	            fmt.Println("Please check back by running `machtiani status` to see if it completed.")
+	            return nil
 			} else {
 				return nil
 			}
@@ -105,15 +109,3 @@ func waitForRepoConfirmation(remoteURL string, apiKey *string, codehostURL strin
 	return fmt.Errorf("timed out waiting for repository confirmation")
 }
 
-func addRepo(remoteURL string, apiKey *string, force bool, config utils.Config, headCommitHash string, useMockLLM bool) error {
-	response, err := api.AddRepository(remoteURL, remoteURL, apiKey, config.Environment.ModelAPIKey, api.RepoManagerURL, config.Environment.ModelBaseURL, force, headCommitHash, useMockLLM)
-	if err != nil {
-		return fmt.Errorf("Error adding repository: %w", err)
-	}
-
-	fmt.Println(response.Message)
-	fmt.Println("---")
-	fmt.Println("Your repo is getting added to machtiani is in progress!")
-	fmt.Println("Please check back by running `machtiani status` to see if it completed.")
-	return nil
-}
