@@ -83,27 +83,31 @@ class BaseTestEndToEnd:
         # Checkout master branch first to ensure we're syncing from a clean state
         self.setup.checkout_branch("master")
 
-        command = 'git checkout master && machtiani git-sync --force'
+        command = 'git checkout master && machtiani git-sync --cost --force'
         stdout_normalized = self.run_machtiani_command(command)
 
         expected_output = [
             "Using remote URL: https://github.com/7db9a/chastler.git",
-            "Ignoring files based on .machtiani.ignore:",
-            "poetry.lock",
-            "Estimated embedding tokens: 3000",
-            "Estimated inference tokens: 10396",
-            "VCSType.git repository added successfully",
-            "",
-            "---",
+            "Repository not found on Machtiani. Preparing for initial sync.", # Common line
+            "Ignoring files based on .machtiani.ignore:", # Common line
+            "poetry.lock", # Actual output had this directly after ignore list
+            "Repository confirmation received.", # Added based on actual output (-)
+            "---", # Added based on actual output (-)
+            "Estimating token cost...", # Added based on actual output (-)
+            "Estimated embedding tokens: 3000", # Common line
+            "Estimated inference tokens: 10396", # Common line
+            "---", # Common line
+            "VCSType.git repository added successfully", # Common line
+            "---", # Common line
             "Your repo is getting added to machtiani is in progress!",
             "Please check back by running `machtiani status` to see if it completed."
         ]
+        # --- END CORRECTION ---
 
         expected_output = [line.strip() for line in expected_output if line.strip()]
         self.assertEqual(stdout_normalized, expected_output)
-
     def test_02_run_machtiani_sync_command_not_ready(self):
-        command = 'machtiani git-sync --force'
+        command = 'machtiani git-sync --cost --force'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
 
@@ -196,16 +200,20 @@ class BaseTestEndToEnd:
         self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_normalized))
 
     def test_06_run_machtiani_sync_command(self):
-        command = 'machtiani git-sync --force'
+        command = 'machtiani git-sync --cost --force'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
 
         expected_output = [
-            "Using remote URL: https://github.com/7db9a/chastler.git",
-            "Estimated embedding tokens: 0",
-            "Estimated inference tokens: 0",
-            "Successfully synced the repository: https://github.com/7db9a/chastler.git.",
-            'Server response: {"message":"Fetched and checked out branch \'master\' for project \'https://github.com/7db9a/chastler.git\' and updated index.","branch_name":"master","project_name":"https://github.com/7db9a/chastler.git"}'
+            "Using remote URL: https://github.com/7db9a/chastler.git", # Common line
+            "Repository found. Preparing to sync branch: master", # Changed based on actual output (-)
+            "---", # Common line
+            "Estimating token cost...", # Added based on actual output (-)
+            "Estimated embedding tokens: 0", # Common line
+            "Estimated inference tokens: 0", # Common line
+            "---", # Common line
+            "Successfully synced the repository: https://github.com/7db9a/chastler.git.", # Common line
+            'Server response: {"message":"Fetched and checked out branch \'master\' for project \'https://github.com/7db9a/chastler.git\' and updated index.","branch_name":"master","project_name":"https://github.com/7db9a/chastler.git"}' # Added based on actual output (-)
         ]
 
         expected_output = [line.strip() for line in expected_output if line.strip()]
@@ -213,14 +221,20 @@ class BaseTestEndToEnd:
 
     def test_07_sync_new_commits_and_prompt_command(self):
         # Step 2: Run git_sync and assert the output
-        command = 'git checkout feature && machtiani git-sync --force'
+        command = 'git checkout feature && machtiani git-sync --force --cost'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
 
         expected_output = [
             "Using remote URL: https://github.com/7db9a/chastler.git",
+            "Repository found. Preparing to sync branch: feature",
+            "",
+            "---",
+            "Estimating token cost...",
             "Estimated embedding tokens: 1000",
             "Estimated inference tokens: 85",
+            "---",
+            "",
             "Successfully synced the repository: https://github.com/7db9a/chastler.git.",
             'Server response: {"message":"Fetched and checked out branch \'feature\' for project \'https://github.com/7db9a/chastler.git\' and updated index.","branch_name":"feature","project_name":"https://github.com/7db9a/chastler.git"}'
         ]
@@ -271,7 +285,6 @@ class BaseTestEndToEnd:
     #    sync_thread.join()
 
     def test_10_sync_feature2_branch(self):
-        # Step 1: Clean up before starting the test
         self.teardown_end_to_end()
         self.setup_end_to_end()
 
@@ -279,22 +292,27 @@ class BaseTestEndToEnd:
         time.sleep(5)
 
         # Step 4: Run git_sync again and assert the output now shows the correct token counts
-        command = 'git checkout feature2 && machtiani git-sync --force'
+        command = 'git checkout feature2 && machtiani git-sync --cost --force'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
 
         expected_output = [
-            "Using remote URL: https://github.com/7db9a/chastler.git",
-            "Ignoring files based on .machtiani.ignore:",
-            "poetry.lock",
-            "Estimated embedding tokens: 6000",
-            "Estimated inference tokens: 10605",
-            "VCSType.git repository added successfully",
-            "",
-            "---",
+            "Using remote URL: https://github.com/7db9a/chastler.git", # Common line
+            "Repository not found on Machtiani. Preparing for initial sync.", # Common line
+            "Ignoring files based on .machtiani.ignore:", # Common line
+            "poetry.lock", # Actual output had this directly after ignore list
+            "Repository confirmation received.", # Added based on actual output (-)
+            "---", # Added based on actual output (-)
+            "Estimating token cost...", # Added based on actual output (-)
+            "Estimated embedding tokens: 6000", # Common line
+            "Estimated inference tokens: 10605", # Common line
+            "---", # Common line
+            "VCSType.git repository added successfully", # Common line
+            "---", # Common line
             "Your repo is getting added to machtiani is in progress!",
-            "Please check back by running `machtiani status` to see if it completed."
+            "Please check back by running `machtiani status` to see if it completed." # Common line
         ]
+        # --- END CORRECTION ---
 
         expected_output = [line.strip() for line in expected_output if line.strip()]
         self.assertEqual(stdout_normalized, expected_output)
@@ -303,7 +321,7 @@ class BaseTestEndToEnd:
         self.teardown_end_to_end()
 
     def test_11_run_machtiani_sync_command_not_ready(self):
-        command = 'machtiani git-sync --force'
+        command = 'machtiani git-sync --force --cost'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
 

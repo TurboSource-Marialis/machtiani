@@ -21,8 +21,11 @@ func Execute() {
 	fs := flag.NewFlagSet("machtiani", flag.ContinueOnError)
 	remoteName := fs.String("remote", "origin", "Name of the remote repository")
 	forceFlag := fs.Bool("force", false, "Skip confirmation prompt and proceed with the operation.")
-    verboseFlag := fs.Bool("verbose", false, "Print verbose output including timing information.") // Added verbose flag
-    costFlag := fs.Bool("cost", false, "Estimate token cost without proceeding with the sync.") // Add cost flag
+	verboseFlag := fs.Bool("verbose", false, "Print verbose output including timing information.")
+	// Updated cost flag description
+	costFlag := fs.Bool("cost", false, "Estimate token cost before proceeding with the sync.")
+	// Added cost-only flag
+	costOnlyFlag := fs.Bool("cost-only", false, "Estimate token cost and exit without performing the sync.")
 
 	compatible, message, err := api.GetInstallInfo()
 	if err != nil {
@@ -52,25 +55,24 @@ func Execute() {
 		return // Exit after printing help
 	}
 
-
 	command := os.Args[1]
 	switch command {
 	case "status":
 		handleStatus(&config, remoteURL)
 		return // Exit after handling status
-    case "git-sync":
-        utils.ParseFlags(fs, os.Args[2:]) // Use the new helper function
-        headCommitHash, err := git.GetHeadCommitHash()
-        if err != nil {
-            log.Printf("Error getting HEAD commit hash: %v", err) // Log error but continue
-        }
+	case "git-sync":
+		utils.ParseFlags(fs, os.Args[2:]) // Use the new helper function
+		headCommitHash, err := git.GetHeadCommitHash()
+		if err != nil {
+			log.Printf("Error getting HEAD commit hash: %v", err) // Log error but continue
+		}
 
-        // Pass costFlag to handleGitSync
-        if err := handleGitSync(remoteURL, apiKey, *forceFlag, *verboseFlag, *costFlag, config, headCommitHash); err != nil {
-            log.Printf("Error handling git-sync: %v", err)
-            os.Exit(1)
-        }
-        return
+		// Pass costFlag and costOnlyFlag to handleGitSync
+		if err := handleGitSync(remoteURL, apiKey, *forceFlag, *verboseFlag, *costFlag, *costOnlyFlag, config, headCommitHash); err != nil {
+			log.Printf("Error handling git-sync: %v", err)
+			os.Exit(1)
+		}
+		return
 	case "git-delete":
 		utils.ParseFlags(fs, os.Args[2:]) // Use the new helper function
 		if remoteURL == "" {
