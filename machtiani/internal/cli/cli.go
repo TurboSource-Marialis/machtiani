@@ -6,21 +6,49 @@ import (
 	"log"
 	"os"
 	"time"
+	"strconv"
 
 	"github.com/7db9a/machtiani/internal/api"
 	"github.com/7db9a/machtiani/internal/git"
 	"github.com/7db9a/machtiani/internal/utils"
 )
 
+// Build-time variable for system message frequency
+var SystemMessageFrequencyHours = "24" // Default 24 hours, will be set via ldflags
+
 func Execute() {
-    // Try to fetch and display the system message
-    systemMsg, err := git.GetLatestMachtianiSystemMessage(api.MachtianiGitRemoteURL)
-    if err == nil && systemMsg != "" {
-        fmt.Printf("\n============= SYSTEM MESSAGE =============\n%s\n=========================================\n\n", systemMsg)
-    } else if err != nil {
-        // Log the error but don't show it to the user
-        log.Printf("Failed to fetch system message: %v", err)
-    }
+	// Parse the system message frequency
+	frequencyHours, err := strconv.Atoi(SystemMessageFrequencyHours)
+	if err != nil {
+		frequencyHours = 24 // Default to 24 hours if parsing fails
+		log.Printf("Warning: failed to parse system message frequency, using default 24 hours: %v", err)
+	}
+
+	// Check if we should display the system message
+	shouldDisplay, err := git.ShouldDisplaySystemMessage(frequencyHours)
+	if err != nil {
+		log.Printf("Warning: error checking if system message should be displayed: %v", err)
+		// Default to displaying the message if there's an error
+		shouldDisplay = true
+	}
+
+	if shouldDisplay {
+		// Try to fetch and display the system message
+		systemMsg, err := git.GetLatestMachtianiSystemMessage(api.MachtianiGitRemoteURL)
+		if err == nil && systemMsg != "" {
+			fmt.Printf("\n============= SYSTEM MESSAGE =============\n%s\n=========================================\n\n", systemMsg)
+
+			// Record that we displayed the message
+			if err := git.RecordSystemMessageDisplayed(); err != nil {
+				log.Printf("Warning: failed to record system message display time: %v", err)
+				// Continue with program execution
+			}
+		} else if err != nil {
+			// Log the error but don't show it to the user
+			log.Printf("Failed to fetch system message: %v", err)
+		}
+	}
+
 	config, err := utils.LoadConfig()
 	if err != nil {
 		log.Fatalf("Error loading config: %v", err)

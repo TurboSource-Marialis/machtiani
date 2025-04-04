@@ -7,8 +7,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
-
+    "time"
 )
 
 // GetLatestMachtianiSystemMessage fetches the latest system message from the machtiani remote git repository
@@ -48,6 +49,77 @@ func getSystemMessageWithGit(machtianiGitRemoteURL string) (string, error) {
 	}
 
 	return string(content), nil
+}
+
+// getSystemMessageLastDisplayedPath returns the path to the file that tracks when the system message was last displayed
+func getSystemMessageLastDisplayedPath() (string, error) {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("failed to get user home directory: %v", err)
+	}
+
+	machtianiDir := filepath.Join(homeDir, ".machtiani")
+	if err := os.MkdirAll(machtianiDir, 0755); err != nil {
+		return "", fmt.Errorf("failed to create .machtiani directory: %v", err)
+	}
+
+	return filepath.Join(machtianiDir, "system-message-last-displayed"), nil
+}
+
+// RecordSystemMessageDisplayed records the current time as when the system message was last displayed
+func RecordSystemMessageDisplayed() error {
+	path, err := getSystemMessageLastDisplayedPath()
+	if err != nil {
+		return err
+	}
+
+	// Current Unix timestamp
+	now := strconv.FormatInt(time.Now().Unix(), 10)
+
+	return os.WriteFile(path, []byte(now), 0644)
+}
+
+// ShouldDisplaySystemMessage checks if the system message should be displayed
+func ShouldDisplaySystemMessage(frequencyHours int) (bool, error) {
+	path, err := getSystemMessageLastDisplayedPath()
+	if err != nil {
+		// If there's an error getting the path, display the message to be safe
+		return true, err
+	}
+
+	// If the file doesn't exist, show the message
+	content, err := os.ReadFile(path)
+	if os.IsNotExist(err) {
+		return true, nil
+	} else if err != nil {
+		// For other errors, display the message to be safe
+		return true, err
+	}
+
+	// Parse the timestamp from the file
+	timestamp, err := strconv.ParseInt(string(content), 10, 64)
+	if err != nil {
+		// If parsing fails, display the message
+		return true, fmt.Errorf("failed to parse timestamp: %v", err)
+	}
+
+	lastDisplayed := time.Unix(timestamp, 0).UTC()
+	now := time.Now().UTC()
+
+	// Calculate today's midnight UTC
+	todayMidnight := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+
+	// If the last display was before today's midnight, show the message
+	if lastDisplayed.Before(todayMidnight) {
+		return true, nil
+	}
+
+	// Also check if it's been frequencyHours since the last display
+	if now.Sub(lastDisplayed) >= time.Duration(frequencyHours)*time.Hour {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 func GetProjectName() (string, error) {
