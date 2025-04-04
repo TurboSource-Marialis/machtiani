@@ -322,6 +322,13 @@ Make sure to run after doing the above.
 
    This is used to help test whether generated git messages by machtiani are in the ballpark of being correct using a cosine similarity threshold.
 
+5. Clone `chastler` into `end-to-end-tests/data/git-projects`
+
+   ```
+   cd end-to-end-tests/data/git-projects
+   https://github.com/7db9a/chastler
+   ```
+
 #### Running the Defacto Tests
 
 To run the end-to-end test suite from inside `end-to-end-tests` directory:
