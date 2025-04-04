@@ -13,6 +13,14 @@ import (
 )
 
 func Execute() {
+    // Try to fetch and display the system message
+    systemMsg, err := git.GetLatestMachtianiSystemMessage(api.MachtianiGitRemoteURL)
+    if err == nil && systemMsg != "" {
+        fmt.Printf("\n============= SYSTEM MESSAGE =============\n%s\n=========================================\n\n", systemMsg)
+    } else if err != nil {
+        // Log the error but don't show it to the user
+        log.Printf("Failed to fetch system message: %v", err)
+    }
 	config, err := utils.LoadConfig()
 	if err != nil {
 		log.Fatalf("Error loading config: %v", err)

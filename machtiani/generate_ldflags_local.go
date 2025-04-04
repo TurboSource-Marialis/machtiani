@@ -21,8 +21,11 @@ func main() {
     // Get build date
     buildDate := time.Now().Format(time.RFC3339)
 
-    // Construct ldflags
-    ldflags := fmt.Sprintf("-X 'github.com/7db9a/machtiani/internal/api.HeadOID=%s' -X 'github.com/7db9a/machtiani/internal/api.BuildDate=%s'", headOID, buildDate)
+    // Start constructing ldflags
+    ldflags := fmt.Sprintf("-X 'github.com/7db9a/machtiani/internal/api.HeadOID=%s' -X 'github.com/7db9a/machtiani/internal/api.BuildDate=%s' -X 'github.com/7db9a/machtiani/internal/api.MachtianiGitRemoteURL=%s'",
+    headOID,
+    buildDate,
+    "https://github.com/turboSource-marialis/machtiani")
 
     fmt.Println(ldflags)
 }

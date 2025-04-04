@@ -21,6 +21,7 @@ var (
 	BuildDate      string = "unknown"
 	MachtianiURL   string = "http://localhost:5071"
 	RepoManagerURL string = "http://localhost:5070"
+    MachtianiGitRemoteURL string = "none"
 )
 
 var (

@@ -27,7 +27,10 @@ func main() {
     buildDate := time.Now().Format(time.RFC3339)
 
     // Start constructing ldflags
-    ldflags := fmt.Sprintf("-X 'github.com/7db9a/machtiani/internal/api.HeadOID=%s' -X 'github.com/7db9a/machtiani/internal/api.BuildDate=%s'", headOID, buildDate)
+    ldflags := fmt.Sprintf("-X 'github.com/7db9a/machtiani/internal/api.HeadOID=%s' -X 'github.com/7db9a/machtiani/internal/api.BuildDate=%s' -X 'github.com/7db9a/machtiani/internal/api.MachtianiGitRemoteURL=%s'",
+    headOID,
+    buildDate,
+    "https://github.com/turboSource-marialis/machtiani")
 
     // If the release flag is provided, process it to include the new ldflags
     if *releaseFlag != "" {
