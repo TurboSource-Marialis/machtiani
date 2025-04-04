@@ -275,6 +275,12 @@ go.mod
 
 The CLI will stream the response and save the chat in `.machtiani/chat/` in the directory you ran the prompt. It also gives a descriptive name to the chat file for you convenience
 
+## Features
+
+Machtiani will let you know if you should pull latest changes so you can get the most powerful version available.
+
+It checks for any latest system messages every so often from machtiani's codehost (currently GitHub) using the git protocol. It simply does a shallow clone of machtiani's repo, gets the latest system message, and throws away the clone. This ensures the tool doesn't 'phone home' to external services beyond the codehost, maintaining user privacy.
+
 ## Developer Section
 
 ### End-to-End Tests
