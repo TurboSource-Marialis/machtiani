@@ -322,20 +322,25 @@ Make sure to run after doing the above.
 
    This is used to help test whether generated git messages by machtiani are in the ballpark of being correct using a cosine similarity threshold.
 
-5. Clone `chastler` into `end-to-end-tests/data/git-projects`
+5. Clone `chastler` and `machtiani` into `end-to-end-tests/data/git-projects`
 
    ```
    cd end-to-end-tests/data/git-projects
-   https://github.com/7db9a/chastler
+   git clone https://github.com/7db9a/chastler
+   git clone --branch end-to-end-test --single-branch https://github.com/7db9a/machtiani-end-to-end-test
    ```
+
+   Unless you have the codheost keys for the repo, this may not work.
 
 #### Running the Defacto Tests
 
 To run the end-to-end test suite from inside `end-to-end-tests` directory:
 
 ```bash
-python -m unittest test_end_to_end.py test_end_to_end_no_codehost_api_key.py
+python -m unittest test_end_to_end test_end_to_end_extra
 ```
+
+`test_end_to_end_no_codehost_api_key` is no longer useful as count tokens requires auto-deletion of the repo on dry-run on initialization.
 
 #### Why `test_end_to_end.py` is the Defacto Test
 

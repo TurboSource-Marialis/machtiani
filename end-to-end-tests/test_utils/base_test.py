@@ -1,5 +1,6 @@
 import unittest
 import os
+import re
 import json
 import time
 import threading
@@ -616,3 +617,80 @@ class BaseTestEndToEnd:
     #    #identical_embeddings_count = sum(1 for i in range(len(embeddings)) for j in range(i + 1, len(embeddings)) if embeddings[i] == embeddings[j])
     #    #self.assertEqual(identical_embeddings_count, 1,
     #    #                        "There should be 1 set of identical embeddings in commit 879ce80f")
+
+
+class ExtraTestEndToEnd:
+    """Test cases specifically run within the machtiani repository."""
+
+    @classmethod
+    def setup_end_to_end(cls, no_code_host_key=False):
+        """Initialize the test environment."""
+        cls.maxDiff = None
+        cls.directory = "data/git-projects/machtiani"
+        cls.setup = Setup(cls.directory)
+
+        # Ensure the .machtiani/chat directory exists
+        chat_dir = os.path.join(cls.directory, ".machtiani", "chat")
+        os.makedirs(chat_dir, exist_ok=True)
+
+        """Class-level setup for logging configuration."""
+        #logging.basicConfig(level=logging.DEBUG)
+        cls.logger = logging.getLogger(__name__)
+
+    @classmethod
+    def teardown_end_to_end(cls):
+        """Tear down after tests run within the machtiani repository."""
+        print(f"\n--- Tearing down TestMachtianiRepoEndToEnd for machtiani ---")
+        # No specific teardown needed for this test yet
+
+    def run_machtiani_command_in_machtiani_repo(self, command):
+        """Helper function to run a machtiani command in the machtiani repo."""
+        # Use the class directory attribute
+        stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
+        # Return raw lists for easier parsing of specific lines
+        return stdout_machtiani, stderr_machtiani
+
+    def test_cost_estimation_time(self):
+        """
+        Tests the time taken for cost estimation using 'git-sync --cost-only'.
+        Verifies the output contains the estimation time and it falls within 20-30 seconds.
+        """
+        command = 'machtiani git-sync --cost-only --verbose'
+        print(f"\nRunning command in {self.directory}: {command}")
+        stdout_machtiani, stderr_machtiani = self.run_machtiani_command_in_machtiani_repo(command)
+
+        # Uncomment for debugging if needed
+        # print("--- STDOUT ---")
+        # print("\n".join(stdout_machtiani))
+        # print("--- STDERR ---")
+        # print("\n".join(stderr_machtiani))
+        # print("--------------")
+
+        estimation_time = None
+        time_line_found = False
+        # Regex to find the specific line and capture the time value
+        pattern = r"Time until cost estimation finished: (\d+\.\d+)s"
+
+        for line in stdout_machtiani:
+            match = re.search(pattern, line)
+            if match:
+                time_str = match.group(1) # Get the captured group (the number)
+                try:
+                    estimation_time = float(time_str)
+                    time_line_found = True
+                    print(f"Found cost estimation time: {estimation_time}s")
+                    break # Stop searching once the line is found
+                except ValueError:
+                    print(f"Warning: Found line matching pattern, but failed to convert '{time_str}' to float.")
+                    # Continue searching in case of malformed lines, though unlikely
+
+        # Assert that the line was found and time was extracted
+        self.assertTrue(time_line_found, f"Line matching pattern '{pattern}' not found in stdout.")
+        self.assertIsNotNone(estimation_time, "Failed to extract a valid estimation time float.")
+
+        # Assert that the extracted time is within the expected range (20-30 seconds)
+        print(f"Asserting estimation time ({estimation_time}s) is between 20 and 30 seconds.")
+        self.assertGreaterEqual(estimation_time, 20.0,
+                                f"Cost estimation time ({estimation_time}s) was less than 20 seconds.")
+        self.assertLessEqual(estimation_time, 30.0,
+                               f"Cost estimation time ({estimation_time}s) was more than 30 seconds.")
