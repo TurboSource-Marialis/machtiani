@@ -63,6 +63,7 @@ func Execute() {
 	// Added cost-only flag
 	costOnlyFlag := fs.Bool("cost-only", false, "Estimate token cost and exit without performing the sync.")
     amplifyFlag := fs.String("amplify", "off", "Amplification level (off, low, mid, high), default is off when flag is present")
+    depthFlag := fs.Int("depth", 10000, "Depth of commit history to fetch (integer, default 10000)") // Added depth flag
 
 	compatible, message, err := api.GetInstallInfo()
 	if err != nil {
@@ -105,7 +106,7 @@ func Execute() {
 		}
 
 		// Pass costFlag and costOnlyFlag to handleGitSync
-		if err := handleGitSync(remoteURL, apiKey, *forceFlag, *verboseFlag, *costFlag, *costOnlyFlag, config, headCommitHash, *amplifyFlag); err != nil {
+		if err := handleGitSync(remoteURL, apiKey, *forceFlag, *verboseFlag, *costFlag, *costOnlyFlag, config, headCommitHash, *amplifyFlag, *depthFlag); err != nil {
 			log.Printf("Error handling git-sync: %v", err)
 			os.Exit(1)
 		}

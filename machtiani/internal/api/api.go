@@ -85,7 +85,7 @@ func EstimateTokenCount(codeURL string, name string, apiKey *string) (int, int, 
 	return tokenCountEmbedding, tokenCountInference, nil
 }
 
-func AddRepository(codeURL, name string, apiKey *string, openAIAPIKey, repoManagerURL, llmModelBaseURL string, force bool, headCommitHash string, useMockLLM bool, amplificationLevel string) (AddRepositoryResponse, error) {
+func AddRepository(codeURL, name string, apiKey *string, openAIAPIKey, repoManagerURL, llmModelBaseURL string, force bool, headCommitHash string, useMockLLM bool, amplificationLevel string, depthLevel int) (AddRepositoryResponse, error) {
     // Load config and ignore files first
     config, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
     if err != nil {
@@ -103,6 +103,7 @@ func AddRepository(codeURL, name string, apiKey *string, openAIAPIKey, repoManag
         "head":            headCommitHash,
         "use_mock_llm":    useMockLLM,
         "amplification_level": amplificationLevel,
+        "depth_level":     depthLevel,
     }
 	// Convert data to JSON
 	addRepositoryRequestJson, err := json.Marshal(addRepositoryRequestData)
@@ -147,7 +148,7 @@ func AddRepository(codeURL, name string, apiKey *string, openAIAPIKey, repoManag
 }
 
 // FetchAndCheckoutBranch sends a request to fetch and checkout a branch.
-func FetchAndCheckoutBranch(codeURL, name, branchName string, apiKey *string, openAIAPIKey string, force bool, headCommitHash string, useMockLLM bool, amplificationLevel string) (string, error) {
+func FetchAndCheckoutBranch(codeURL, name, branchName string, apiKey *string, openAIAPIKey string, force bool, headCommitHash string, useMockLLM bool, amplificationLevel string, depthLevel int) (string, error) {
 	config, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
 	if err != nil {
 		return "", err
@@ -173,6 +174,7 @@ func FetchAndCheckoutBranch(codeURL, name, branchName string, apiKey *string, op
 		"head":            headCommitHash,
 		"use_mock_llm":    useMockLLM,
         "amplification_level": amplificationLevel,
+        "depth_level":     depthLevel,
 	}
 
 	fetchAndCheckoutBranchRequestJson, err := json.Marshal(fetchAndCheckoutBranchRequestData)
