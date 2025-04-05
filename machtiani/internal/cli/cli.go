@@ -62,7 +62,7 @@ func Execute() {
 	costFlag := fs.Bool("cost", false, "Estimate token cost before proceeding with the sync.")
 	// Added cost-only flag
 	costOnlyFlag := fs.Bool("cost-only", false, "Estimate token cost and exit without performing the sync.")
-    amplifyFlag := fs.String("amplify", "mid", "Amplification level (low, mid, high), default is mid when flag is present")
+    amplifyFlag := fs.String("amplify", "off", "Amplification level (off, low, mid, high), default is off when flag is present")
 
 	compatible, message, err := api.GetInstallInfo()
 	if err != nil {
