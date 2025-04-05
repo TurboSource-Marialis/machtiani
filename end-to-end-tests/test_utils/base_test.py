@@ -84,7 +84,7 @@ class BaseTestEndToEnd:
         # Checkout master branch first to ensure we're syncing from a clean state
         self.setup.checkout_branch("master")
 
-        command = 'git checkout master && machtiani git-sync --cost --force'
+        command = 'git checkout master && machtiani git-sync --amplify low --cost --force'
         stdout_normalized = self.run_machtiani_command(command)
 
         expected_output = [
@@ -108,7 +108,7 @@ class BaseTestEndToEnd:
         expected_output = [line.strip() for line in expected_output if line.strip()]
         self.assertEqual(stdout_normalized, expected_output)
     def test_02_run_machtiani_sync_command_not_ready(self):
-        command = 'machtiani git-sync --cost --force'
+        command = 'machtiani git-sync --amplify low --cost --force'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
 
@@ -125,7 +125,7 @@ class BaseTestEndToEnd:
         end_time = time.time()
 
         total_time_elapsed = end_time - start_time
-        print(f"Total time elapsed for running machtiani git-sync: {total_time_elapsed:.2f} seconds")
+        print(f"Total time elapsed for running machtiani git-sync --amplify low: {total_time_elapsed:.2f} seconds")
 
         # Save the elapsed time to a file
         filename = create_elapsed_time_filename(total_time_elapsed)
@@ -133,7 +133,7 @@ class BaseTestEndToEnd:
 
         with open(file_path, 'w') as f:
             f.write(f"Test executed on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-            f.write(f"Total time elapsed for running machtiani git-sync: {total_time_elapsed:.2f} seconds\n")
+            f.write(f"Total time elapsed for running machtiani git-sync --amplify low: {total_time_elapsed:.2f} seconds\n")
 
         print(f"Elapsed time written to file: {file_path}")
 
@@ -201,7 +201,7 @@ class BaseTestEndToEnd:
         self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_normalized))
 
     def test_06_run_machtiani_sync_command(self):
-        command = 'machtiani git-sync --cost --force'
+        command = 'machtiani git-sync --amplify low --cost --force'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
 
@@ -222,7 +222,7 @@ class BaseTestEndToEnd:
 
     def test_07_sync_new_commits_and_prompt_command(self):
         # Step 2: Run git_sync and assert the output
-        command = 'git checkout feature && machtiani git-sync --force --cost'
+        command = 'git checkout feature && machtiani git-sync --amplify low --force --cost'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
 
@@ -266,7 +266,7 @@ class BaseTestEndToEnd:
 
     #def test_09_run_machtiani_status_with_lock(self):
     #    def run_sync():
-    #        command = 'git checkout feature && machtiani git-sync --force'
+    #        command = 'git checkout feature && machtiani git-sync --amplify low --force'
     #        run_machtiani_command(command, self.directory)
 
     #    sync_thread = threading.Thread(target=run_sync)
@@ -293,7 +293,7 @@ class BaseTestEndToEnd:
         time.sleep(5)
 
         # Step 4: Run git_sync again and assert the output now shows the correct token counts
-        command = 'git checkout feature2 && machtiani git-sync --cost --force'
+        command = 'git checkout feature2 && machtiani git-sync --amplify low --cost --force'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
 
@@ -322,7 +322,7 @@ class BaseTestEndToEnd:
         self.teardown_end_to_end()
 
     def test_11_run_machtiani_sync_command_not_ready(self):
-        command = 'machtiani git-sync --force --cost'
+        command = 'machtiani git-sync --amplify low --force --cost'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
 
@@ -339,7 +339,7 @@ class BaseTestEndToEnd:
         end_time = time.time()
 
         total_time_elapsed = end_time - start_time
-        print(f"Total time elapsed for running machtiani git-sync: {total_time_elapsed:.2f} seconds")
+        print(f"Total time elapsed for running machtiani git-sync --amplify low: {total_time_elapsed:.2f} seconds")
 
         # Save the elapsed time to a file
         filename = create_elapsed_time_filename(total_time_elapsed)
@@ -347,7 +347,7 @@ class BaseTestEndToEnd:
 
         with open(file_path, 'w') as f:
             f.write(f"Test executed on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-            f.write(f"Total time elapsed for running machtiani git-sync: {total_time_elapsed:.2f} seconds\n")
+            f.write(f"Total time elapsed for running machtiani git-sync --amplify low: {total_time_elapsed:.2f} seconds\n")
 
         print(f"Elapsed time written to file: {file_path}")
 
@@ -650,12 +650,12 @@ class ExtraTestEndToEnd:
         # Return raw lists for easier parsing of specific lines
         return stdout_machtiani, stderr_machtiani
 
-    def test_cost_estimation_time(self):
+    def test_cost_estimation_time_low_amplify(self):
         """
-        Tests the time taken for cost estimation using 'git-sync --cost-only'.
+        Tests the time taken for cost estimation using 'git-sync --amplify low --cost-only'.
         Verifies the output contains the estimation time and it falls within 20-30 seconds.
         """
-        command = 'machtiani git-sync --cost-only --verbose'
+        command = 'machtiani git-sync --amplify low --cost-only --verbose'
         print(f"\nRunning command in {self.directory}: {command}")
         stdout_machtiani, stderr_machtiani = self.run_machtiani_command_in_machtiani_repo(command)
 
@@ -694,3 +694,48 @@ class ExtraTestEndToEnd:
                                 f"Cost estimation time ({estimation_time}s) was less than 20 seconds.")
         self.assertLessEqual(estimation_time, 30.0,
                                f"Cost estimation time ({estimation_time}s) was more than 30 seconds.")
+
+    def test_cost_estimation_time_no_amplify(self):
+        """
+        Tests the time taken for cost estimation using 'git-sync --cost-only'.
+        Verifies the output contains the estimation time and it falls within 20-30 seconds.
+        """
+        command = 'machtiani git-sync --cost-only --verbose'
+        print(f"\nRunning command in {self.directory}: {command}")
+        stdout_machtiani, stderr_machtiani = self.run_machtiani_command_in_machtiani_repo(command)
+
+        # Uncomment for debugging if needed
+        # print("--- STDOUT ---")
+        # print("\n".join(stdout_machtiani))
+        # print("--- STDERR ---")
+        # print("\n".join(stderr_machtiani))
+        # print("--------------")
+
+        estimation_time = None
+        time_line_found = False
+        # Regex to find the specific line and capture the time value
+        pattern = r"Time until cost estimation finished: (\d+\.\d+)s"
+
+        for line in stdout_machtiani:
+            match = re.search(pattern, line)
+            if match:
+                time_str = match.group(1) # Get the captured group (the number)
+                try:
+                    estimation_time = float(time_str)
+                    time_line_found = True
+                    print(f"Found cost estimation time: {estimation_time}s")
+                    break # Stop searching once the line is found
+                except ValueError:
+                    print(f"Warning: Found line matching pattern, but failed to convert '{time_str}' to float.")
+                    # Continue searching in case of malformed lines, though unlikely
+
+        # Assert that the line was found and time was extracted
+        self.assertTrue(time_line_found, f"Line matching pattern '{pattern}' not found in stdout.")
+        self.assertIsNotNone(estimation_time, "Failed to extract a valid estimation time float.")
+
+        # Assert that the extracted time is within the expected range (3-5 seconds)
+        print(f"Asserting estimation time ({estimation_time}s) is between 3 and 5 seconds.")
+        self.assertGreaterEqual(estimation_time, 3.0,
+                                f"Cost estimation time ({estimation_time}s) was less than 3 seconds.")
+        self.assertLessEqual(estimation_time, 5.0,
+                               f"Cost estimation time ({estimation_time}s) was more than 5 seconds.")
