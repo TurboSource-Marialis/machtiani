@@ -10,7 +10,8 @@ import (
 	"github.com/7db9a/machtiani/internal/utils"
 )
 
-func handleGitSync(remoteURL string, apiKey *string, force bool, verbose bool, cost bool, costOnly bool, config utils.Config, headCommitHash string) error {
+func handleGitSync(remoteURL string, apiKey *string, force bool, verbose bool, cost bool, costOnly bool, config utils.Config, headCommitHash string, amplificationLevel string) error {
+
 	startTime := time.Now()
 	branchName, err := git.GetBranch()
 	if err != nil {
@@ -40,7 +41,7 @@ func handleGitSync(remoteURL string, apiKey *string, force bool, verbose bool, c
 
 			if cost || costOnly {
 				// Perform dry-run add to allow estimation
-				_, err = api.AddRepository(remoteURL, remoteURL, apiKey, config.Environment.ModelAPIKey, api.RepoManagerURL, config.Environment.ModelBaseURL, true, headCommitHash, true)
+				_, err = api.AddRepository(remoteURL, remoteURL, apiKey, config.Environment.ModelAPIKey, api.RepoManagerURL, config.Environment.ModelBaseURL, true, headCommitHash, true, amplificationLevel)
 				if err != nil && !strings.Contains(err.Error(), "already exists") {
 					return fmt.Errorf("error during initial repository check/add (dry run): %w", err)
 				}
@@ -76,7 +77,7 @@ func handleGitSync(remoteURL string, apiKey *string, force bool, verbose bool, c
 			}
 
 			if force || utils.ConfirmProceed() {
-				response, err := api.AddRepository(remoteURL, remoteURL, apiKey, config.Environment.ModelAPIKey, api.RepoManagerURL, config.Environment.ModelBaseURL, force, headCommitHash, false)
+				response, err := api.AddRepository(remoteURL, remoteURL, apiKey, config.Environment.ModelAPIKey, api.RepoManagerURL, config.Environment.ModelBaseURL, force, headCommitHash, false, amplificationLevel)
 				if err != nil {
 					return fmt.Errorf("Error adding repository: %w", err)
 				}
@@ -97,7 +98,7 @@ func handleGitSync(remoteURL string, apiKey *string, force bool, verbose bool, c
 	fmt.Println("Repository found. Preparing to sync branch:", branchName)
 
 	if cost || costOnly {
-		_, err = api.FetchAndCheckoutBranch(remoteURL, remoteURL, branchName, apiKey, config.Environment.ModelAPIKey, true, headCommitHash, true)
+		_, err = api.FetchAndCheckoutBranch(remoteURL, remoteURL, branchName, apiKey, config.Environment.ModelAPIKey, true, headCommitHash, true, amplificationLevel)
 		if err != nil {
 			return fmt.Errorf("Error during repository sync check (dry run): %w", err)
 		}
@@ -115,7 +116,7 @@ func handleGitSync(remoteURL string, apiKey *string, force bool, verbose bool, c
 	}
 
 	if force || utils.ConfirmProceed() {
-		message, err := api.FetchAndCheckoutBranch(remoteURL, remoteURL, branchName, apiKey, config.Environment.ModelAPIKey, force, headCommitHash, false)
+		message, err := api.FetchAndCheckoutBranch(remoteURL, remoteURL, branchName, apiKey, config.Environment.ModelAPIKey, force, headCommitHash, false, amplificationLevel)
 		if err != nil {
 			return fmt.Errorf("Error syncing repository: %w", err)
 		}

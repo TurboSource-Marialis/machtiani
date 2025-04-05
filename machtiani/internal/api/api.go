@@ -85,7 +85,7 @@ func EstimateTokenCount(codeURL string, name string, apiKey *string) (int, int, 
 	return tokenCountEmbedding, tokenCountInference, nil
 }
 
-func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey string, repoManagerURL string, llmModelBaseURL string, force bool, headCommitHash string, useMockLLM bool) (AddRepositoryResponse, error) {
+func AddRepository(codeURL, name string, apiKey *string, openAIAPIKey, repoManagerURL, llmModelBaseURL string, force bool, headCommitHash string, useMockLLM bool, amplificationLevel string) (AddRepositoryResponse, error) {
     // Load config and ignore files first
     config, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
     if err != nil {
@@ -102,6 +102,7 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
         "ignore_files":    ignoreFiles,
         "head":            headCommitHash,
         "use_mock_llm":    useMockLLM,
+        "amplification_level": amplificationLevel,
     }
 	// Convert data to JSON
 	addRepositoryRequestJson, err := json.Marshal(addRepositoryRequestData)
@@ -146,7 +147,7 @@ func AddRepository(codeURL string, name string, apiKey *string, openAIAPIKey str
 }
 
 // FetchAndCheckoutBranch sends a request to fetch and checkout a branch.
-func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiKey *string, openAIAPIKey string, force bool, headCommitHash string, useMockLLM bool) (string, error) {
+func FetchAndCheckoutBranch(codeURL, name, branchName string, apiKey *string, openAIAPIKey string, force bool, headCommitHash string, useMockLLM bool, amplificationLevel string) (string, error) {
 	config, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
 	if err != nil {
 		return "", err
@@ -171,6 +172,7 @@ func FetchAndCheckoutBranch(codeURL string, name string, branchName string, apiK
 		"ignore_files":    ignoreFiles,
 		"head":            headCommitHash,
 		"use_mock_llm":    useMockLLM,
+        "amplification_level": amplificationLevel,
 	}
 
 	fetchAndCheckoutBranchRequestJson, err := json.Marshal(fetchAndCheckoutBranchRequestData)
