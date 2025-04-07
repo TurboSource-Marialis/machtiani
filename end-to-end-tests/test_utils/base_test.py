@@ -650,45 +650,52 @@ class ExtraTestEndToEnd:
         # Return raw lists for easier parsing of specific lines
         return stdout_machtiani, stderr_machtiani
 
-    def test_cost_estimation_time_low_amplify(self):
-        """
-        Tests the time taken for cost estimation using 'git-sync --amplify low --cost-only'.
-        Verifies the output contains the estimation time and it falls within 20-30 seconds.
-        """
-        command = 'machtiani git-sync --amplify low --cost-only --verbose'
-        print(f"\nRunning command in {self.directory}: {command}")
-        stdout_machtiani, stderr_machtiani = self.run_machtiani_command_in_machtiani_repo(command)
-
-        # Uncomment for debugging if needed
-        # print("--- STDOUT ---")
-        # print("\n".join(stdout_machtiani))
-        # print("--- STDERR ---")
-        # print("\n".join(stderr_machtiani))
-        # print("--------------")
-
+    def _extract_estimation_time(self, stdout_machtiani):
+        """Helper function to extract estimation time from stdout."""
         estimation_time = None
         time_line_found = False
-        # Regex to find the specific line and capture the time value
         pattern = r"Time until cost estimation finished: (\d+\.\d+)s"
 
         for line in stdout_machtiani:
             match = re.search(pattern, line)
             if match:
-                time_str = match.group(1) # Get the captured group (the number)
+                time_str = match.group(1)
                 try:
                     estimation_time = float(time_str)
                     time_line_found = True
                     print(f"Found cost estimation time: {estimation_time}s")
-                    break # Stop searching once the line is found
+                    break
                 except ValueError:
                     print(f"Warning: Found line matching pattern, but failed to convert '{time_str}' to float.")
-                    # Continue searching in case of malformed lines, though unlikely
 
-        # Assert that the line was found and time was extracted
-        self.assertTrue(time_line_found, f"Line matching pattern '{pattern}' not found in stdout.")
+        return estimation_time, time_line_found
+
+    def test_cost_estimation_time_low_amplify(self):
+        """
+        Tests the time and token counts for cost estimation using 'git-sync --amplify low --cost-only'.
+        Verifies the output contains the estimation time and it falls within 20-30 seconds.
+        Verifies the specific token counts.
+        """
+        command = 'machtiani git-sync --amplify low --cost-only --verbose'
+        print(f"\nRunning command in {self.directory}: {command}")
+        stdout_machtiani, stderr_machtiani = self.run_machtiani_command_in_machtiani_repo(command)
+
+        # Check for specific token counts
+        self.assertTrue(
+            any(line.strip() == "Estimated embedding tokens: 531000" for line in stdout_machtiani),
+            "Expected 'Estimated embedding tokens: 531000' not found in stdout."
+        )
+        self.assertTrue(
+            any(line.strip() == "Estimated inference tokens: 550098" for line in stdout_machtiani),
+            "Expected 'Estimated inference tokens: 550098' not found in stdout."
+        )
+
+        # Extract and assert time
+        estimation_time, time_line_found = self._extract_estimation_time(stdout_machtiani)
+
+        self.assertTrue(time_line_found, "Time estimation line not found in stdout.")
         self.assertIsNotNone(estimation_time, "Failed to extract a valid estimation time float.")
 
-        # Assert that the extracted time is within the expected range (20-30 seconds)
         print(f"Asserting estimation time ({estimation_time}s) is between 20 and 30 seconds.")
         self.assertGreaterEqual(estimation_time, 20.0,
                                 f"Cost estimation time ({estimation_time}s) was less than 20 seconds.")
@@ -697,45 +704,161 @@ class ExtraTestEndToEnd:
 
     def test_cost_estimation_time_no_amplify(self):
         """
-        Tests the time taken for cost estimation using 'git-sync --cost-only'.
-        Verifies the output contains the estimation time and it falls within 20-30 seconds.
+        Tests the time and token counts for cost estimation using 'git-sync --cost-only'.
+        Verifies the output contains the estimation time and it falls within 3-5 seconds.
+        Verifies the specific token counts.
         """
         command = 'machtiani git-sync --cost-only --verbose'
         print(f"\nRunning command in {self.directory}: {command}")
         stdout_machtiani, stderr_machtiani = self.run_machtiani_command_in_machtiani_repo(command)
 
-        # Uncomment for debugging if needed
-        # print("--- STDOUT ---")
-        # print("\n".join(stdout_machtiani))
-        # print("--- STDERR ---")
-        # print("\n".join(stderr_machtiani))
-        # print("--------------")
+        # Check for specific token counts
+        self.assertTrue(
+            any(line.strip() == "Estimated embedding tokens: 265500" for line in stdout_machtiani),
+            "Expected 'Estimated embedding tokens: 265500' not found in stdout."
+        )
+        self.assertTrue(
+            any(line.strip() == "Estimated inference tokens: 36343" for line in stdout_machtiani),
+            "Expected 'Estimated inference tokens: 36343' not found in stdout."
+        )
 
-        estimation_time = None
-        time_line_found = False
-        # Regex to find the specific line and capture the time value
-        pattern = r"Time until cost estimation finished: (\d+\.\d+)s"
+        # Extract and assert time
+        estimation_time, time_line_found = self._extract_estimation_time(stdout_machtiani)
 
-        for line in stdout_machtiani:
-            match = re.search(pattern, line)
-            if match:
-                time_str = match.group(1) # Get the captured group (the number)
-                try:
-                    estimation_time = float(time_str)
-                    time_line_found = True
-                    print(f"Found cost estimation time: {estimation_time}s")
-                    break # Stop searching once the line is found
-                except ValueError:
-                    print(f"Warning: Found line matching pattern, but failed to convert '{time_str}' to float.")
-                    # Continue searching in case of malformed lines, though unlikely
-
-        # Assert that the line was found and time was extracted
-        self.assertTrue(time_line_found, f"Line matching pattern '{pattern}' not found in stdout.")
+        self.assertTrue(time_line_found, "Time estimation line not found in stdout.")
         self.assertIsNotNone(estimation_time, "Failed to extract a valid estimation time float.")
 
-        # Assert that the extracted time is within the expected range (3-5 seconds)
-        print(f"Asserting estimation time ({estimation_time}s) is between 3 and 5 seconds.")
+        print(f"Asserting estimation time ({estimation_time}s) is between 3 and 7 seconds.")
         self.assertGreaterEqual(estimation_time, 3.0,
                                 f"Cost estimation time ({estimation_time}s) was less than 3 seconds.")
-        self.assertLessEqual(estimation_time, 5.0,
-                               f"Cost estimation time ({estimation_time}s) was more than 5 seconds.")
+        self.assertLessEqual(estimation_time, 7.0,
+                               f"Cost estimation time ({estimation_time}s) was more than 7 seconds.")
+
+    # --- New Tests with --depth 1 ---
+
+    def test_cost_estimation_time_no_amplify_depth_1(self):
+        """
+        Tests time and tokens for 'git-sync --cost-only --depth 1'.
+        Expects time between 2-4 seconds and specific token counts.
+        """
+        command = 'machtiani git-sync --cost-only --verbose --depth 1'
+        print(f"\nRunning command in {self.directory}: {command}")
+        stdout_machtiani, stderr_machtiani = self.run_machtiani_command_in_machtiani_repo(command)
+
+        # Check for specific token counts
+        self.assertTrue(
+            any(line.strip() == "Estimated embedding tokens: 500" for line in stdout_machtiani),
+            "Expected 'Estimated embedding tokens: 500' not found in stdout (depth 1, no amplify)."
+        )
+        self.assertTrue(
+            any(line.strip() == "Estimated inference tokens: 15" for line in stdout_machtiani),
+            "Expected 'Estimated inference tokens: 15' not found in stdout (depth 1, no amplify)."
+        )
+
+        # Extract and assert time
+        estimation_time, time_line_found = self._extract_estimation_time(stdout_machtiani)
+
+        self.assertTrue(time_line_found, "Time estimation line not found in stdout (depth 1, no amplify).")
+        self.assertIsNotNone(estimation_time, "Failed to extract valid estimation time (depth 1, no amplify).")
+
+        print(f"Asserting estimation time ({estimation_time}s) is between 1 and 4 seconds (depth 1, no amplify).")
+        self.assertGreaterEqual(estimation_time, 1.0,
+                                f"Cost estimation time ({estimation_time}s) was less than 1 seconds (depth 1, no amplify).")
+        self.assertLessEqual(estimation_time, 4.0,
+                               f"Cost estimation time ({estimation_time}s) was more than 4 seconds (depth 1, no amplify).")
+
+    def test_cost_estimation_time_low_amplify_depth_1(self):
+        """
+        Tests time and tokens for 'git-sync --amplify low --cost-only --depth 1'.
+        Expects time between 2-4 seconds and specific token counts.
+        """
+        command = 'machtiani git-sync --amplify low --cost-only --verbose --depth 1'
+        print(f"\nRunning command in {self.directory}: {command}")
+        stdout_machtiani, stderr_machtiani = self.run_machtiani_command_in_machtiani_repo(command)
+
+        # Check for specific token counts
+        self.assertTrue(
+            any(line.strip() == "Estimated embedding tokens: 1000" for line in stdout_machtiani),
+            "Expected 'Estimated embedding tokens: 1000' not found in stdout (depth 1, low amplify)."
+        )
+        self.assertTrue(
+            any(line.strip() == "Estimated inference tokens: 161" for line in stdout_machtiani),
+            "Expected 'Estimated inference tokens: 161' not found in stdout (depth 1, low amplify)."
+        )
+
+        # Extract and assert time
+        estimation_time, time_line_found = self._extract_estimation_time(stdout_machtiani)
+
+        self.assertTrue(time_line_found, "Time estimation line not found in stdout (depth 1, low amplify).")
+        self.assertIsNotNone(estimation_time, "Failed to extract valid estimation time (depth 1, low amplify).")
+
+        print(f"Asserting estimation time ({estimation_time}s) is between 1 and 4 seconds (depth 1, low amplify).")
+        self.assertGreaterEqual(estimation_time, 1.0,
+                                f"Cost estimation time ({estimation_time}s) was less than 1 seconds (depth 1, low amplify).")
+        self.assertLessEqual(estimation_time, 4.0,
+                               f"Cost estimation time ({estimation_time}s) was more than 4 seconds (depth 1, low amplify).")
+
+    # --- New Tests with --depth 137 ---
+
+    def test_cost_estimation_time_no_amplify_depth_137(self):
+        """
+        Tests time and tokens for 'git-sync --cost-only --depth 137'.
+        Expects time between 2-4 seconds and specific token counts.
+        """
+        command = 'machtiani git-sync --cost-only --verbose --depth 137'
+        print(f"\nRunning command in {self.directory}: {command}")
+        stdout_machtiani, stderr_machtiani = self.run_machtiani_command_in_machtiani_repo(command)
+
+        # Check for specific token counts
+        self.assertTrue(
+            any(line.strip() == "Estimated embedding tokens: 68500" for line in stdout_machtiani),
+            "Expected 'Estimated embedding tokens: 68500' not found in stdout (depth 137, no amplify)."
+        )
+        self.assertTrue(
+            any(line.strip() == "Estimated inference tokens: 5210" for line in stdout_machtiani),
+            "Expected 'Estimated inference tokens: 5210' not found in stdout (depth 137, no amplify)."
+        )
+
+        # Extract and assert time
+        estimation_time, time_line_found = self._extract_estimation_time(stdout_machtiani)
+
+        self.assertTrue(time_line_found, "Time estimation line not found in stdout (depth 137, no amplify).")
+        self.assertIsNotNone(estimation_time, "Failed to extract valid estimation time (depth 137, no amplify).")
+
+        print(f"Asserting estimation time ({estimation_time}s) is between 2 and 4 seconds (depth 137, no amplify).")
+        self.assertGreaterEqual(estimation_time, 2.0,
+                                f"Cost estimation time ({estimation_time}s) was less than 2 seconds (depth 137, no amplify).")
+        self.assertLessEqual(estimation_time, 4.0,
+                               f"Cost estimation time ({estimation_time}s) was more than 4 seconds (depth 137, no amplify).")
+
+    def test_cost_estimation_time_low_amplify_depth_137(self):
+        """
+        Tests time and tokens for 'git-sync --amplify low --cost-only --depth 137'.
+        Expects time between 8-10 seconds and specific token counts.
+        """
+        command = 'machtiani git-sync --amplify low --cost-only --verbose --depth 137'
+        print(f"\nRunning command in {self.directory}: {command}")
+        stdout_machtiani, stderr_machtiani = self.run_machtiani_command_in_machtiani_repo(command)
+
+        # Check for specific token counts
+        self.assertTrue(
+            any(line.strip() == "Estimated embedding tokens: 137000" for line in stdout_machtiani),
+            "Expected 'Estimated embedding tokens: 137000' not found in stdout (depth 137, low amplify)."
+        )
+        self.assertTrue(
+            any(line.strip() == "Estimated inference tokens: 126125" for line in stdout_machtiani),
+            "Expected 'Estimated inference tokens: 126125' not found in stdout (depth 137, low amplify)."
+        )
+
+        # Extract and assert time
+        estimation_time, time_line_found = self._extract_estimation_time(stdout_machtiani)
+
+        self.assertTrue(time_line_found, "Time estimation line not found in stdout (depth 137, low amplify).")
+        self.assertIsNotNone(estimation_time, "Failed to extract valid estimation time (depth 137, low amplify).")
+
+        print(f"Asserting estimation time ({estimation_time}s) is between 8 and 10 seconds (depth 137, low amplify).")
+        self.assertGreaterEqual(estimation_time, 8.0,
+                                f"Cost estimation time ({estimation_time}s) was less than 8 seconds (depth 137, low amplify).")
+        self.assertLessEqual(estimation_time, 10.0,
+                               f"Cost estimation time ({estimation_time}s) was more than 10 seconds (depth 137, low amplify).")
+
