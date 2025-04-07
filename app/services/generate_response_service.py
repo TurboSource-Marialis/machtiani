@@ -19,6 +19,7 @@ from app.utils import (
 )
 from lib.ai.llm_model import LlmModel
 
+#logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Define token limits for different models
@@ -119,17 +120,23 @@ async def generate_response(
                 logger.debug("Response from infer-file: %s", list_file_search_response)
 
                 # Separate file paths by type
-                commit_paths, file_paths = separate_file_paths_by_type(list_file_search_response)
+                commit_paths, file_paths, localization_paths = separate_file_paths_by_type(list_file_search_response)
 
                 # Get top 5 commit paths
                 top_commit_paths = commit_paths[:5]
-                logger.info(f"Top 5 commit paths before removing duplicates: {top_commit_paths}")
+                logger.info(f"Top 5 commit paths before removing duplicates: {top_commit_paths}\n")
 
                 # Get top 5 file paths
                 top_file_paths = file_paths[:5]
-                logger.info(f"Top 5 file paths before removing duplicates: {top_file_paths}")
+                logger.info(f"Top 5 file paths before removing duplicates: {top_file_paths}\n")
+
+                # Get top 5 localization paths
+                top_localization_paths = localization_paths[:5]
+                logger.info(f"Top 5 localization paths before removing duplicates: {top_localization_paths}\n")
+
                 list_file_path_entry = top_commit_paths.copy()
                 list_file_path_entry.extend(top_file_paths)
+                list_file_path_entry.extend(top_localization_paths)
                 logger.info(f"list of file paths before removing duplicates: {list_file_path_entry}")
                 if list_file_path_entry:
                     list_file_path_entry = await remove_duplicate_file_paths(list_file_path_entry)

@@ -58,6 +58,7 @@ async def remove_duplicate_file_paths(file_paths: List[FilePathEntry]) -> List[F
 def separate_file_paths_by_type(file_search_responses: List[FileSearchResponse]) -> Tuple[List[FilePathEntry], List[FilePathEntry]]:
     commit_file_paths = []
     file_file_paths = []
+    localization_file_paths = []
 
     for response in file_search_responses:
         for file_path_entry in response.file_paths:
@@ -65,8 +66,10 @@ def separate_file_paths_by_type(file_search_responses: List[FileSearchResponse])
                 commit_file_paths.append(FilePathEntry(path=file_path_entry.path))
             elif response.path_type == 'file':
                 file_file_paths.append(FilePathEntry(path=file_path_entry.path))
+            elif response.path_type == 'localization':
+                localization_file_paths.append(FilePathEntry(path=file_path_entry.path))
 
-    return commit_file_paths, file_file_paths
+    return commit_file_paths, file_file_paths, localization_file_paths
 
 async def count_tokens(text: str) -> int:
     return len(text) // 4 + 1
