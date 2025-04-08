@@ -244,6 +244,15 @@ async def generate_response(
                 # Prepend the unique commit paths to the retrieved_file_paths list
                 retrieved_file_paths = top_commit_paths_to_add + retrieved_file_paths
 
+
+                seen = set()
+                deduped_paths = []
+                for path in retrieved_file_paths:
+                    if path not in seen:
+                        deduped_paths.append(path)
+                        seen.add(path)
+                retrieved_file_paths = deduped_paths
+
                 combined_prompt = f"{prompt}\n\nHere are the relevant files:\n"
                 for path, content in file_content_response.contents.items():
                     combined_prompt += f"\n--- {path} ---\n{content}\n"
