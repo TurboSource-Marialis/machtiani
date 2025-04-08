@@ -19,7 +19,7 @@ from app.utils import (
 )
 from lib.ai.llm_model import LlmModel
 
-#logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Define token limits for different models
@@ -262,9 +262,36 @@ async def generate_response(
             if retrieved_file_paths:
                 yield {"retrieved_file_paths": retrieved_file_paths}
 
-            # Stream tokens from OpenAI response
+            # Accumulate tokens from OpenAI response
+            response_tokens = []
             async for token_json in llm_model.send_prompt_streaming(combined_prompt):
-                yield json.loads(token_json)
+                token_data = json.loads(token_json)
+                token = token_data.get("token", "")
+                response_tokens.append(token)
+                yield token_data  # Stream tokens as before
+
+            final_response_text = ''.join(response_tokens)
+
+            # Call file-edit for each retrieved file path, log response
+            file_edit_url = f"{base_url}/file-edit/"
+            async with httpx.AsyncClient(timeout=600) as edit_client:
+                for file_path in retrieved_file_paths:
+                    payload = {
+                        "project": project,
+                        "file_path": file_path,
+                        "instructions": final_response_text,
+                        "llm_model_api_key": llm_model_api_key,
+                        "llm_model_base_url": str(llm_model_base_url),
+                        "model": model,
+                        "ignore_files": ignore_files or []
+                    }
+                    try:
+                        resp = await edit_client.post(file_edit_url, json=payload)
+                        resp.raise_for_status()
+                        resp_json = resp.json()
+                        logger.info(f"[file-edit] {file_path} response: {resp_json}")
+                    except Exception as e:
+                        logger.error(f"[file-edit] Error editing {file_path}: {e}")
 
     except httpx.RequestError as exc:
         logger.error(f"Request error: {exc}")
