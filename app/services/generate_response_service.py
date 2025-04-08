@@ -289,8 +289,8 @@ async def generate_response(
                         "project": project,
                         "file_path": file_path,
                         "instructions": final_response_text,
-                        "llm_model_api_key": llm_model_api_key,
-                        "llm_model_base_url": str(llm_model_base_url),
+                        "llm_model_api_key": llm_model_api_key_other,
+                        "llm_model_base_url": str(llm_model_base_url_other),
                         "model": model,
                         "ignore_files": ignore_files or []
                     }
