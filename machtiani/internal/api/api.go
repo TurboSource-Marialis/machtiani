@@ -17,11 +17,11 @@ import (
 )
 
 var (
-	HeadOID        string = "none"
-	BuildDate      string = "unknown"
-	MachtianiURL   string = "http://localhost:5071"
-	RepoManagerURL string = "http://localhost:5070"
-    MachtianiGitRemoteURL string = "none"
+	HeadOID               string = "none"
+	BuildDate             string = "unknown"
+	MachtianiURL          string = "http://localhost:5071"
+	RepoManagerURL        string = "http://localhost:5070"
+	MachtianiGitRemoteURL string = "none"
 )
 
 var (
@@ -31,8 +31,8 @@ var (
 )
 
 const (
-	CONTENT_TYPE_KEY   = "Content-Type"
-	CONTENT_TYPE_VALUE = "application/json"
+	CONTENT_TYPE_KEY     = "Content-Type"
+	CONTENT_TYPE_VALUE   = "application/json"
 	API_GATEWAY_HOST_KEY = "X-RapidAPI-Key"
 )
 
@@ -81,30 +81,29 @@ func EstimateTokenCount(codeURL string, name string, apiKey *string) (int, int, 
 		return 0, 0, fmt.Errorf("error getting token count: %w", err)
 	}
 
-
 	return tokenCountEmbedding, tokenCountInference, nil
 }
 
 func AddRepository(codeURL, name string, apiKey *string, openAIAPIKey, repoManagerURL, llmModelBaseURL string, force bool, headCommitHash string, useMockLLM bool, amplificationLevel string, depthLevel int) (AddRepositoryResponse, error) {
-    // Load config and ignore files first
-    config, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
-    if err != nil {
-        return AddRepositoryResponse{}, err
-    }
+	// Load config and ignore files first
+	config, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
+	if err != nil {
+		return AddRepositoryResponse{}, err
+	}
 
-    addRepositoryRequestData := map[string]interface{}{
-        "codehost_url":    codeURL,
-        "project_name":    name,
-        "vcs_type":        "git",
-        "api_key":         apiKey,
-        "llm_model_api_key": openAIAPIKey,
-        "llm_model_base_url": llmModelBaseURL,
-        "ignore_files":    ignoreFiles,
-        "head":            headCommitHash,
-        "use_mock_llm":    useMockLLM,
-        "amplification_level": amplificationLevel,
-        "depth_level":     depthLevel,
-    }
+	addRepositoryRequestData := map[string]interface{}{
+		"codehost_url":        codeURL,
+		"project_name":        name,
+		"vcs_type":            "git",
+		"api_key":             apiKey,
+		"llm_model_api_key":   openAIAPIKey,
+		"llm_model_base_url":  llmModelBaseURL,
+		"ignore_files":        ignoreFiles,
+		"head":                headCommitHash,
+		"use_mock_llm":        useMockLLM,
+		"amplification_level": amplificationLevel,
+		"depth_level":         depthLevel,
+	}
 	// Convert data to JSON
 	addRepositoryRequestJson, err := json.Marshal(addRepositoryRequestData)
 	if err != nil {
@@ -164,17 +163,17 @@ func FetchAndCheckoutBranch(codeURL, name, branchName string, apiKey *string, op
 	go utils.Spinner(done)
 
 	fetchAndCheckoutBranchRequestData := map[string]interface{}{
-		"codehost_url":    codeURL,
-		"project_name":    name,
-		"branch_name":     branchName,
-		"api_key":         apiKey,
-		"llm_model_api_key": openAIAPIKey,
-		"llm_model_base_url": config.Environment.ModelBaseURL,
-		"ignore_files":    ignoreFiles,
-		"head":            headCommitHash,
-		"use_mock_llm":    useMockLLM,
-        "amplification_level": amplificationLevel,
-        "depth_level":     depthLevel,
+		"codehost_url":        codeURL,
+		"project_name":        name,
+		"branch_name":         branchName,
+		"api_key":             apiKey,
+		"llm_model_api_key":   openAIAPIKey,
+		"llm_model_base_url":  config.Environment.ModelBaseURL,
+		"ignore_files":        ignoreFiles,
+		"head":                headCommitHash,
+		"use_mock_llm":        useMockLLM,
+		"amplification_level": amplificationLevel,
+		"depth_level":         depthLevel,
 	}
 
 	fetchAndCheckoutBranchRequestJson, err := json.Marshal(fetchAndCheckoutBranchRequestData)
@@ -288,9 +287,10 @@ func DeleteStore(projectName string, codehostURL string, vcsType string, apiKey 
 }
 
 type GenerateResponseResult struct {
-	LlmModelResponse string   `json:"llm_model_response"`
-	RawResponse        string   `json:"llm_model_response"`
-	RetrievedFilePaths []string `json:"retrieved_file_paths"`
+	LlmModelResponse      string            `json:"llm_model_response"`
+	RawResponse           string            `json:"llm_model_response"`
+	RetrievedFilePaths    []string          `json:"retrieved_file_paths"`
+	UpdateContentResponse map[string]string `json:"update_content_response"`
 }
 
 func init() {
@@ -317,18 +317,18 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 	}
 
 	payload := map[string]interface{}{
-		"prompt":                  prompt,
-		"project":                 project,
-		"mode":                    mode,
-		"model":                   model,
-		"match_strength":          matchStrength,
-		"llm_model_api_key":       config.Environment.ModelAPIKey,
-		"llm_model_api_key_other": config.Environment.ModelAPIKeyOther,
-		"llm_model_base_url":      config.Environment.ModelBaseURL,
-		"codehost_api_key":        config.Environment.CodeHostAPIKey,
-		"codehost_url":            codehostURL,
-		"ignore_files":            ignoreFiles,
-		"head_commit_hash":      headCommitHash,
+		"prompt":                   prompt,
+		"project":                  project,
+		"mode":                     mode,
+		"model":                    model,
+		"match_strength":           matchStrength,
+		"llm_model_api_key":        config.Environment.ModelAPIKey,
+		"llm_model_api_key_other":  config.Environment.ModelAPIKeyOther,
+		"llm_model_base_url":       config.Environment.ModelBaseURL,
+		"codehost_api_key":         config.Environment.CodeHostAPIKey,
+		"codehost_url":             codehostURL,
+		"ignore_files":             ignoreFiles,
+		"head_commit_hash":         headCommitHash,
 		"llm_model_base_url_other": config.Environment.ModelBaseURLOther,
 	}
 
@@ -375,11 +375,13 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 
 	// Initialize variables
 	var completeResponse strings.Builder
-	var rawResponse strings.Builder         // Initialize rawResponse
+	var rawResponse strings.Builder // Initialize rawResponse
 	var retrievedFilePaths []string
-	var tokenBuffer bytes.Buffer // Buffer to accumulate tokens
-	var inCodeBlock bool        // Track if we're inside a code block
+	var tokenBuffer bytes.Buffer     // Buffer to accumulate tokens
+	var inCodeBlock bool             // Track if we're inside a code block
 	var codeBlockBuffer bytes.Buffer // Buffer to accumulate code block content
+
+	updateContentResponse := make(map[string]string)
 
 	// Use a JSON decoder to read multiple JSON objects from the response stream
 	decoder := json.NewDecoder(resp.Body)
@@ -430,6 +432,7 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 
 			// Check if buffer contains two consecutive newlines indicating a potential block end
 			content := tokenBuffer.String()
+
 			for {
 				idx := strings.Index(content, "\n\n")
 				if idx == -1 {
@@ -520,22 +523,23 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 			// log.Printf("Retrieved file paths: %v", retrievedFilePaths)
 		}
 
-        // NEW: handle updated files
-        if updated, ok := chunk["updated_file_contents"]; ok {
-            updatedJSON, err := json.Marshal(updated)
-            if err != nil {
-                return nil, fmt.Errorf("failed to marshal updated_file_contents: %w", err)
-            }
-            updatedMap := map[string]string{}
-            if err := json.Unmarshal(updatedJSON, &updatedMap); err != nil {
-                return nil, fmt.Errorf("failed to unmarshal updated_file_contents: %w", err)
-            }
+		// NEW: handle updated files
+		if updated, ok := chunk["updated_file_contents"]; ok {
+			updatedJSON, err := json.Marshal(updated)
+			if err != nil {
+				return nil, fmt.Errorf("failed to marshal updated_file_contents: %w", err)
+			}
+			updatedMap := map[string]string{}
+			if err := json.Unmarshal(updatedJSON, &updatedMap); err != nil {
+				return nil, fmt.Errorf("failed to unmarshal updated_file_contents: %w", err)
+			}
 
-            // Print updated file contents or store as needed
-            for path, content := range updatedMap {
-                fmt.Printf("\n\n--- Updated: %s ---\n%s\n", path, content)
-            }
-        }
+			// Print and collect updated file contents
+			for path, content := range updatedMap {
+				fmt.Printf("\n\n--- Updated: %s ---\n%s\n", path, content)
+				updateContentResponse[path] = content
+			}
+		}
 	}
 
 	// Render any remaining content in the buffer after the stream ends
@@ -567,9 +571,10 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 	}
 
 	return &GenerateResponseResult{
-		LlmModelResponse: completeResponse.String(),
+		LlmModelResponse:   completeResponse.String(),
 		RawResponse:        rawResponse.String(), // Include rawResponse
 		RetrievedFilePaths: retrievedFilePaths,
+	    UpdateContentResponse: updateContentResponse,
 	}, nil
 }
 
