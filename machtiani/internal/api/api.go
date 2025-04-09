@@ -536,7 +536,6 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 
 			// Print and collect updated file contents
 			for path, content := range updatedMap {
-				fmt.Printf("\n\n--- Updated: %s ---\n%s\n", path, content)
 				updateContentResponse[path] = content
 			}
 		}
