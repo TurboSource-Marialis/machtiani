@@ -519,6 +519,23 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 			// Optionally log retrieved file paths
 			// log.Printf("Retrieved file paths: %v", retrievedFilePaths)
 		}
+
+        // NEW: handle updated files
+        if updated, ok := chunk["updated_file_contents"]; ok {
+            updatedJSON, err := json.Marshal(updated)
+            if err != nil {
+                return nil, fmt.Errorf("failed to marshal updated_file_contents: %w", err)
+            }
+            updatedMap := map[string]string{}
+            if err := json.Unmarshal(updatedJSON, &updatedMap); err != nil {
+                return nil, fmt.Errorf("failed to unmarshal updated_file_contents: %w", err)
+            }
+
+            // Print updated file contents or store as needed
+            for path, content := range updatedMap {
+                fmt.Printf("\n\n--- Updated: %s ---\n%s\n", path, content)
+            }
+        }
 	}
 
 	// Render any remaining content in the buffer after the stream ends

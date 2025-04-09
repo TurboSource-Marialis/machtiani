@@ -283,6 +283,7 @@ async def generate_response(
 
             # Call file-edit for each retrieved file path, log response
             file_edit_url = f"{base_url}/file-edit/"
+            updated_contents = {}
             async with httpx.AsyncClient(timeout=600) as edit_client:
                 for file_path in retrieved_file_paths:
                     payload = {
@@ -299,8 +300,14 @@ async def generate_response(
                         resp.raise_for_status()
                         resp_json = resp.json()
                         logger.info(f"[file-edit] {file_path} response: {resp_json}")
+                        # Assuming edit returns updated content in resp_json["updated_content"]
+                        updated_contents[file_path] = resp_json.get("updated_content", "")
                     except Exception as e:
                         logger.error(f"[file-edit] Error editing {file_path}: {e}")
+                        updated_contents[file_path] = f"[Error updating file: {e}]"
+
+            if updated_contents:
+                yield {"updated_file_contents": updated_contents}
 
     except httpx.RequestError as exc:
         logger.error(f"Request error: {exc}")
