@@ -300,7 +300,12 @@ async def generate_response(
                         resp.raise_for_status()
                         resp_json = resp.json()
                         logger.info(f"[file-edit] {file_path} response: {resp_json}")
-                        # Assuming edit returns updated content in resp_json["updated_content"]
+                        # Check errors field: if empty or missing, update; else, skip
+                        errors = resp_json.get("errors", [])
+                        if errors:
+                            logger.warning(f"[file-edit] Skipping update for {file_path} due to errors: {errors}")
+                            continue  # skip this file
+
                         updated_contents[file_path] = resp_json.get("updated_content", "")
                     except Exception as e:
                         logger.error(f"[file-edit] Error editing {file_path}: {e}")
