@@ -571,10 +571,10 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 	}
 
 	return &GenerateResponseResult{
-		LlmModelResponse:   completeResponse.String(),
-		RawResponse:        rawResponse.String(), // Include rawResponse
-		RetrievedFilePaths: retrievedFilePaths,
-	    UpdateContentResponse: updateContentResponse,
+		LlmModelResponse:      completeResponse.String(),
+		RawResponse:           rawResponse.String(), // Include rawResponse
+		RetrievedFilePaths:    retrievedFilePaths,
+		UpdateContentResponse: updateContentResponse,
 	}, nil
 }
 
@@ -752,6 +752,23 @@ func GetInstallInfo() (bool, string, error) {
 	}
 
 	return returnedHeadOID == HeadOID, message, nil
+}
+
+func (res *GenerateResponseResult) WritePatchToFile() error {
+	if len(res.UpdateContentResponse) == 0 {
+		return fmt.Errorf("no patch content found in UpdateContentResponse")
+	}
+	for filename, patchContent := range res.UpdateContentResponse {
+		// Sanitize filename for patch file
+		safeFilename := strings.ReplaceAll(filename, "/", "_")
+		patchFileName := fmt.Sprintf("%s.patch", safeFilename)
+		err := ioutil.WriteFile(patchFileName, []byte(patchContent), 0644)
+		if err != nil {
+			return fmt.Errorf("failed to write patch to file %s: %w", patchFileName, err)
+		}
+		fmt.Printf("Patch saved to %s\n", patchFileName)
+	}
+	return nil
 }
 
 type SpinnerController struct {
