@@ -282,37 +282,38 @@ async def generate_response(
             final_response_text = ''.join(response_tokens)
 
             # Call file-edit for each retrieved file path, log response
-            file_edit_url = f"{base_url}/file-edit/"
-            updated_contents = {}
-            async with httpx.AsyncClient(timeout=600) as edit_client:
-                for file_path in retrieved_file_paths:
-                    payload = {
-                        "project": project,
-                        "file_path": file_path,
-                        "instructions": final_response_text,
-                        "llm_model_api_key": llm_model_api_key_other,
-                        "llm_model_base_url": str(llm_model_base_url_other),
-                        "model": model,
-                        "ignore_files": ignore_files or []
-                    }
-                    try:
-                        resp = await edit_client.post(file_edit_url, json=payload)
-                        resp.raise_for_status()
-                        resp_json = resp.json()
-                        logger.info(f"[file-edit] {file_path} response: {resp_json}")
-                        # Check errors field: if empty or missing, update; else, skip
-                        errors = resp_json.get("errors", [])
-                        if errors:
-                            logger.warning(f"[file-edit] Skipping update for {file_path} due to errors: {errors}")
-                            continue  # skip this file
+            if mode == SearchMode.default:
+                file_edit_url = f"{base_url}/file-edit/"
+                updated_contents = {}
+                async with httpx.AsyncClient(timeout=600) as edit_client:
+                    for file_path in retrieved_file_paths:
+                        payload = {
+                            "project": project,
+                            "file_path": file_path,
+                            "instructions": final_response_text,
+                            "llm_model_api_key": llm_model_api_key_other,
+                            "llm_model_base_url": str(llm_model_base_url_other),
+                            "model": model,
+                            "ignore_files": ignore_files or []
+                        }
+                        try:
+                            resp = await edit_client.post(file_edit_url, json=payload)
+                            resp.raise_for_status()
+                            resp_json = resp.json()
+                            logger.info(f"[file-edit] {file_path} response: {resp_json}")
+                            # Check errors field: if empty or missing, update; else, skip
+                            errors = resp_json.get("errors", [])
+                            if errors:
+                                logger.warning(f"[file-edit] Skipping update for {file_path} due to errors: {errors}")
+                                continue  # skip this file
 
-                        updated_contents[file_path] = resp_json.get("updated_content", "")
-                    except Exception as e:
-                        logger.error(f"[file-edit] Error editing {file_path}: {e}")
-                        updated_contents[file_path] = f"[Error updating file: {e}]"
+                            updated_contents[file_path] = resp_json.get("updated_content", "")
+                        except Exception as e:
+                            logger.error(f"[file-edit] Error editing {file_path}: {e}")
+                            updated_contents[file_path] = f"[Error updating file: {e}]"
 
-            if updated_contents:
-                yield {"updated_file_contents": updated_contents}
+                if updated_contents:
+                    yield {"updated_file_contents": updated_contents}
 
     except httpx.RequestError as exc:
         logger.error(f"Request error: {exc}")

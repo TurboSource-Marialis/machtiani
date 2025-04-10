@@ -23,7 +23,7 @@ var (
 const (
 	defaultModel         = "gpt-4o-mini"
 	defaultMatchStrength = "mid"
-	defaultMode          = "commit"
+	defaultMode          = "default"
 )
 
 const (
@@ -36,7 +36,7 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
 	fs := pflag.NewFlagSet("machtiani", pflag.ContinueOnError)
 	modelFlag := fs.String("model", defaultModel, "Model to use (options: gpt-4o, gpt-4o-mini)")
 	matchStrengthFlag := fs.String("match-strength", defaultMatchStrength, "Match strength (options: high, mid, low)")
-	modeFlag := fs.String("mode", defaultMode, "Search mode: pure-chat, commit, or super")
+	modeFlag := fs.String("mode", defaultMode, "Search mode: chat, pure-chat, or default")
 	fileFlag := fs.String("file", "", "Path to the markdown file")
 	forceFlag := fs.Bool("force", false, "Force the operation")
 	verboseFlag := fs.Bool("verbose", false, "Enable verbose output")

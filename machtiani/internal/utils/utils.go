@@ -194,8 +194,8 @@ func ValidateFlags(modelFlag, matchStrengthFlag, modeFlag *string) {
     }
 
     mode := *modeFlag
-    if mode != "pure-chat" && mode != "commit" && mode != "super" {
-        log.Fatalf("Error: Invalid mode selected. Choose either 'chat', 'commit', or 'super'.")
+    if mode != "chat" && mode != "pure-chat" && mode != "default" {
+        log.Fatalf("Error: Invalid mode selected. Choose either chat, pure-chat, or default.")
     }
 }
 
