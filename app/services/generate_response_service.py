@@ -306,13 +306,20 @@ async def generate_response(
                             if errors:
                                 logger.warning(f"[file-edit] Skipping update for {file_path} due to errors: {errors}")
                                 continue  # skip this file
-
-                            updated_contents[file_path] = resp_json.get("updated_content", "")
+                            updated_contents[file_path] = {
+                                "updated_content": resp_json.get("updated_content", ""),
+                                "errors": resp_json.get("errors", []),
+                            }
                         except Exception as e:
                             logger.error(f"[file-edit] Error editing {file_path}: {e}")
-                            updated_contents[file_path] = f"[Error updating file: {e}]"
+                            updated_contents[file_path] = {
+                                "updated_content": f"[Error updating file: {e}]",
+                                "errors": [str(e)],
+                            }
 
                 if updated_contents:
+                    logger.info(f"updated_file_contents: {updated_contents}")
+                    logger.info(f"updated_file_contents type: {type(updated_contents)}")
                     yield {"updated_file_contents": updated_contents}
 
     except httpx.RequestError as exc:

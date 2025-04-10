@@ -286,11 +286,17 @@ func DeleteStore(projectName string, codehostURL string, vcsType string, apiKey 
 	}
 }
 
+
+type UpdateFileContent struct {
+	UpdatedContent string   `json:"updated_content"`
+	Errors         []string `json:"errors"`
+}
+
 type GenerateResponseResult struct {
-	LlmModelResponse      string            `json:"llm_model_response"`
-	RawResponse           string            `json:"llm_model_response"`
-	RetrievedFilePaths    []string          `json:"retrieved_file_paths"`
-	UpdateContentResponse map[string]string `json:"update_content_response"`
+	LlmModelResponse      string                       `json:"llm_model_response"`
+	RawResponse           string                       `json:"llm_model_response"`
+	RetrievedFilePaths    []string                     `json:"retrieved_file_paths"`
+	UpdateContentResponse map[string]UpdateFileContent `json:"update_content_response"`
 }
 
 func init() {
@@ -373,6 +379,7 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 		return nil, fmt.Errorf("unprocessable entity: %s", body)
 	}
 
+
 	// Initialize variables
 	var completeResponse strings.Builder
 	var rawResponse strings.Builder // Initialize rawResponse
@@ -381,7 +388,7 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 	var inCodeBlock bool             // Track if we're inside a code block
 	var codeBlockBuffer bytes.Buffer // Buffer to accumulate code block content
 
-	updateContentResponse := make(map[string]string)
+	updateContentResponse := make(map[string]UpdateFileContent)
 
 	// Use a JSON decoder to read multiple JSON objects from the response stream
 	decoder := json.NewDecoder(resp.Body)
@@ -523,20 +530,21 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 			// log.Printf("Retrieved file paths: %v", retrievedFilePaths)
 		}
 
+
 		// NEW: handle updated files
 		if updated, ok := chunk["updated_file_contents"]; ok {
 			updatedJSON, err := json.Marshal(updated)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal updated_file_contents: %w", err)
 			}
-			updatedMap := map[string]string{}
+			updatedMap := map[string]UpdateFileContent{}
 			if err := json.Unmarshal(updatedJSON, &updatedMap); err != nil {
 				return nil, fmt.Errorf("failed to unmarshal updated_file_contents: %w", err)
 			}
 
 			// Print and collect updated file contents
-			for path, content := range updatedMap {
-				updateContentResponse[path] = content
+			for path, updateObj := range updatedMap {
+				updateContentResponse[path] = updateObj
 			}
 		}
 	}
@@ -757,15 +765,27 @@ func (res *GenerateResponseResult) WritePatchToFile() error {
 	if len(res.UpdateContentResponse) == 0 {
 		return fmt.Errorf("no patch content found in UpdateContentResponse")
 	}
-	for filename, patchContent := range res.UpdateContentResponse {
+	for filename, update := range res.UpdateContentResponse {
+		skip := false
+		for _, errMsg := range update.Errors {
+			if len(strings.TrimSpace(errMsg)) > 0 {
+				skip = true
+				break
+			}
+		}
+		if skip {
+			fmt.Printf("Skipping patch for %s due to error.\n", filename)
+			continue
+		}
+
 		// Sanitize filename for patch file
 		safeFilename := strings.ReplaceAll(filename, "/", "_")
 		patchFileName := fmt.Sprintf("%s.patch", safeFilename)
-		err := ioutil.WriteFile(patchFileName, []byte(patchContent), 0644)
+		err := ioutil.WriteFile(patchFileName, []byte(update.UpdatedContent), 0644)
 		if err != nil {
 			return fmt.Errorf("failed to write patch to file %s: %w", patchFileName, err)
 		}
-		fmt.Printf("Patch saved to %s\n", patchFileName)
+		fmt.Printf("Wrote patch for %s to %s\n", filename, patchFileName)
 	}
 	return nil
 }
