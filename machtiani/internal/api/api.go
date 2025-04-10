@@ -763,7 +763,7 @@ func GetInstallInfo() (bool, string, error) {
 
 func (res *GenerateResponseResult) WritePatchToFile() error {
 	if len(res.UpdateContentResponse) == 0 {
-		return fmt.Errorf("no patch content found in UpdateContentResponse")
+        return nil
 	}
 	for filename, update := range res.UpdateContentResponse {
 		skip := false
