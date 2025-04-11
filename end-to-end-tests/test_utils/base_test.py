@@ -188,10 +188,11 @@ class BaseTestEndToEnd:
 
     def test_05_run_machtiani_prompt_command(self):
         status_command = 'machtiani status'
+
         wait_for_status_complete(status_command, self.directory)
         time.sleep(3)
 
-        command = 'machtiani "what does the readme say?" --force'
+        command = 'machtiani  "what does the readme say?" --force --mode chat'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
 
@@ -241,10 +242,11 @@ class BaseTestEndToEnd:
         ]
 
         expected_output = [line.strip() for line in expected_output if line.strip()]
+
         self.assertEqual(stdout_normalized, expected_output)
 
         # Step 3: Run git prompt and assert the output
-        command = 'machtiani "what does the readme say?" --force'
+        command = 'machtiani  "what does the readme say?" --force --mode chat'
         stdout_prompt, stderr_prompt = run_machtiani_command(command, self.directory)
         stdout_prompt_normalized = clean_output(stdout_prompt)
 
@@ -253,9 +255,10 @@ class BaseTestEndToEnd:
         self.assertFalse(any("--force" in line for line in stdout_prompt_normalized))
         self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_prompt_normalized))
 
+
     def test_08_run_machtiani_prompt_file_flag_command(self):
         chat_file_path = append_future_features_to_chat_file(self.directory)
-        command = f"machtiani --file {chat_file_path}"
+        command = f"machtiani  --file {chat_file_path} --mode chat"
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
         stdout_normalized = clean_output(stdout_machtiani)
 

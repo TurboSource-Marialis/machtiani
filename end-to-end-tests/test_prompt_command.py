@@ -17,10 +17,11 @@ class TestMachtianiCommand(unittest.TestCase):
         print("fetch_res")
         print("Fetched branches:", fetch_res)
         self.setup.force_push("master-backup", "master")
+
         self.setup.run_git_store()
 
     def test_run_machtiani_command(self):
-        command = 'machtiani "what does the readme say?" --force'
+        command = 'machtiani  "what does the readme say?" --force --mode chat'
 
         # Perform the command execution
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
