@@ -26,11 +26,18 @@ const (
 	defaultMode          = "default"
 )
 
+
 const (
 	CONTENT_TYPE_KEY     = "Content-Type"
 	CONTENT_TYPE_VALUE   = "application/json"
 	API_GATEWAY_HOST_KEY = "X-RapidAPI-Key"
 )
+
+// Function to create a visual separator
+func createSeparator(message string) string {
+	separator := strings.Repeat("=", 60)
+	return fmt.Sprintf("\n%s\n%s\n%s\n", separator, message, separator)
+}
 
 func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey *string, headCommitHash string) {
 	fs := pflag.NewFlagSet("machtiani", pflag.ContinueOnError)
@@ -68,12 +75,20 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
 
 	// Call GenerateResponse to get the streamed response
 	result, err := api.GenerateResponse(prompt, *remoteURL, *modeFlag, *modelFlag, *matchStrengthFlag, *forceFlag, headCommitHash)
+
 	if err != nil {
 		log.Fatalf("Error making API call: %v", err)
 	}
+
+	// Add a separator before writing patches
+	fmt.Println(createSeparator("Writing File Patches"))
+
 	if err := result.WritePatchToFile(); err != nil {
 		log.Printf("Error writing patch file: %v", err)
 	}
+
+	// Add a separator after writing patches
+	fmt.Println(createSeparator(""))
 
 	// Collect the final OpenAI response for further processing if needed
 	rawResponse := result.RawResponse
