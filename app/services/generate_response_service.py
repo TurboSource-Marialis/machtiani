@@ -6,6 +6,7 @@ import logging
 from typing import List, Optional
 from pydantic import SecretStr, HttpUrl
 from fastapi import HTTPException
+import asyncio
 from app.utils import (
     aggregate_file_paths,
     remove_duplicate_file_paths,
@@ -286,6 +287,8 @@ async def generate_response(
                 file_edit_url = f"{base_url}/file-edit/"
                 updated_contents = {}
                 async with httpx.AsyncClient(timeout=600) as edit_client:
+                    # Create tasks for all file-edit requests
+                    tasks = []
                     for file_path in retrieved_file_paths:
                         payload = {
                             "project": project,
@@ -296,19 +299,29 @@ async def generate_response(
                             "model": model,
                             "ignore_files": ignore_files or []
                         }
+                        tasks.append(edit_client.post(file_edit_url, json=payload))
+
+                    # Execute all tasks concurrently
+                    responses = await asyncio.gather(*tasks, return_exceptions=True)
+
+                    # Process each response
+                    for file_path, resp in zip(retrieved_file_paths, responses):
                         try:
-                            resp = await edit_client.post(file_edit_url, json=payload)
+                            if isinstance(resp, Exception):
+                                raise resp  # Re-raise caught exceptions for uniform handling
+
                             resp.raise_for_status()
                             resp_json = resp.json()
                             logger.info(f"[file-edit] {file_path} response: {resp_json}")
-                            # Check errors field: if empty or missing, update; else, skip
+
                             errors = resp_json.get("errors", [])
                             if errors:
                                 logger.warning(f"[file-edit] Skipping update for {file_path} due to errors: {errors}")
-                                continue  # skip this file
+                                continue
+
                             updated_contents[file_path] = {
                                 "updated_content": resp_json.get("updated_content", ""),
-                                "errors": resp_json.get("errors", []),
+                                "errors": errors,
                             }
                         except Exception as e:
                             logger.error(f"[file-edit] Error editing {file_path}: {e}")
@@ -319,7 +332,6 @@ async def generate_response(
 
                 if updated_contents:
                     logger.info(f"updated_file_contents: {updated_contents}")
-                    logger.info(f"updated_file_contents type: {type(updated_contents)}")
                     yield {"updated_file_contents": updated_contents}
 
     except httpx.RequestError as exc:
