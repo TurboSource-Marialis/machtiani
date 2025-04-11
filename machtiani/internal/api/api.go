@@ -761,32 +761,73 @@ func GetInstallInfo() (bool, string, error) {
 	return returnedHeadOID == HeadOID, message, nil
 }
 
+
 func (res *GenerateResponseResult) WritePatchToFile() error {
 	if len(res.UpdateContentResponse) == 0 {
-        return nil
+		return nil
 	}
+
+	var outputBuffer bytes.Buffer // Use a buffer to collect messages
+
+	// Add a newline before the patch messages start for clear separation
+	outputBuffer.WriteString("\n")
+
 	for filename, update := range res.UpdateContentResponse {
 		skip := false
+		// Check if there are any non-empty error messages
 		for _, errMsg := range update.Errors {
 			if len(strings.TrimSpace(errMsg)) > 0 {
+				log.Printf("Error received for file %s: %s", filename, errMsg) // Log the specific error
 				skip = true
 				break
 			}
 		}
 		if skip {
-			fmt.Printf("Skipping patch for %s due to error.\n", filename)
+			// Append message to buffer instead of printing directly
+			outputBuffer.WriteString(fmt.Sprintf("Skipping patch creation for %s due to errors during generation.\n", filename))
 			continue
 		}
 
+		// If UpdatedContent is empty, skip writing the patch file
+		if len(strings.TrimSpace(update.UpdatedContent)) == 0 {
+			outputBuffer.WriteString(fmt.Sprintf("Skipping patch creation for %s as updated content is empty.\n", filename))
+			continue
+		}
+
+
 		// Sanitize filename for patch file
 		safeFilename := strings.ReplaceAll(filename, "/", "_")
+		safeFilename = strings.ReplaceAll(safeFilename, ":", "_") // Add more sanitization if needed
 		patchFileName := fmt.Sprintf("%s.patch", safeFilename)
-		err := ioutil.WriteFile(patchFileName, []byte(update.UpdatedContent), 0644)
-		if err != nil {
-			return fmt.Errorf("failed to write patch to file %s: %w", patchFileName, err)
+
+		// Ensure the .machtiani/patches directory exists
+		patchesDir := ".machtiani/patches"
+		if err := utils.EnsureDirExists(patchesDir); err != nil {
+			return fmt.Errorf("failed to ensure patches directory exists: %w", err)
 		}
-		fmt.Printf("Wrote patch for %s to %s\n", filename, patchFileName)
+		fullPatchPath := fmt.Sprintf("%s/%s", patchesDir, patchFileName)
+
+
+		err := ioutil.WriteFile(fullPatchPath, []byte(update.UpdatedContent), 0644)
+		if err != nil {
+			// Log the error but collect a message for the user
+			log.Printf("Failed to write patch to file %s: %v", fullPatchPath, err)
+			outputBuffer.WriteString(fmt.Sprintf("Error writing patch for %s to %s\n", filename, fullPatchPath))
+			// Decide if you want to return the error immediately or just report it
+			// return fmt.Errorf("failed to write patch to file %s: %w", fullPatchPath, err) // Option: Stop on first error
+		} else {
+			// Append success message to buffer instead of printing directly
+			outputBuffer.WriteString(fmt.Sprintf("Wrote patch for %s to %s\n", filename, fullPatchPath))
+		}
 	}
+
+	// Print the collected messages all at once after the loop
+	// Only print if the buffer actually contains messages (beyond the initial newline)
+	if outputBuffer.Len() > 1 {
+		fmt.Print(outputBuffer.String())
+	}
+
+
 	return nil
 }
 

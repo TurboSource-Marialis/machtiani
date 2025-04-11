@@ -16,6 +16,22 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// EnsureDirExists creates a directory if it doesn't already exist.
+func EnsureDirExists(dirPath string) error {
+	if _, err := os.Stat(dirPath); os.IsNotExist(err) {
+		// Directory does not exist, create it
+		err = os.MkdirAll(dirPath, 0755) // Use MkdirAll to create parent dirs if needed
+		if err != nil {
+			return fmt.Errorf("failed to create directory %s: %w", dirPath, err)
+		}
+	} else if err != nil {
+		// Another error occurred when checking the directory
+		return fmt.Errorf("failed to check directory status %s: %w", dirPath, err)
+	}
+	// Directory exists or was created successfully
+	return nil
+}
+
 func CreateTempMarkdownFile(content string, filename string) (string, error) {
     // Define the directory where files will be saved
     chatDir := ".machtiani/chat"
