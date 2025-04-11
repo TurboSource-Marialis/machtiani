@@ -292,11 +292,13 @@ type UpdateFileContent struct {
 	Errors         []string `json:"errors"`
 }
 
+
 type GenerateResponseResult struct {
 	LlmModelResponse      string                       `json:"llm_model_response"`
 	RawResponse           string                       `json:"llm_model_response"`
 	RetrievedFilePaths    []string                     `json:"retrieved_file_paths"`
 	UpdateContentResponse map[string]UpdateFileContent `json:"update_content_response"`
+	HeadCommitHash        string                       `json:"head_commit_hash"`
 }
 
 func init() {
@@ -577,11 +579,13 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 		}
 	}
 
+
 	return &GenerateResponseResult{
 		LlmModelResponse:      completeResponse.String(),
 		RawResponse:           rawResponse.String(), // Include rawResponse
 		RetrievedFilePaths:    retrievedFilePaths,
 		UpdateContentResponse: updateContentResponse,
+		HeadCommitHash:        headCommitHash,
 	}, nil
 }
 

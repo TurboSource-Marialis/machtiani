@@ -7,7 +7,9 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os/exec"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/7db9a/machtiani/internal/api"
@@ -25,7 +27,6 @@ const (
 	defaultMatchStrength = "mid"
 	defaultMode          = "default"
 )
-
 
 const (
 	CONTENT_TYPE_KEY     = "Content-Type"
@@ -85,6 +86,28 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
 
 	if err := result.WritePatchToFile(); err != nil {
 		log.Printf("Error writing patch file: %v", err)
+	} else {
+		patchDir := filepath.Join(".machtiani", "patches")
+
+		// Get all patch files in the directory
+		files, err := filepath.Glob(filepath.Join(patchDir, "*.patch"))
+		if err != nil {
+			log.Printf("Error finding patch files: %v", err)
+		} else if len(files) == 0 {
+			log.Printf("No patch files found in %s", patchDir)
+		} else {
+			// Apply each patch file
+			for _, patchPath := range files {
+				cmd := exec.Command("git", "apply", patchPath)
+				output, err := cmd.CombinedOutput()
+				if err != nil {
+					log.Printf("Error applying patch %s: %v\nGit output: %s",
+						filepath.Base(patchPath), err, string(output))
+				} else {
+					log.Printf("Successfully applied patch: %s", filepath.Base(patchPath))
+				}
+			}
+		}
 	}
 
 	// Add a separator after writing patches
