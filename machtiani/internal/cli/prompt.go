@@ -34,9 +34,13 @@ const (
 	API_GATEWAY_HOST_KEY = "X-RapidAPI-Key"
 )
 
+
 // Function to create a visual separator
 func createSeparator(message string) string {
 	separator := strings.Repeat("=", 60)
+	if message == "" { // Handle empty message for just a line break separator
+		return fmt.Sprintf("\n%s\n", separator)
+	}
 	return fmt.Sprintf("\n%s\n%s\n%s\n", separator, message, separator)
 }
 
@@ -158,8 +162,14 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
 		filename, err = generateFilename(prompt, config.Environment.ModelAPIKey, config.Environment.ModelBaseURL)
 		if err != nil {
 			log.Fatalf("Error generating filename: %v", err)
+
 		}
 	}
+
+	// --- START CHANGE ---
+	// Add separator before handling the response saving
+	fmt.Println(createSeparator("Saving Chat Response"))
+	// --- END CHANGE ---
 
 	// Handle the final API response with structured data
 	handleAPIResponse(prompt, rawResponse, retrievedFilePaths, filename, *fileFlag)
@@ -175,10 +185,14 @@ func handleAPIResponse(prompt, openaiResponse string, retrievedFilePaths []strin
 	// Save the response to the markdown file with the provided filename
 	tempFile, err := utils.CreateTempMarkdownFile(openaiResponse, filename) // Pass the filename
 	if err != nil {
+
 		log.Fatalf("Error creating markdown file: %v", err)
 	}
 
-	fmt.Printf("\n\nResponse saved to %s\n", tempFile)
+	// --- START CHANGE ---
+	// Print the save location - removed leading newlines
+	fmt.Printf("Response saved to %s\n", tempFile)
+	// --- END CHANGE ---
 
 	// Optionally, handle retrieved file paths further if needed
 	//if len(retrievedFilePaths) > 0 {
