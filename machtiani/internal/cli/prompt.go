@@ -74,6 +74,7 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
 		printVerboseInfo(*fileFlag, *modelFlag, *matchStrengthFlag, *modeFlag, prompt)
 	}
 
+
 	// Call GenerateResponse to get the streamed response
 	result, err := api.GenerateResponse(prompt, *remoteURL, *modeFlag, *modelFlag, *matchStrengthFlag, *forceFlag, headCommitHash)
 
@@ -81,61 +82,64 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
 		log.Fatalf("Error making API call: %v", err)
 	}
 
-	// Add a separator before writing patches
-	fmt.Println(createSeparator("Writing File Patches"))
+	// Only process patches in default mode
+	if *modeFlag == defaultMode {
+		// Add a separator before writing patches
+		fmt.Println(createSeparator("Writing File Patches"))
 
-	patchDir := filepath.Join(".machtiani", "patches")
+		patchDir := filepath.Join(".machtiani", "patches")
 
-	// Get list of existing patch files BEFORE writing new ones
-	existingPatchFiles, err := filepath.Glob(filepath.Join(patchDir, "*.patch"))
-	if err != nil {
-		log.Printf("Error finding existing patch files: %v", err)
-		existingPatchFiles = []string{} // If error, assume no existing files
-	}
-
-	// Create a map of existing patch files for quick lookup
-	existingPatchMap := make(map[string]bool)
-	for _, file := range existingPatchFiles {
-		existingPatchMap[file] = true
-	}
-
-	// Write the patch files
-	if err := result.WritePatchToFile(); err != nil {
-		log.Printf("Error writing patch file: %v", err)
-	} else {
-		// Get all patch files AFTER writing
-		allPatchFiles, err := filepath.Glob(filepath.Join(patchDir, "*.patch"))
+		// Get list of existing patch files BEFORE writing new ones
+		existingPatchFiles, err := filepath.Glob(filepath.Join(patchDir, "*.patch"))
 		if err != nil {
-			log.Printf("Error finding patch files: %v", err)
-		} else {
-			// Find which files are new by comparing with existing files
-			var newPatchFiles []string
-			for _, file := range allPatchFiles {
-				if !existingPatchMap[file] {
-					newPatchFiles = append(newPatchFiles, file)
-				}
-			}
+			log.Printf("Error finding existing patch files: %v", err)
+			existingPatchFiles = []string{} // If error, assume no existing files
+		}
 
-			if len(newPatchFiles) == 0 {
-				log.Printf("No new patch files were created")
+		// Create a map of existing patch files for quick lookup
+		existingPatchMap := make(map[string]bool)
+		for _, file := range existingPatchFiles {
+			existingPatchMap[file] = true
+		}
+
+		// Write the patch files
+		if err := result.WritePatchToFile(); err != nil {
+			log.Printf("Error writing patch file: %v", err)
+		} else {
+			// Get all patch files AFTER writing
+			allPatchFiles, err := filepath.Glob(filepath.Join(patchDir, "*.patch"))
+			if err != nil {
+				log.Printf("Error finding patch files: %v", err)
 			} else {
-				// Apply only the newly created patch files
-				for _, patchPath := range newPatchFiles {
-					cmd := exec.Command("git", "apply", patchPath)
-					output, err := cmd.CombinedOutput()
-					if err != nil {
-						log.Printf("Error applying patch %s: %v\nGit output: %s",
-							filepath.Base(patchPath), err, string(output))
-					} else {
-						log.Printf("Successfully applied patch: %s", filepath.Base(patchPath))
+				// Find which files are new by comparing with existing files
+				var newPatchFiles []string
+				for _, file := range allPatchFiles {
+					if !existingPatchMap[file] {
+						newPatchFiles = append(newPatchFiles, file)
+					}
+				}
+
+				if len(newPatchFiles) == 0 {
+					log.Printf("No new patch files were created")
+				} else {
+					// Apply only the newly created patch files
+					for _, patchPath := range newPatchFiles {
+						cmd := exec.Command("git", "apply", patchPath)
+						output, err := cmd.CombinedOutput()
+						if err != nil {
+							log.Printf("Error applying patch %s: %v\nGit output: %s",
+								filepath.Base(patchPath), err, string(output))
+						} else {
+							log.Printf("Successfully applied patch: %s", filepath.Base(patchPath))
+						}
 					}
 				}
 			}
 		}
-	}
 
-	// Add a separator after writing patches
-	fmt.Println(createSeparator(""))
+		// Add a separator after writing patches
+		fmt.Println(createSeparator(""))
+	}
 
 	// Collect the final OpenAI response for further processing if needed
 	rawResponse := result.RawResponse
