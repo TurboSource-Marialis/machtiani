@@ -84,27 +84,51 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
 	// Add a separator before writing patches
 	fmt.Println(createSeparator("Writing File Patches"))
 
+	patchDir := filepath.Join(".machtiani", "patches")
+
+	// Get list of existing patch files BEFORE writing new ones
+	existingPatchFiles, err := filepath.Glob(filepath.Join(patchDir, "*.patch"))
+	if err != nil {
+		log.Printf("Error finding existing patch files: %v", err)
+		existingPatchFiles = []string{} // If error, assume no existing files
+	}
+
+	// Create a map of existing patch files for quick lookup
+	existingPatchMap := make(map[string]bool)
+	for _, file := range existingPatchFiles {
+		existingPatchMap[file] = true
+	}
+
+	// Write the patch files
 	if err := result.WritePatchToFile(); err != nil {
 		log.Printf("Error writing patch file: %v", err)
 	} else {
-		patchDir := filepath.Join(".machtiani", "patches")
-
-		// Get all patch files in the directory
-		files, err := filepath.Glob(filepath.Join(patchDir, "*.patch"))
+		// Get all patch files AFTER writing
+		allPatchFiles, err := filepath.Glob(filepath.Join(patchDir, "*.patch"))
 		if err != nil {
 			log.Printf("Error finding patch files: %v", err)
-		} else if len(files) == 0 {
-			log.Printf("No patch files found in %s", patchDir)
 		} else {
-			// Apply each patch file
-			for _, patchPath := range files {
-				cmd := exec.Command("git", "apply", patchPath)
-				output, err := cmd.CombinedOutput()
-				if err != nil {
-					log.Printf("Error applying patch %s: %v\nGit output: %s",
-						filepath.Base(patchPath), err, string(output))
-				} else {
-					log.Printf("Successfully applied patch: %s", filepath.Base(patchPath))
+			// Find which files are new by comparing with existing files
+			var newPatchFiles []string
+			for _, file := range allPatchFiles {
+				if !existingPatchMap[file] {
+					newPatchFiles = append(newPatchFiles, file)
+				}
+			}
+
+			if len(newPatchFiles) == 0 {
+				log.Printf("No new patch files were created")
+			} else {
+				// Apply only the newly created patch files
+				for _, patchPath := range newPatchFiles {
+					cmd := exec.Command("git", "apply", patchPath)
+					output, err := cmd.CombinedOutput()
+					if err != nil {
+						log.Printf("Error applying patch %s: %v\nGit output: %s",
+							filepath.Base(patchPath), err, string(output))
+					} else {
+						log.Printf("Successfully applied patch: %s", filepath.Base(patchPath))
+					}
 				}
 			}
 		}
