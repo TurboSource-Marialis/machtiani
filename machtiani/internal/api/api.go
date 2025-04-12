@@ -771,10 +771,14 @@ func (res *GenerateResponseResult) WritePatchToFile() error {
 		return nil
 	}
 
+
 	var outputBuffer bytes.Buffer // Use a buffer to collect messages
 
 	// Add a newline before the patch messages start for clear separation
 	outputBuffer.WriteString("\n")
+
+	// Get current timestamp for unique filenames
+	timestamp := time.Now().Format("20060102_150405") // YYYYMMDD_HHMMSS format
 
 	for filename, update := range res.UpdateContentResponse {
 		skip := false
@@ -799,10 +803,13 @@ func (res *GenerateResponseResult) WritePatchToFile() error {
 		}
 
 
+
 		// Sanitize filename for patch file
 		safeFilename := strings.ReplaceAll(filename, "/", "_")
 		safeFilename = strings.ReplaceAll(safeFilename, ":", "_") // Add more sanitization if needed
-		patchFileName := fmt.Sprintf("%s.patch", safeFilename)
+
+		// Include timestamp in the filename for uniqueness
+		patchFileName := fmt.Sprintf("%s_%s.patch", safeFilename, timestamp)
 
 		// Ensure the .machtiani/patches directory exists
 		patchesDir := ".machtiani/patches"
