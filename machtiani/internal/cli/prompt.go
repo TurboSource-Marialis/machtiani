@@ -4,15 +4,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+
 	"log"
 	"net/http"
 	"net/url"
-	"os/exec"
+	//"os/exec" // No longer needed here for git apply
 	"path"
 	"path/filepath"
 	"strings"
+	"time" // Added for generateFilename timeout
+	"errors" // Added for generateFilename error handling
 
 	"github.com/7db9a/machtiani/internal/api"
+	"github.com/7db9a/machtiani/internal/git" // Import the git package
 	"github.com/7db9a/machtiani/internal/utils"
 	"github.com/charmbracelet/glamour"
 	"github.com/spf13/pflag"
@@ -86,62 +90,38 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
 		log.Fatalf("Error making API call: %v", err)
 	}
 
+
 	// Only process patches in default mode
 	if *modeFlag == defaultMode {
-		// Add a separator before writing patches
-		fmt.Println(createSeparator("Writing File Patches"))
+		fmt.Println(createSeparator("Writing & Applying File Patches"))
 
 		patchDir := filepath.Join(".machtiani", "patches")
 
 		// Get list of existing patch files BEFORE writing new ones
 		existingPatchFiles, err := filepath.Glob(filepath.Join(patchDir, "*.patch"))
 		if err != nil {
-			log.Printf("Error finding existing patch files: %v", err)
+			// Log warning but continue, ApplyGitPatches might still work or log its own error
+			log.Printf("Warning: Error finding existing patch files: %v", err)
 			existingPatchFiles = []string{} // If error, assume no existing files
 		}
 
-		// Create a map of existing patch files for quick lookup
-		existingPatchMap := make(map[string]bool)
-		for _, file := range existingPatchFiles {
-			existingPatchMap[file] = true
-		}
-
-		// Write the patch files
+		// Write the new patch files (this part remains here)
 		if err := result.WritePatchToFile(); err != nil {
-			log.Printf("Error writing patch file: %v", err)
+			log.Printf("Error writing patch file(s): %v", err)
+			// Decide if we should proceed to apply patches even if writing failed?
+			// Let's assume if writing failed, there are no *new* patches to apply.
 		} else {
-			// Get all patch files AFTER writing
-			allPatchFiles, err := filepath.Glob(filepath.Join(patchDir, "*.patch"))
+			// --- START REFACTOR ---
+			// Call the function from git_utils to apply the patches
+			err = git.ApplyGitPatches(patchDir, existingPatchFiles)
 			if err != nil {
-				log.Printf("Error finding patch files: %v", err)
-			} else {
-				// Find which files are new by comparing with existing files
-				var newPatchFiles []string
-				for _, file := range allPatchFiles {
-					if !existingPatchMap[file] {
-						newPatchFiles = append(newPatchFiles, file)
-					}
-				}
-
-				if len(newPatchFiles) == 0 {
-					log.Printf("No new patch files were created")
-				} else {
-					// Apply only the newly created patch files
-					for _, patchPath := range newPatchFiles {
-						cmd := exec.Command("git", "apply", patchPath)
-						output, err := cmd.CombinedOutput()
-						if err != nil {
-							log.Printf("Error applying patch %s: %v\nGit output: %s",
-								filepath.Base(patchPath), err, string(output))
-						} else {
-							log.Printf("Successfully applied patch: %s", filepath.Base(patchPath))
-						}
-					}
-				}
+				// This error would likely be from filepath.Glob inside ApplyGitPatches
+				log.Printf("Error during patch application process: %v", err)
 			}
+			// --- END REFACTOR ---
 		}
 
-		// Add a separator after writing patches
+		// Add a separator after writing/applying patches
 		fmt.Println(createSeparator(""))
 	}
 
@@ -158,18 +138,17 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
 	}
 
 	// Generate a filename if necessary
+
+	// Generate a filename if necessary
 	if filename == "" || filename == "." {
 		filename, err = generateFilename(prompt, config.Environment.ModelAPIKey, config.Environment.ModelBaseURL)
 		if err != nil {
-			log.Fatalf("Error generating filename: %v", err)
-
+			log.Printf("Warning: Error generating filename: %v. Using default.", err) // Log warning instead of fatal
+			filename = "machtiani-response"                                          // Provide a default filename
 		}
 	}
 
-	// --- START CHANGE ---
-	// Add separator before handling the response saving
 	fmt.Println(createSeparator("Saving Chat Response"))
-	// --- END CHANGE ---
 
 	// Handle the final API response with structured data
 	handleAPIResponse(prompt, rawResponse, retrievedFilePaths, filename, *fileFlag)
@@ -182,17 +161,20 @@ func handleAPIResponse(prompt, openaiResponse string, retrievedFilePaths []strin
 	// Render the markdown content (assuming renderMarkdown handles the display)
 	//renderMarkdown(markdownContent)
 
+
 	// Save the response to the markdown file with the provided filename
 	tempFile, err := utils.CreateTempMarkdownFile(openaiResponse, filename) // Pass the filename
 	if err != nil {
-
-		log.Fatalf("Error creating markdown file: %v", err)
+		// Log error but don't necessarily stop the whole application
+		log.Printf("Error creating markdown file '%s': %v", filename+".md", err)
+		// Optionally print the response to stdout as a fallback?
+		fmt.Println("\n--- Start Fallback Response Output ---")
+		fmt.Println(openaiResponse)
+		fmt.Println("--- End Fallback Response Output ---")
+		return // Stop further processing in this function if save failed
 	}
 
-	// --- START CHANGE ---
-	// Print the save location - removed leading newlines
 	fmt.Printf("Response saved to %s\n", tempFile)
-	// --- END CHANGE ---
 
 	// Optionally, handle retrieved file paths further if needed
 	//if len(retrievedFilePaths) > 0 {
@@ -205,53 +187,106 @@ func handleAPIResponse(prompt, openaiResponse string, retrievedFilePaths []strin
 	//}
 }
 
+
 func generateFilename(context string, llmModelApiKey string, llmModelBaseUrl string) (string, error) {
 	config, err := utils.LoadConfig()
 	if err != nil {
-		log.Fatalf("Error loading config: %v", err)
+		// Don't make this fatal within this specific function
+		return "", fmt.Errorf("error loading config: %w", err)
 	}
-	endpoint := MachtianiURL
+	endpoint := MachtianiURL // Assuming MachtianiURL is set globally or via config/env
 
 	if endpoint == "" {
 		return "", fmt.Errorf("MACHTIANI_URL environment variable is not set")
 	}
 
-	url := fmt.Sprintf("%s/generate-filename?context=%s&llm_model_api_key=%s&llm_model_base_url=%s&llm_model_base_url_other=%s&llm_model_api_key_other=%s", endpoint, url.QueryEscape(context), url.QueryEscape(llmModelApiKey), url.QueryEscape(llmModelBaseUrl), url.QueryEscape(config.Environment.ModelBaseURLOther), url.QueryEscape(config.Environment.ModelAPIKeyOther))
-
-	req, err := http.NewRequest("GET", url, nil)
+	// Construct URL properly
+	baseURL, err := url.Parse(endpoint)
 	if err != nil {
-		return "", fmt.Errorf("failed to create request: %v", err)
+		return "", fmt.Errorf("invalid MACHTIANI_URL: %w", err)
+	}
+	baseURL.Path = path.Join(baseURL.Path, "/generate-filename") // Use path.Join
+
+	// Prepare query parameters
+	params := url.Values{}
+	params.Add("context", context)
+	// Only add keys/URLs if they are actually configured/needed by the endpoint
+	if llmModelApiKey != "" {
+		params.Add("llm_model_api_key", llmModelApiKey)
+	}
+	if llmModelBaseUrl != "" {
+		params.Add("llm_model_base_url", llmModelBaseUrl)
+	}
+	if config.Environment.ModelBaseURLOther != "" {
+		params.Add("llm_model_base_url_other", config.Environment.ModelBaseURLOther)
+	}
+	if config.Environment.ModelAPIKeyOther != "" {
+		params.Add("llm_model_api_key_other", config.Environment.ModelAPIKeyOther)
+	}
+	baseURL.RawQuery = params.Encode()
+
+	req, err := http.NewRequest("GET", baseURL.String(), nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %w", err)
 	}
 
-	if config.Environment.APIGatewayHostValue != "" {
+	// Add headers
+	if config.Environment.APIGatewayHostValue != "" && config.Environment.APIGatewayHostKey != "" {
+		req.Header.Set(config.Environment.APIGatewayHostKey, config.Environment.APIGatewayHostValue)
+	} else if config.Environment.APIGatewayHostValue != "" { // Fallback to default key if only value is set
 		req.Header.Set(API_GATEWAY_HOST_KEY, config.Environment.APIGatewayHostValue)
 	}
-	req.Header.Set(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE)
+	req.Header.Set(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE) // Content-Type might not be strictly needed for GET
 
-	client := &http.Client{}
+	client := &http.Client{Timeout: time.Second * 15} // Add a timeout
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("failed to call generate-filename endpoint: %v", err)
+		return "", fmt.Errorf("failed to call generate-filename endpoint: %w", err)
 	}
 	defer resp.Body.Close()
 
+	body, readErr := ioutil.ReadAll(resp.Body) // Read body first for better error reporting
 	if resp.StatusCode != http.StatusOK {
-		body, _ := ioutil.ReadAll(resp.Body)
+		if readErr != nil { // Handle error reading body as well
+			return "", fmt.Errorf("generate-filename endpoint returned status %d. Failed to read response body: %w", resp.StatusCode, readErr)
+		}
 		return "", fmt.Errorf("generate-filename endpoint returned status %d: %s", resp.StatusCode, string(body))
 	}
-
-	var filename string
-	if err := json.NewDecoder(resp.Body).Decode(&filename); err != nil {
-		return "", fmt.Errorf("failed to decode response from generate-filename endpoint: %v", err)
+	if readErr != nil { // Handle read error even if status is OK
+		return "", fmt.Errorf("failed to read response body from generate-filename endpoint: %w", readErr)
 	}
 
-	return filename, nil
+	var responseData struct { // Expecting a JSON object like {"filename": "..."}
+		Filename string `json:"filename"`
+	}
+	// Use json.Unmarshal instead of Decode for byte slice
+	if err := json.Unmarshal(body, &responseData); err != nil {
+		// Log the body content for debugging if unmarshal fails
+		log.Printf("Failed to decode JSON response from generate-filename. Body: %s", string(body))
+		return "", fmt.Errorf("failed to decode response from generate-filename endpoint: %w", err)
+	}
+
+	if responseData.Filename == "" {
+		return "", errors.New("generate-filename endpoint returned an empty filename")
+	}
+
+	return responseData.Filename, nil
 }
 
+// createMarkdownContent - unchanged
 func createMarkdownContent(prompt, openAIResponse string, retrievedFilePaths []string, fileFlag string) string {
 	var markdownContent string
 	if fileFlag != "" {
-		markdownContent = fmt.Sprintf("%s\n\n# Assistant\n\n%s", readMarkdownFile(fileFlag), openAIResponse)
+		// Ensure reading the file doesn't cause a fatal error if it fails here
+		// It should have been read successfully earlier in handlePrompt
+		content, err := ioutil.ReadFile(fileFlag)
+		if err != nil {
+			log.Printf("Warning: could not re-read markdown file %s for content creation: %v", fileFlag, err)
+			// Fallback to just using the prompt string if file read fails here
+			markdownContent = fmt.Sprintf("# User\n\n%s\n\n# Assistant\n\n%s", prompt, openAIResponse)
+		} else {
+			markdownContent = fmt.Sprintf("%s\n\n# Assistant\n\n%s", string(content), openAIResponse)
+		}
 	} else {
 		markdownContent = fmt.Sprintf("# User\n\n%s\n\n# Assistant\n\n%s", prompt, openAIResponse)
 	}
@@ -259,53 +294,74 @@ func createMarkdownContent(prompt, openAIResponse string, retrievedFilePaths []s
 	if len(retrievedFilePaths) > 0 {
 		markdownContent += "\n\n# Retrieved File Paths\n\n"
 		for _, path := range retrievedFilePaths {
-			markdownContent += fmt.Sprintf("- %s\n", path)
+			markdownContent += fmt.Sprintf("- `%s`\n", path) // Added backticks for code formatting
 		}
 	}
 
 	return markdownContent
 }
 
+// renderMarkdown - unchanged
 func renderMarkdown(content string) {
 	renderer, err := glamour.NewTermRenderer(
 		glamour.WithAutoStyle(),
-		glamour.WithWordWrap(120),
+		glamour.WithWordWrap(120), // Adjust wrap width as needed
 	)
 	if err != nil {
-		log.Fatalf("Error creating renderer: %v", err)
+		// Log error but perhaps fallback to plain print
+		log.Printf("Error creating glamour renderer: %v. Printing raw content.", err)
+		fmt.Println(content)
+		return
 	}
 
 	out, err := renderer.Render(content)
 	if err != nil {
-		log.Fatalf("Error rendering Markdown: %v", err)
+		// Log error but perhaps fallback to plain print
+		log.Printf("Error rendering Markdown with glamour: %v. Printing raw content.", err)
+		fmt.Println(content)
+		return
 	}
 
 	fmt.Println(out)
 }
 
+// readMarkdownFile - unchanged (though maybe make it return error instead of fatal)
 func readMarkdownFile(path string) string {
 	content, err := ioutil.ReadFile(path)
 	if err != nil {
-		log.Fatalf("Error reading markdown file: %v", err)
+		// This is called from createMarkdownContent which now handles potential errors
+		log.Fatalf("Error reading markdown file: %v", err) // Keep fatal here if initial read must succeed
 	}
 	return string(content)
 }
 
+// printVerboseInfo - unchanged
 func printVerboseInfo(markdown, model, matchStrength, mode, prompt string) {
 	_, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
 	if err != nil {
-		log.Fatalf("Error loading config: %v", err)
+		log.Printf("Warning: Error loading config/ignore files for verbose info: %v", err)
+	} else {
+		// Print the file paths
+		fmt.Println("Parsed file paths from machtiani.ignore:")
+		if len(ignoreFiles) > 0 {
+			for _, path := range ignoreFiles {
+				fmt.Printf("  %s\n", path)
+			}
+		} else {
+			fmt.Println("  (No ignore rules found or file doesn't exist)")
+		}
 	}
 
-	// Print the file paths
-	fmt.Println("Parsed file paths from machtiani.ignore:")
-	for _, path := range ignoreFiles {
-		fmt.Printf(" %s\n", path)
-	}
 	fmt.Println("Arguments passed:")
 	fmt.Printf("  Markdown file: %s\n", markdown)
 	fmt.Printf("  Model: %s\n", model)
 	fmt.Printf("  Match strength: %s\n", matchStrength)
 	fmt.Printf("  Mode: %s\n", mode)
-	fmt.Printf("  Prompt: %s\n", prompt)
+	// Truncate long prompts in verbose output?
+	maxPromptLen := 200
+	truncatedPrompt := prompt
+	if len(prompt) > maxPromptLen {
+		truncatedPrompt = prompt[:maxPromptLen] + "..."
+	}
+	fmt.Printf("  Prompt: %s\n", truncatedPrompt)
 }

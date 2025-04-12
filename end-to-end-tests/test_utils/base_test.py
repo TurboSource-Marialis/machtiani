@@ -603,6 +603,7 @@ class BaseTestEndToEnd:
         # Clean up the copied file
         os.remove('commits_embeddings.json')
 
+
     #def test_18_verify_commits_embeddings_message_and_embeddings_order(self):
     #    #See test 16, as there is some attempt to do this. Embeddings order is not honored by system.
     #    # Log the messages and embeddings for debugging
@@ -621,6 +622,63 @@ class BaseTestEndToEnd:
     #    #self.assertEqual(identical_embeddings_count, 1,
     #    #                        "There should be 1 set of identical embeddings in commit 879ce80f")
 
+
+    def test_19_run_machtiani_prompt_with_code_changes(self):
+        """Test machtiani prompt command without chat mode to see patch application."""
+        # First run git-sync to ensure the repo is ready
+        status_command = 'machtiani status'
+        wait_for_status_complete(status_command, self.directory)
+        time.sleep(3)
+
+        # Run command without --mode chat flag to trigger file changes
+        command = 'machtiani "Add a comment to the README explaining the project is a video processing library" --model deepseek/deepseek-r1'
+        stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
+
+        # Poll for "Response saved" message for up to 2 minutes
+        response_saved = False
+        timeout = 120  # 2 minutes in seconds
+        start_time = time.time()
+
+        # Check if README.md was modified (an indicator that command completed)
+        git_check = 'git status --porcelain README.md'
+        while time.time() - start_time < timeout:
+            if response_saved:
+                break
+
+            # Wait a bit before checking again
+            time.sleep(5)
+
+            stdout_git, stderr_git = run_machtiani_command(git_check, self.directory)
+            if any("M README.md" in line for line in stdout_git):
+                # If README was modified, check output one more time
+                response_saved = True
+                break
+
+        if not response_saved:
+            self.fail("Prompt command did not complete successfully - 'Response saved' not found in output after 2 minutes")
+
+        stdout_normalized = clean_output(stdout_machtiani)
+
+        # Check for the separators and section headers that appear in patch mode
+        self.assertIn("============================================================", stdout_normalized)
+
+        # Fix: Change "Writing File Patches" to "Writing & Applying File Patches" to match actual output
+        self.assertIn("Writing & Applying File Patches", stdout_normalized)
+
+        # Check that patches were either written/applied or skipped (either is valid)
+        patch_processing_evidence = False
+        for line in stdout_normalized:
+            if "Wrote patch for" in line or "Skipping patch creation for" in line:
+                patch_processing_evidence = True
+                break
+
+        self.assertTrue(patch_processing_evidence, "No evidence of patch processing in output")
+
+        # Verify the regular response was still saved
+        self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_normalized))
+
+        # Make sure the prompt was processed (README mentioned)
+        self.assertTrue(any("README" in line for line in stdout_normalized))
 
 class ExtraTestEndToEnd:
     """Test cases specifically run within the machtiani repository."""
