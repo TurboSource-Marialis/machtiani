@@ -265,22 +265,17 @@ func ValidateDepthFlag(value int) error {
 	return nil
 }
 
-// ValidateHeadCommitExistsOnRemote checks if the HEAD commit matches the remote branch's HEAD.
+
+// ValidateHeadCommitExistsOnRemote checks if the HEAD commit matches the origin remote's current branch.
 // Returns nil if commits match, error if they differ or validation fails.
 func ValidateHeadCommitExistsOnRemote(headCommitHash string) error {
-	// Get the upstream branch of the current branch
-	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}")
-	output, err := cmd.CombinedOutput()
+	// Get the current branch name
+	branchName, err := git.GetBranch()
 	if err != nil {
-		return fmt.Errorf("failed to get upstream branch: %w, output: %s", err, strings.TrimSpace(string(output)))
+		return fmt.Errorf("failed to get current branch: %w", err)
 	}
-	upstreamBranch := strings.TrimSpace(string(output))
-	parts := strings.SplitN(upstreamBranch, "/", 2)
-	if len(parts) < 2 {
-		return fmt.Errorf("invalid upstream branch format: %s", upstreamBranch)
-	}
-	remoteName := parts[0]
-	remoteBranch := parts[1]
+	remoteName := "origin"
+	remoteBranch := branchName
 
 	// Fetch the latest from the remote
 	fetchCmd := exec.Command("git", "fetch", "--quiet", remoteName, remoteBranch)
@@ -289,19 +284,20 @@ func ValidateHeadCommitExistsOnRemote(headCommitHash string) error {
 			remoteBranch, fetchErr, strings.TrimSpace(string(fetchOutput)))
 	}
 
+
 	// Get the commit hash of the remote branch
-	remoteCommitCmd := exec.Command("git", "rev-parse", upstreamBranch)
+	remoteCommitCmd := exec.Command("git", "rev-parse", fmt.Sprintf("%s/%s", remoteName, remoteBranch))
 	remoteCommitOutput, remoteCommitErr := remoteCommitCmd.CombinedOutput()
 	if remoteCommitErr != nil {
-		return fmt.Errorf("failed to get remote commit hash for %s: %w, output: %s",
-			upstreamBranch, remoteCommitErr, strings.TrimSpace(string(remoteCommitOutput)))
+		return fmt.Errorf("failed to get remote commit hash for %s/%s: %w, output: %s",
+			remoteName, remoteBranch, remoteCommitErr, strings.TrimSpace(string(remoteCommitOutput)))
 	}
 	remoteCommitHash := strings.TrimSpace(string(remoteCommitOutput))
 
 	// Compare with local head commit
 	if remoteCommitHash != headCommitHash {
-		return fmt.Errorf("local commit %s does not match remote %s (remote has %s)",
-			headCommitHash, upstreamBranch, remoteCommitHash)
+		return fmt.Errorf("local commit %s does not match remote %s/%s (remote has %s)",
+			headCommitHash, remoteName, remoteBranch, remoteCommitHash)
 	}
 
 	return nil
