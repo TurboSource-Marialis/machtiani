@@ -11,8 +11,25 @@ import (
 )
 
 func handleGitSync(remoteURL string, apiKey *string, force bool, verbose bool, cost bool, costOnly bool, config utils.Config, headCommitHash string, amplificationLevel string, depthLevel int) error {
-
 	startTime := time.Now()
+
+	// Get the current HEAD commit hash if not provided
+	var err error
+	if headCommitHash == "" {
+		headCommitHash, err = git.GetHeadCommitHash()
+		if err != nil {
+			return fmt.Errorf("Error retrieving HEAD commit hash: %w", err)
+		}
+	}
+
+	// Validate that the HEAD commit matches the remote branch
+	err = utils.ValidateHeadCommitExistsOnRemote(headCommitHash)
+	if err != nil && !force {
+		return fmt.Errorf("Validation failed: %w. Use --force to bypass this validation.", err)
+	} else if err != nil && force {
+		fmt.Printf("Warning: %v. Proceeding anyway due to --force flag.\n", err)
+	}
+
 	branchName, err := git.GetBranch()
 	if err != nil {
 		return fmt.Errorf("Error retrieving current branch name: %w", err)
