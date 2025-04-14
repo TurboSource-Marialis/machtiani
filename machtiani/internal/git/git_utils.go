@@ -73,6 +73,7 @@ func getSystemMessageWithGit(machtianiGitRemoteURL string) (string, error) {
 	return string(content), nil
 }
 
+
 // getSystemMessageLastDisplayedPath returns the path to the file that tracks when the system message was last displayed
 func getSystemMessageLastDisplayedPath() (string, error) {
 	homeDir, err := os.UserHomeDir()
@@ -90,6 +91,55 @@ func getSystemMessageLastDisplayedPath() (string, error) {
 	}
 
 	return filepath.Join(machtianiDir, "system-message-last-displayed"), nil
+}
+
+// getLastSystemMessagePath returns the path to the file that stores the last shown system message
+func getLastSystemMessagePath() (string, error) {
+    homeDir, err := os.UserHomeDir()
+    if err != nil {
+        return "", fmt.Errorf("failed to get user home directory: %w", err)
+    }
+
+    machtianiDir := filepath.Join(homeDir, ".machtiani")
+    if err := os.MkdirAll(machtianiDir, 0755); err != nil {
+        if os.IsPermission(err) {
+            return "", fmt.Errorf("permission denied creating directory %s: %w", machtianiDir, err)
+        }
+        return "", fmt.Errorf("failed to create .machtiani directory: %w", err)
+    }
+
+    return filepath.Join(machtianiDir, ".last_system_message"), nil
+}
+
+// GetLastSystemMessage reads the content of the last shown system message
+func GetLastSystemMessage() (string, error) {
+    path, err := getLastSystemMessagePath()
+    if err != nil {
+        return "", err
+    }
+
+    content, err := os.ReadFile(path)
+    if os.IsNotExist(err) {
+        return "", nil // No last message exists yet
+    } else if err != nil {
+        return "", fmt.Errorf("failed to read last system message: %w", err)
+    }
+
+    return string(content), nil
+}
+
+// SaveSystemMessage saves the given message as the last shown system message
+func SaveSystemMessage(message string) error {
+    path, err := getLastSystemMessagePath()
+    if err != nil {
+        return err
+    }
+
+    err = os.WriteFile(path, []byte(message), 0640)
+    if err != nil {
+        return fmt.Errorf("failed to write system message to %s: %w", path, err)
+    }
+    return nil
 }
 
 // RecordSystemMessageDisplayed records the current time as when the system message was last displayed

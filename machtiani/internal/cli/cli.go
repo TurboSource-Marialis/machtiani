@@ -32,16 +32,31 @@ func Execute() {
 		shouldDisplay = true
 	}
 
+
 	if shouldDisplay {
 		// Try to fetch and display the system message
 		systemMsg, err := git.GetLatestMachtianiSystemMessage(api.MachtianiGitRemoteURL)
 		if err == nil && systemMsg != "" {
-			fmt.Printf("\n============= SYSTEM MESSAGE =============\n%s\n=========================================\n\n", systemMsg)
+			// Check if the message is different from the last one shown
+			lastMsg, err := git.GetLastSystemMessage()
+			if err != nil {
+				log.Printf("Warning: failed to read last system message: %v", err)
+				lastMsg = "" // Continue with displaying the message
+			}
 
-			// Record that we displayed the message
+			// Only show if the message is different
+			if systemMsg != lastMsg {
+				fmt.Printf("\n============= SYSTEM MESSAGE =============\n%s\n=========================================\n\n", systemMsg)
+
+				// Save the new message as the last shown
+				if err := git.SaveSystemMessage(systemMsg); err != nil {
+					log.Printf("Warning: failed to save system message: %v", err)
+				}
+			}
+
+			// Record that we checked the message, regardless of whether we display it
 			if err := git.RecordSystemMessageDisplayed(); err != nil {
 				log.Printf("Warning: failed to record system message display time: %v", err)
-				// Continue with program execution
 			}
 		} else if err != nil {
 			// Log the error but don't show it to the user
