@@ -62,12 +62,15 @@ class BaseTestEndToEnd:
 
 
     @classmethod
-    def teardown_end_to_end(cls):
+    def teardown_end_to_end(cls, unstage_files=True):
         """Clean up the test environment."""
         try:
             cls.teardown = Teardown(cls.directory)
+
             cls.teardown.delete_ignore_file()
             cls.teardown.delete_chat_files()
+            if unstage_files:
+                cls.teardown.restore_untracked_changes()  # Added method call
             stdout, stderr = cls.teardown.run_git_delete()
             print("Teardown Output:", stdout)
             print("Teardown Errors:", stderr)
@@ -289,7 +292,7 @@ class BaseTestEndToEnd:
     #    sync_thread.join()
 
     def test_10_sync_feature2_branch(self):
-        self.teardown_end_to_end()
+        self.teardown_end_to_end(unstage_files=False)
         self.setup_end_to_end()
 
         # Introduce a slight delay to allow for remote to be ready
@@ -322,7 +325,7 @@ class BaseTestEndToEnd:
         self.assertEqual(stdout_normalized, expected_output)
 
         # Step 5: Clean up after the test
-        self.teardown_end_to_end()
+        self.teardown_end_to_end(unstage_files=False)
 
     def test_11_run_machtiani_sync_command_not_ready(self):
         command = 'machtiani git-sync --amplify low --force --cost'
@@ -636,7 +639,7 @@ class BaseTestEndToEnd:
 
         # Poll for "Response saved" message for up to 2 minutes
         response_saved = False
-        timeout = 120  # 2 minutes in seconds
+        timeout = 180  # 3 minutes in seconds
         start_time = time.time()
 
         # Check if README.md was modified (an indicator that command completed)

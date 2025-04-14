@@ -48,6 +48,7 @@ class Teardown:
             print(f"Deleted .machtiani.ignore file.")
         else:
             print(f".machtiani.ignore file does not exist.")
+
     def delete_chat_files(self):
        """Delete all files in the .machtiani/chat directory."""
        chat_directory = os.path.join(self.git_directory, '.machtiani', 'chat')
@@ -68,6 +69,22 @@ class Teardown:
        if not os.listdir(chat_directory):
            os.rmdir(chat_directory)
            print(f"Deleted directory: {chat_directory}")
+
+    def restore_untracked_changes(self):
+        """Restores the repository to a clean state by discarding untracked changes and files."""
+        # Reset tracked files to HEAD
+        reset_command = 'git reset --hard'
+        reset_stdout, reset_stderr = run_machtiani_command(reset_command, self.git_directory)
+        print("Reset tracked files output:", reset_stdout)
+        if reset_stderr:
+            print("Reset tracked files errors:", reset_stderr)
+
+        # Clean untracked files and directories
+        clean_command = 'git clean -fd -f'
+        clean_stdout, clean_stderr = run_machtiani_command(clean_command, self.git_directory)
+        print("Clean untracked files output:", clean_stdout)
+        if clean_stderr:
+            print("Clean untracked files errors:", clean_stderr)
 
 class Setup:
     def __init__(self, git_directory, no_code_host_key=False):
