@@ -13,15 +13,6 @@ class Teardown:
             raise ValueError(f"The specified directory '{git_directory}' is not a valid directory.")
         self.git_directory = git_directory
 
-        # Copy default.machtiani-config.yml to .machtiani-config.yml
-        default_config_path = os.path.join(self.git_directory, 'default.machtiani-config.yml')
-        target_config_path = os.path.join(self.git_directory, '.machtiani-config.yml')
-        if os.path.exists(default_config_path):
-            shutil.copy(default_config_path, target_config_path)
-            print(f"Copied default.machtiani-config.yml to .machtiani-config.yml")
-        else:
-            print(f"Warning: {default_config_path} does not exist. No configuration file copied.")
-
     def run_git_delete(self):
         """Run 'machtiani git-delete --force' in the specified git directory."""
         command = "machtiani git-delete --force"
@@ -87,22 +78,35 @@ class Teardown:
             print("Clean untracked files errors:", clean_stderr)
 
 class Setup:
-    def __init__(self, git_directory, no_code_host_key=False):
+    def __init__(self, git_directory, configs_directory, no_code_host_key=False):
         """Initialize the Setup class with the path to the git project directory."""
         if not os.path.isdir(git_directory):
             raise ValueError(f"The specified directory '{git_directory}' is not a valid directory.")
+        if not os.path.isdir(configs_directory):
+            raise ValueError(f"The specified directory '{configs_directory}' is not a valid directory.")
         self.git_directory = git_directory
-        self.git_operations = GitOperations(git_directory)  # Initialize GitOperations
+        self.configs_directory = configs_directory
 
         if no_code_host_key:
             # Copy no-code-host-key.machtiani-config.yml to .machtiani-config.yml
-            no_code_host_key_config_path = os.path.join(self.git_directory, 'no-code-host-key.machtiani-config.yml')
+            no_code_host_key_config_path = os.path.join(self.configs_directory, 'no-code-host-key.machtiani-config.yml')
             target_config_path = os.path.join(self.git_directory, '.machtiani-config.yml')
             if os.path.exists(no_code_host_key_config_path):
                 shutil.copy(no_code_host_key_config_path, target_config_path)
                 print(f"Copied no-code-host-key.machtiani-config.yml to .machtiani-config.yml")
             else:
                 print(f"Warning: {no_code_host_key_config_path} does not exist. No configuration file copied.")
+        else:
+            # Copy no-code-host-key.machtiani-config.yml to .machtiani-config.yml
+            default_config_path = os.path.join(self.configs_directory, 'default.machtiani-config.yml')
+            target_config_path = os.path.join(self.git_directory, '.machtiani-config.yml')
+            if os.path.exists(default_config_path):
+                shutil.copy(default_config_path, target_config_path)
+                print(f"Copied default.machtiani-config.yml to .machtiani-config.yml")
+            else:
+                print(f"Warning: {default_config_path} does not exist. No configuration file copied.")
+
+        self.git_operations = GitOperations(git_directory)  # Initialize GitOperations
 
     def fetch_latest_branches(self):
         """Fetch the latest branches from the remote repository."""

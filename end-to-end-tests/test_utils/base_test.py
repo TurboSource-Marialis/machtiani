@@ -26,7 +26,8 @@ class BaseTestEndToEnd:
         """Initialize the test environment."""
         cls.maxDiff = None
         cls.directory = "data/git-projects/chastler"
-        cls.setup = Setup(cls.directory, no_code_host_key)
+        cls.configs = "data/configs"
+        cls.setup = Setup(cls.directory, cls.configs, no_code_host_key)
 
         # Fetch the latest branches
         cls.setup.fetch_latest_branches()
@@ -691,7 +692,8 @@ class ExtraTestEndToEnd:
         """Initialize the test environment."""
         cls.maxDiff = None
         cls.directory = "data/git-projects/machtiani"
-        cls.setup = Setup(cls.directory)
+        cls.configs = "data/configs"
+        cls.setup = Setup(cls.directory, cls.configs)
 
         # Ensure the .machtiani/chat directory exists
         chat_dir = os.path.join(cls.directory, ".machtiani", "chat")
