@@ -113,14 +113,34 @@ func Execute() {
 	case "status":
 		handleStatus(&config, remoteURL)
 		return // Exit after handling status
+
 	case "git-sync":
-		utils.ParseFlags(fs, os.Args[2:]) // Use the new helper function
+
+		// Use the new validation function
+		err := utils.ValidateArgFormat(fs, os.Args[2:])
+		if err != nil {
+			fmt.Printf("Error in command arguments: %v\n", err)
+			os.Exit(1)
+		}
+
+		// Validate amplify flag value
+		if err := utils.ValidateAmplifyFlag(*amplifyFlag); err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		// Validate depth flag value
+		if err := utils.ValidateDepthFlag(*depthFlag); err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
 		headCommitHash, err := git.GetHeadCommitHash()
 		if err != nil {
 			log.Printf("Error getting HEAD commit hash: %v", err) // Log error but continue
 		}
 
-		// Pass costFlag and costOnlyFlag to handleGitSync
+		// Use validated parameters
 		if err := handleGitSync(remoteURL, apiKey, *forceFlag, *verboseFlag, *costFlag, *costOnlyFlag, config, headCommitHash, *amplifyFlag, *depthFlag); err != nil {
 			log.Printf("Error handling git-sync: %v", err)
 			os.Exit(1)

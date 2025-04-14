@@ -198,6 +198,7 @@ func GetProjectOrDefault(projectFlag *string) (string, error) {
     return *projectFlag, nil
 }
 
+
 func ValidateFlags(modelFlag, matchStrengthFlag, modeFlag *string) {
     //model := *modelFlag
     //if model != "gpt-4o" && model != "gpt-4o-mini" {
@@ -213,6 +214,63 @@ func ValidateFlags(modelFlag, matchStrengthFlag, modeFlag *string) {
     if mode != "chat" && mode != "pure-chat" && mode != "default" {
         log.Fatalf("Error: Invalid mode selected. Choose either chat, pure-chat, or default.")
     }
+}
+
+// ValidateArgFormat checks arguments for common CLI usage errors like missing -- prefix
+func ValidateArgFormat(fs *flag.FlagSet, args []string) error {
+    // Before parsing, check for arguments that might be missing the -- prefix
+    for i := 0; i < len(args); i++ {
+        arg := args[i]
+        // Skip if argument already has - or -- prefix
+        if strings.HasPrefix(arg, "-") {
+            continue
+        }
+
+        // Check if this matches a defined flag name
+        var flagExists bool
+        fs.VisitAll(func(f *flag.Flag) {
+            if f.Name == arg {
+                flagExists = true
+            }
+        })
+
+        if flagExists {
+            return fmt.Errorf("invalid flag format: '%s'. Did you mean '--%s'?", arg, arg)
+        }
+    }
+
+    // If validation passes, continue with normal parsing
+    return fs.Parse(args)
+}
+
+// ValidateAmplifyFlag validates the amplification level
+func ValidateAmplifyFlag(value string) error {
+    validValues := map[string]bool{
+        "off":  true,
+        "low":  true,
+        "mid":  true,
+        "high": true,
+    }
+
+    if !validValues[value] {
+        return fmt.Errorf("invalid value for --amplify: '%s'. Must be one of: off, low, mid, high", value)
+    }
+
+    return nil
+}
+
+// ValidateDepthFlag validates the depth parameter
+func ValidateDepthFlag(value int) error {
+    if value <= 0 {
+        return fmt.Errorf("invalid value for --depth: %d. Must be a positive integer", value)
+    }
+
+    return nil
+}
+
+// ParseFlagsWithValidation combines argument format validation with flag parsing
+func ParseFlagsWithValidation(fs *flag.FlagSet, args []string) error {
+    return ValidateArgFormat(fs, args)
 }
 
 func Spinner(done chan bool) {

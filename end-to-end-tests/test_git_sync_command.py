@@ -49,6 +49,46 @@ class TestMachtianiSyncCommand(unittest.TestCase):
         # Assert that the normalized output matches the expected output
         self.assertEqual(stdout_normalized, expected_output)
 
+
+
+    def test_04a_git_sync_invalid_flag_format(self):
+        """Test that the git-sync command fails properly with invalid flag format."""
+        command = 'machtiani git-sync amplify low --depth 1'
+
+        stdout_raw, stderr_raw = run_machtiani_command(command, self.directory)
+        stdout_clean = clean_output(stdout_raw)
+        stderr_clean = clean_output(stderr_raw)
+        combined = stdout_clean + stderr_clean
+
+        # Check for proper error message
+        self.assertTrue(any("Error in command arguments" in line for line in combined))
+        self.assertTrue(any("invalid flag format: 'amplify'" in line for line in combined))
+        self.assertTrue(any("Did you mean '--amplify'?" in line for line in combined))
+
+
+    def test_04b_git_sync_invalid_amplify_value(self):
+        """Test that the git-sync command validates amplify values."""
+        command = 'machtiani git-sync --amplify invalid --depth 1'
+
+        stdout_raw, stderr_raw = run_machtiani_command(command, self.directory)
+        stdout_clean = clean_output(stdout_raw)
+        stderr_clean = clean_output(stderr_raw)
+        combined = stdout_clean + stderr_clean
+
+        self.assertTrue(any("invalid value for --amplify" in line for line in combined))
+        self.assertTrue(any("Must be one of: off, low, mid, high" in line for line in combined))
+
+
+    def test_04c_git_sync_valid_flags(self):
+        """Test that the git-sync command works correctly with valid flags."""
+        command = 'machtiani git-sync --amplify low --depth 1 --force'
+
+        stdout_raw, _ = run_machtiani_command(command, self.directory)
+        stdout_clean = clean_output(stdout_raw)
+
+        # Check that the command executed successfully
+        self.assertTrue(any("Successfully synced the repository" in line for line in stdout_clean))
+
     def tearDown(self):
         """Clean up the test environment by running the git delete command."""
         try:
