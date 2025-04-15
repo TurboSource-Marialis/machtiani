@@ -1,3 +1,4 @@
+
 import unittest
 import os
 import re
@@ -19,6 +20,10 @@ from test_utils.test_utils import (
     append_future_features_to_chat_file,
 
 )
+
+def strip_spinner_lines(lines):
+    spinner_chars = ['⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷']
+    return [line for line in lines if not any(ch in line for ch in spinner_chars)]
 
 class BaseTestEndToEnd:
     @classmethod
@@ -110,7 +115,10 @@ class BaseTestEndToEnd:
         ]
         # --- END CORRECTION ---
 
+
         expected_output = [line.strip() for line in expected_output if line.strip()]
+        # Strip spinner lines before assertion
+        stdout_normalized = strip_spinner_lines(stdout_normalized)
         self.assertEqual(stdout_normalized, expected_output)
 
     def test_02_run_machtiani_sync_command_not_ready(self):
@@ -226,7 +234,7 @@ class BaseTestEndToEnd:
         stdout_clean = clean_output(stdout_raw)
 
         # Check that the command executed successfully
-        self.assertTrue(any("Successfully synced the repository" in line for line in stdout_clean))
+        self.assertTrue(any("Successfully synced" in line for line in stdout_clean))
 
     def test_05_run_machtiani_prompt_command(self):
         status_command = 'machtiani status'
@@ -256,11 +264,14 @@ class BaseTestEndToEnd:
             "Estimated embedding tokens: 0", # Common line
             "Estimated inference tokens: 0", # Common line
             "---", # Common line
-            "Successfully synced the repository: https://github.com/7db9a/chastler.git.", # Common line
-            'Server response: {"message":"Fetched and checked out branch \'master\' for project \'https://github.com/7db9a/chastler.git\' and updated index.","branch_name":"master","project_name":"https://github.com/7db9a/chastler.git"}' # Added based on actual output (-)
+            "Successfully synced 'master' branch of chastler.git to the chat service.",
+            "- service message: Fetched and checked out branch 'master' for project"
         ]
 
+
         expected_output = [line.strip() for line in expected_output if line.strip()]
+        # Strip spinner lines before assertion
+        stdout_normalized = strip_spinner_lines(stdout_normalized)
         self.assertEqual(stdout_normalized, expected_output)
 
     def test_07_sync_new_commits_and_prompt_command(self):
@@ -279,12 +290,14 @@ class BaseTestEndToEnd:
             "Estimated inference tokens: 85",
             "---",
             "",
-            "Successfully synced the repository: https://github.com/7db9a/chastler.git.",
-            'Server response: {"message":"Fetched and checked out branch \'feature\' for project \'https://github.com/7db9a/chastler.git\' and updated index.","branch_name":"feature","project_name":"https://github.com/7db9a/chastler.git"}'
+            "Successfully synced 'feature' branch of chastler.git to the chat service.",
+            "- service message: Fetched and checked out branch 'feature' for project"
         ]
 
-        expected_output = [line.strip() for line in expected_output if line.strip()]
 
+        expected_output = [line.strip() for line in expected_output if line.strip()]
+        # Strip spinner lines before assertion
+        stdout_normalized = strip_spinner_lines(stdout_normalized)
         self.assertEqual(stdout_normalized, expected_output)
 
         # Step 3: Run git prompt and assert the output
@@ -360,7 +373,10 @@ class BaseTestEndToEnd:
         ]
         # --- END CORRECTION ---
 
+
         expected_output = [line.strip() for line in expected_output if line.strip()]
+        # Strip spinner lines before assertion
+        stdout_normalized = strip_spinner_lines(stdout_normalized)
         self.assertEqual(stdout_normalized, expected_output)
 
         # Step 5: Clean up after the test
