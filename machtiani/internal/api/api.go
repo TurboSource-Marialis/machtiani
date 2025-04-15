@@ -16,6 +16,7 @@ import (
 	"github.com/charmbracelet/glamour"
 )
 
+
 var (
 	HeadOID               string = "none"
 	BuildDate             string = "unknown"
@@ -23,6 +24,16 @@ var (
 	RepoManagerURL        string = "http://localhost:5070"
 	MachtianiGitRemoteURL string = "none"
 )
+
+func extractRepoName(projectURL string) string {
+    parts := strings.Split(projectURL, "/")
+    for i := len(parts) - 1; i >= 0; i-- {
+        if parts[i] != "" {
+            return parts[i]
+        }
+    }
+    return projectURL
+}
 
 var (
 	renderer     *glamour.TermRenderer
@@ -217,7 +228,25 @@ func FetchAndCheckoutBranch(codeURL, name, branchName string, apiKey *string, op
 	// Clear the spinner on completion
 	fmt.Print("\r ") // Clear the spinner output
 
-	return fmt.Sprintf("Successfully synced the repository: %s.\nServer response: %s", name, string(body)), nil
+
+	type SyncResponse struct {
+		Message     string `json:"message"`
+		BranchName  string `json:"branch_name"`
+		ProjectName string `json:"project_name"`
+	}
+
+	var syncResp SyncResponse
+	if err := json.Unmarshal(body, &syncResp); err != nil {
+		// Fallback to original format if parsing fails
+		log.Printf("Error parsing sync response: %v", err)
+		return fmt.Sprintf("Successfully synced the repository: %s.\nServer response: %s", name, string(body)), nil
+	}
+
+	repoName := extractRepoName(syncResp.ProjectName)
+    formattedMessage := fmt.Sprintf("Successfully synced '%s' branch to %s's to the chat service\n - service message: %s",
+		syncResp.BranchName, repoName, syncResp.Message)
+
+	return formattedMessage, nil
 }
 
 func DeleteStore(projectName string, codehostURL string, vcsType string, apiKey *string, repoManagerURL string, force bool) (DeleteStoreResponse, error) {
