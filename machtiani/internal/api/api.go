@@ -169,9 +169,11 @@ func FetchAndCheckoutBranch(codeURL, name, branchName string, apiKey *string, op
 		return "", fmt.Errorf("MACHTIANI_REPO_MANAGER_URL environment variable is not set")
 	}
 
-	// Start the spinner
-	done := make(chan bool)
-	go utils.Spinner(done)
+
+	// Initialize and start the spinner
+	spinner := NewSpinnerController()
+	spinner.Start()
+	defer spinner.Stop() // Ensure spinner stops on exit
 
 	fetchAndCheckoutBranchRequestData := map[string]interface{}{
 		"codehost_url":        codeURL,
@@ -222,11 +224,7 @@ func FetchAndCheckoutBranch(codeURL, name, branchName string, apiKey *string, op
 		return "", fmt.Errorf("error reading response body: %w", err)
 	}
 
-	// Stop the spinner
-	done <- true
 
-	// Clear the spinner on completion
-	fmt.Print("\r ") // Clear the spinner output
 
 
 	type SyncResponse struct {
@@ -243,7 +241,7 @@ func FetchAndCheckoutBranch(codeURL, name, branchName string, apiKey *string, op
 	}
 
 	repoName := extractRepoName(syncResp.ProjectName)
-    formattedMessage := fmt.Sprintf("Successfully synced '%s' branch to %s's to the chat service\n - service message: %s",
+    formattedMessage := fmt.Sprintf("Successfully synced '%s' branch of %s to the chat service\n - service message: %s",
 		syncResp.BranchName, repoName, syncResp.Message)
 
 	return formattedMessage, nil
@@ -910,11 +908,13 @@ func (s *SpinnerController) Start() {
 	}
 }
 
+
 func (s *SpinnerController) Stop() {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	if s.spinning {
 		s.done <- true
 		s.spinning = false
+		fmt.Print("\r ") // Clear the spinner line
 	}
 }
