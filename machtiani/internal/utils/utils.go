@@ -311,7 +311,8 @@ func ParseFlagsWithValidation(fs *flag.FlagSet, args []string) error {
 }
 
 func Spinner(done chan bool) {
-	symbols := []rune{'|', '/', '-', '\\'}
+    //symbols := []rune{'▁', '▂', '▃', '▄', '▅', '▆', '▇', '█', '▇', '▆', '▅', '▄', '▃'}
+    symbols := []rune{'⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷'}
 	i := 0
 
 	fmt.Println()
