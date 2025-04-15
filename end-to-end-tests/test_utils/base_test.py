@@ -689,7 +689,7 @@ class BaseTestEndToEnd:
         time.sleep(3)
 
         # Run command without --mode chat flag to trigger file changes
-        command = 'machtiani "Add a comment to the README explaining the project is a video processing library" --model deepseek/deepseek-r1'
+        command = 'machtiani "Add a comment to the README explaining the project is a video processing library"'
         stdout_machtiani, stderr_machtiani = run_machtiani_command(command, self.directory)
 
         # Poll for "Response saved" message for up to 2 minutes
