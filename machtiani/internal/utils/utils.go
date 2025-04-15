@@ -277,11 +277,13 @@ func ValidateHeadCommitExistsOnRemote(headCommitHash string) error {
 	remoteName := "origin"
 	remoteBranch := branchName
 
-	// Fetch the latest from the remote
-	fetchCmd := exec.Command("git", "fetch", "--quiet", remoteName, remoteBranch)
+
+	// Fetch the latest from the remote without specifying branch
+	// This fetches all branches without requiring upstream configuration
+	fetchCmd := exec.Command("git", "fetch", "--quiet", remoteName)
 	if fetchOutput, fetchErr := fetchCmd.CombinedOutput(); fetchErr != nil {
-		return fmt.Errorf("failed to fetch remote branch %s: %w, output: %s",
-			remoteBranch, fetchErr, strings.TrimSpace(string(fetchOutput)))
+		return fmt.Errorf("failed to fetch from remote %s: %w, output: %s",
+			remoteName, fetchErr, strings.TrimSpace(string(fetchOutput)))
 	}
 
 
