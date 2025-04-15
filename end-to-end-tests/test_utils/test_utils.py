@@ -97,7 +97,8 @@ class Setup:
             else:
                 print(f"Warning: {no_code_host_key_config_path} does not exist. No configuration file copied.")
         else:
-            # Copy no-code-host-key.machtiani-config.yml to .machtiani-config.yml
+
+            # Copy default.machtiani-config.yml to .machtiani-config.yml
             default_config_path = os.path.join(self.configs_directory, 'default.machtiani-config.yml')
             target_config_path = os.path.join(self.git_directory, '.machtiani-config.yml')
             if os.path.exists(default_config_path):
@@ -106,7 +107,51 @@ class Setup:
             else:
                 print(f"Warning: {default_config_path} does not exist. No configuration file copied.")
 
+
         self.git_operations = GitOperations(git_directory)  # Initialize GitOperations
+
+        # Configure Git credentials unless no_code_host_key is set
+        if not no_code_host_key:
+            self._configure_git_credentials()
+
+
+    def _configure_git_credentials(self):
+        """Configures Git credentials using codehost key and repository URL."""
+        codehost_key = self.git_operations.api_key
+        remote_url = self.git_operations.get_remote_url()
+        credentials_url = self._construct_credentials_url(remote_url, codehost_key)
+
+        gitcredentials_path = os.path.join(self.git_directory, '.gitcredentials')
+        with open(gitcredentials_path, 'w') as f:
+            f.write(f"{credentials_url}\n")
+        print(f"Created .gitcredentials file at {gitcredentials_path}")
+
+        config_command = "git config credential.helper 'store --file=.gitcredentials'"
+        stdout, stderr = run_machtiani_command(config_command, self.git_directory)
+        if stdout:
+            print(f"Git config output: {stdout}")
+        if stderr:
+            print(f"Git config errors: {stderr}")
+
+    def _construct_credentials_url(self, remote_url, codehost_key):
+        """Constructs the credentials URL for .gitcredentials file."""
+        if remote_url.startswith("https://"):
+            # Extract parts after https:// and remove existing credentials
+            parts = remote_url.split("://", 1)
+            post_protocol = parts[1]
+            if "@" in post_protocol:
+                _, host_path = post_protocol.split("@", 1)
+            else:
+                host_path = post_protocol
+            return f"https://7db9a:{codehost_key}@{host_path}"
+        elif remote_url.startswith("git@"):
+            # Convert SSH URL to HTTPS format
+            host_part = remote_url.split("@", 1)[1]
+            host, repo_path = host_part.split(":", 1)
+            repo_path = repo_path.rstrip(".git")  # Remove .git suffix if present
+            return f"https://7db9a:{codehost_key}@{host}/{repo_path}.git"
+        else:
+            raise ValueError(f"Unsupported remote URL format: {remote_url}")
 
     def fetch_latest_branches(self):
         """Fetch the latest branches from the remote repository."""
