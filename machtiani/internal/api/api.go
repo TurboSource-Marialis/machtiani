@@ -293,12 +293,14 @@ type UpdateFileContent struct {
 }
 
 
+
 type GenerateResponseResult struct {
 	LlmModelResponse      string                       `json:"llm_model_response"`
 	RawResponse           string                       `json:"llm_model_response"`
 	RetrievedFilePaths    []string                     `json:"retrieved_file_paths"`
 	UpdateContentResponse map[string]UpdateFileContent `json:"update_content_response"`
 	HeadCommitHash        string                       `json:"head_commit_hash"`
+	spinner               *SpinnerController
 }
 
 func init() {
@@ -417,9 +419,6 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 	// Start the initial spinner
 	spinner.Start()
 
-	// Ensure the spinner is stopped when the function exits
-	defer spinner.Stop()
-
 	for {
 		var chunk map[string]interface{}
 		if err := decoder.Decode(&chunk); err == io.EOF {
@@ -488,6 +487,7 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 						completeResponse.WriteString(codeBlockBuffer.String())
 						// Reset the code block buffer
 						codeBlockBuffer.Reset()
+						spinner.Start()
 					} else {
 						// Trim any trailing newline characters
 						trimmedBlock := strings.TrimRight(block, "\r\n")
@@ -505,6 +505,7 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 
 						// Append to complete response
 						completeResponse.WriteString(trimmedBlock)
+						spinner.Start()
 					}
 				}
 
@@ -580,13 +581,25 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 	}
 
 
-	return &GenerateResponseResult{
+
+	// Before returning the result, attach the spinner
+	result := &GenerateResponseResult{
 		LlmModelResponse:      completeResponse.String(),
-		RawResponse:           rawResponse.String(), // Include rawResponse
+		RawResponse:           rawResponse.String(),
 		RetrievedFilePaths:    retrievedFilePaths,
 		UpdateContentResponse: updateContentResponse,
 		HeadCommitHash:        headCommitHash,
-	}, nil
+		spinner:               spinner,
+	}
+
+	// Modify the defer to conditionally stop the spinner
+	defer func() {
+		if len(updateContentResponse) == 0 {
+			spinner.Stop()
+		}
+	}()
+
+	return result, nil
 }
 
 func renderMarkdown(content string) error {
@@ -767,10 +780,14 @@ func GetInstallInfo() (bool, string, error) {
 
 
 func (res *GenerateResponseResult) WritePatchToFile() error {
+
 	if len(res.UpdateContentResponse) == 0 {
+        res.spinner.Stop()
 		return nil
 	}
 
+	// Ensure the spinner stops running during file writes
+	res.spinner.Stop()
 
 	var outputBuffer bytes.Buffer // Use a buffer to collect messages
 
