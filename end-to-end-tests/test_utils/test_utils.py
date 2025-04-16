@@ -14,9 +14,9 @@ class Teardown:
         self.git_directory = git_directory
 
     def run_git_delete(self):
-        """Run 'machtiani git-delete --force' in the specified git directory."""
-        command = "machtiani git-delete --force"
-        stdout, stderr = run_machtiani_command(command, self.git_directory)
+        """Run 'mct git-delete --force' in the specified git directory."""
+        command = "mct git-delete --force"
+        stdout, stderr = run_mct_command(command, self.git_directory)
         return clean_output(stdout), clean_output(stderr)
 
     def force_push(self, from_branch, to_branch):
@@ -28,7 +28,7 @@ class Teardown:
         return checkout_branch(branch_name, self.git_directory)
 
     def get_branches(self):
-        stdout, stderr = run_machtiani_command('git branch', self.git_directory)
+        stdout, stderr = run_mct_command('git branch', self.git_directory)
         return stdout
 
     def delete_ignore_file(self):
@@ -65,14 +65,14 @@ class Teardown:
         """Restores the repository to a clean state by discarding untracked changes and files."""
         # Reset tracked files to HEAD
         reset_command = 'git reset --hard'
-        reset_stdout, reset_stderr = run_machtiani_command(reset_command, self.git_directory)
+        reset_stdout, reset_stderr = run_mct_command(reset_command, self.git_directory)
         print("Reset tracked files output:", reset_stdout)
         if reset_stderr:
             print("Reset tracked files errors:", reset_stderr)
 
         # Clean untracked files and directories
         clean_command = 'git clean -fd -f'
-        clean_stdout, clean_stderr = run_machtiani_command(clean_command, self.git_directory)
+        clean_stdout, clean_stderr = run_mct_command(clean_command, self.git_directory)
         print("Clean untracked files output:", clean_stdout)
         if clean_stderr:
             print("Clean untracked files errors:", clean_stderr)
@@ -127,7 +127,7 @@ class Setup:
         print(f"Created .gitcredentials file at {gitcredentials_path}")
 
         config_command = "git config credential.helper 'store --file=.gitcredentials'"
-        stdout, stderr = run_machtiani_command(config_command, self.git_directory)
+        stdout, stderr = run_mct_command(config_command, self.git_directory)
         if stdout:
             print(f"Git config output: {stdout}")
         if stderr:
@@ -166,7 +166,7 @@ class Setup:
         return checkout_branch(branch_name, self.git_directory)
 
     def get_branches(self):
-        stdout, stderr = run_machtiani_command('git branch', self.git_directory)
+        stdout, stderr = run_mct_command('git branch', self.git_directory)
         return stdout
 
     def create_ignore_file(self):
@@ -192,7 +192,7 @@ class GitOperations:
     def get_remote_url(self):
         """Get the remote URL from the git repository in the specified directory."""
         command = "git remote get-url origin"
-        result = run_machtiani_command(command, self.git_directory)
+        result = run_mct_command(command, self.git_directory)
         if result[1]:
             raise Exception("Error fetching remote URL: " + " ".join(result[1]))
         return result[0][0]
@@ -221,10 +221,10 @@ class GitOperations:
         try:
             # Set the remote URL with the auth URL
             command_set_remote = f"git remote set-url origin {auth_url}"
-            run_machtiani_command(command_set_remote, self.git_directory)
+            run_mct_command(command_set_remote, self.git_directory)
 
             command_push = f"git push origin {from_branch}:{to_branch} --force"
-            stdout, stderr = run_machtiani_command(command_push, self.git_directory)
+            stdout, stderr = run_mct_command(command_push, self.git_directory)
             return stdout, stderr
 
         except Exception as e:
@@ -234,7 +234,7 @@ class GitOperations:
         finally:
             # Revert the remote URL back to the original
             command_revert_remote = f"git remote set-url origin {original_remote_url}"
-            run_machtiani_command(command_revert_remote, self.git_directory)
+            run_mct_command(command_revert_remote, self.git_directory)
 
 def clean_output(stdout_lines):
     """Utility function to clean the output from the command."""
@@ -244,7 +244,7 @@ def clean_output(stdout_lines):
     cleaned = [line.strip() for line in stdout_lines if not is_progress_indicator(line)]
     return [line.strip() for line in cleaned if line]
 
-def run_machtiani_command(command, directory):
+def run_mct_command(command, directory):
     """Run a shell command in the specified directory and return the output."""
     if not os.path.isdir(directory):
         raise FileNotFoundError(f"The directory {directory} does not exist.")
@@ -302,7 +302,7 @@ def checkout_branch(branch_name, git_directory):
     """Checkout the specified branch from the remote repository."""
     command = f'git checkout -b {branch_name} origin/{branch_name}'
     try:
-        stdout, stderr = run_machtiani_command(command, git_directory)
+        stdout, stderr = run_mct_command(command, git_directory)
         return stdout, stderr
     except subprocess.CalledProcessError as e:
         print(f"An error occurred while checking out branch '{branch_name}': {e}")
@@ -312,7 +312,7 @@ def wait_for_status_complete(command, directory, max_wait_time=30, interval=1):
     """Wait for a command to return the expected output by polling."""
     elapsed_time = 0
     while elapsed_time < max_wait_time:
-        stdout_status, stderr_status = run_machtiani_command(command, directory)
+        stdout_status, stderr_status = run_mct_command(command, directory)
         stdout_status_normalized = clean_output(stdout_status)
 
         # Convert stdout_status_normalized to a single string if it's a list
@@ -332,7 +332,7 @@ def wait_for_status_incomplete(command, directory, max_wait_time=30, interval=1)
     """Wait for a command to return the expected output by polling."""
     elapsed_time = 0
     while elapsed_time < max_wait_time:
-        stdout_status, stderr_status = run_machtiani_command(command, directory)
+        stdout_status, stderr_status = run_mct_command(command, directory)
         stdout_status_normalized = clean_output(stdout_status)
 
         # Convert stdout_status_normalized to a single string if it's a list

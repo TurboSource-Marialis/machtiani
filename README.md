@@ -15,7 +15,8 @@ Let's use machtiani! Doing the following in the `machtiani-commit-file-retrieval
 $ pwd
 /home/david/projects/machtiani/machtiani-commit-file-retrieval
 
-$ machtiani --model gpt-4o \
+
+$ mct --model gpt-4o \
   "Explain how machtiani gets the correct context from files through the git history, \
    and how is this different than common indexing strategies"
 
@@ -130,10 +131,11 @@ These are straightforward to overcome (e.g. support all git servers), doable wit
 
    go build \
      -ldflags "$(go run generate_ldflags_local.go)" \
-     -o machtiani-cli \
+
+   -o mct-cli \
      ./cmd/machtiani
 
-   cp machtiani-cli /$HOME/.local/bin/machtiani
+   cp mct-cli /$HOME/.local/bin/mct
    ```
 
 
@@ -146,7 +148,8 @@ These are straightforward to overcome (e.g. support all git servers), doable wit
 5. Put a project on machtiani.
 
   ```bash
-   machtiani git-store
+
+   mct git-store
   ```
 
   Replace master with main, if that is the default branch.
@@ -155,13 +158,15 @@ These are straightforward to overcome (e.g. support all git servers), doable wit
 
 
   ```bash
-   machtiani "Ask whatever you want here"
+
+   mct "Ask whatever you want here"
    ```
 
 7. Sync any new commits you pushed to your remote `origin` on Github.
 
   ```bash
-  machtiani git-sync
+
+  mct git-sync
   ```
 
   Replace master with main, if that is the default branch.
@@ -194,24 +199,28 @@ machtiani [flags] [prompt]
 1. **Providing a direct prompt:**
 
    ```bash
-   machtiani "Add a new endpoint to get stats."
+
+   mct "Add a new endpoint to get stats."
    ```
 
 2. **Using an existing markdown chat file:**
    ```bash
-   machtiani --file .machtiani/chat/add_state_endpoint.md
+
+   mct --file .machtiani/chat/add_state_endpoint.md
    ```
 
 3. **Specifying additional parameters:**
 
    ```bash
-   machtiani "Add a new endpoint to get stats." --model gpt-4o --mode pure-chat --match-strength high
+
+   mct "Add a new endpoint to get stats." --model gpt-4o --mode pure-chat --match-strength high
    ```
 
 4. **Using the `--force` flag to skip confirmation:**
 
    ```bash
-   machtiani git-store --force
+
+   mct git-store --force
    ```
 
 ### Different Modes
@@ -224,7 +233,8 @@ The `git-store` command allows you to add a repository to the Machtiani system.
 
 **Usage:**
 ```bash
-machtiani git-store --remote <remote_name> [--force]
+
+mct git-store --remote <remote_name> [--force]
 ```
 
 **Example:**
@@ -238,7 +248,8 @@ The `git-sync` command is used to fetch and checkout a specific branch of the re
 
 **Usage:**
 ```bash
-machtiani git-sync --remote <remote_name> [--force]
+
+mct git-sync --remote <remote_name> [--force]
 ```
 
 **Example:**
@@ -252,7 +263,8 @@ The `git-delete` command allows you to remove a repository from the Machtiani sy
 
 **Usage:**
 ```bash
-machtiani git-delete --remote <remote_name> [--force]
+
+mct git-delete --remote <remote_name> [--force]
 ```
 
 **Example:**
@@ -277,9 +289,10 @@ The CLI will stream the response and save the chat in `.machtiani/chat/` in the 
 
 ## Features
 
+
 Machtiani will let you know if you should pull latest changes so you can get the most powerful version available.
 
-It checks for any latest system messages every so often from machtiani's codehost (currently GitHub) using the git protocol. It simply does a shallow clone of machtiani's repo, gets the latest system message, and throws away the clone. This ensures the tool doesn't 'phone home' to external services beyond the codehost, maintaining user privacy.
+It checks for any latest system messages every so often from Machtiani's codehost (currently GitHub) using the git protocol. It simply does a shallow clone of Machtiani's repo, gets the latest system message, and throws away the clone. This ensures the tool doesn't 'phone home' to external services beyond the codehost, maintaining user privacy.
 
 ## Developer Section
 

@@ -101,7 +101,7 @@ func handleGitSync(remoteURL string, apiKey *string, force bool, verbose bool, c
 				fmt.Println(response.Message)
 				fmt.Println("---")
 				fmt.Println("Your repo is getting added to machtiani is in progress!")
-				fmt.Println("Please check back by running `machtiani status` to see if it completed.")
+				fmt.Println("Please check back by running `mct status` to see if it completed.")
 				return nil
 			} else {
 				fmt.Println("Operation cancelled by user.")

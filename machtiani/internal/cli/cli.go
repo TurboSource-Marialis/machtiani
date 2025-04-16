@@ -69,7 +69,7 @@ func Execute() {
 		log.Fatalf("Error loading config: %v", err)
 	}
 
-	fs := flag.NewFlagSet("machtiani", flag.ContinueOnError)
+	fs := flag.NewFlagSet("mct", flag.ContinueOnError)
 	remoteName := fs.String("remote", "origin", "Name of the remote repository")
 	forceFlag := fs.Bool("force", false, "Skip confirmation prompt and proceed with the operation.")
 	verboseFlag := fs.Bool("verbose", false, "Print verbose output including timing information.")
@@ -173,3 +173,4 @@ func Execute() {
 		return
 	}
 }
+
