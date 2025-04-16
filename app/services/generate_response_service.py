@@ -20,7 +20,6 @@ from app.utils import (
 )
 from lib.ai.llm_model import LlmModel
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Define token limits for different models

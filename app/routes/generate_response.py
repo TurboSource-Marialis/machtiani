@@ -9,7 +9,6 @@ router = APIRouter()
 
 # Set up logging
 import logging
-#logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 @router.post("/generate-response")
