@@ -57,9 +57,17 @@ async def generate_filename(context: str, llm_model_api_key: str, llm_model_base
     match = re.search(r"<filename>\s*(.*?)\s*</filename>", response, re.DOTALL | re.IGNORECASE)
     if not match:
         match = re.search(r"<\s*(.*?)\s*>", response)
+
     if match:
         filename = match.group(1).strip()
-        return filename
+        # Process the filename to remove all extensions and append .md
+        base = filename
+        while True:
+            base, ext = os.path.splitext(base)
+            if not ext:
+                break
+        processed_filename = base
+        return processed_filename
     else:
         # If no valid filename is found, raise an HTTP exception
         raise HTTPException(status_code=400, detail="Invalid response format from OpenAI API.")
