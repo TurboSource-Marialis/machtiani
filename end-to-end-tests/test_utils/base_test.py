@@ -20,9 +20,18 @@ from test_utils.test_utils import (
 
 )
 
+
+import re
+
+def strip_ansi_codes(s):
+    # Remove all ANSI escape sequences
+    ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
+    return ansi_escape.sub('', s)
+
 def strip_spinner_lines(lines):
     spinner_chars = ['⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷']
-    return [line for line in lines if not any(ch in line for ch in spinner_chars)]
+    stripped_lines = [strip_ansi_codes(line) for line in lines]
+    return [line for line in stripped_lines if not any(ch in line for ch in spinner_chars)]
 
 class BaseTestEndToEnd:
     @classmethod

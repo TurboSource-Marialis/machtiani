@@ -265,7 +265,6 @@ func ValidateDepthFlag(value int) error {
 	return nil
 }
 
-
 // ValidateHeadCommitExistsOnRemote checks if the HEAD commit matches the origin remote's current branch.
 // Returns nil if commits match, error if they differ or validation fails.
 func ValidateHeadCommitExistsOnRemote(headCommitHash string) error {
@@ -277,7 +276,6 @@ func ValidateHeadCommitExistsOnRemote(headCommitHash string) error {
 	remoteName := "origin"
 	remoteBranch := branchName
 
-
 	// Fetch the latest from the remote without specifying branch
 	// This fetches all branches without requiring upstream configuration
 	fetchCmd := exec.Command("git", "fetch", "--quiet", remoteName)
@@ -285,7 +283,6 @@ func ValidateHeadCommitExistsOnRemote(headCommitHash string) error {
 		return fmt.Errorf("failed to fetch from remote %s: %w, output: %s",
 			remoteName, fetchErr, strings.TrimSpace(string(fetchOutput)))
 	}
-
 
 	// Get the commit hash of the remote branch
 	remoteCommitCmd := exec.Command("git", "rev-parse", fmt.Sprintf("%s/%s", remoteName, remoteBranch))
@@ -311,9 +308,10 @@ func ParseFlagsWithValidation(fs *flag.FlagSet, args []string) error {
 }
 
 func Spinner(done chan bool) {
-    //symbols := []rune{'▁', '▂', '▃', '▄', '▅', '▆', '▇', '█', '▇', '▆', '▅', '▄', '▃'}
-    symbols := []rune{'⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷'}
+	symbols := []rune{'⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷'}
 	i := 0
+	hotPink := "\033[38;5;205m" // Updated to hot pink (256-color mode)
+	reset := "\033[0m"
 
 	fmt.Println()
 
@@ -324,7 +322,7 @@ func Spinner(done chan bool) {
 			fmt.Print("\r \r")
 			return
 		default:
-			fmt.Printf("\r%c", symbols[i])
+			fmt.Printf("\r%s%c%s", hotPink, symbols[i], reset)
 			i = (i + 1) % len(symbols)
 			time.Sleep(100 * time.Millisecond) // Adjust the spinner speed here
 		}
