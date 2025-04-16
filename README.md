@@ -149,7 +149,8 @@ These are straightforward to overcome (e.g. support all git servers), doable wit
 
   ```bash
 
-   mct git-store
+
+  mct sync
   ```
 
   Replace master with main, if that is the default branch.
@@ -166,7 +167,8 @@ These are straightforward to overcome (e.g. support all git servers), doable wit
 
   ```bash
 
-  mct git-sync
+
+  mct sync
   ```
 
   Replace master with main, if that is the default branch.

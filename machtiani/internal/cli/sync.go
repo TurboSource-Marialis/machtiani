@@ -10,7 +10,8 @@ import (
 	"github.com/7db9a/machtiani/internal/utils"
 )
 
-func handleGitSync(remoteURL string, apiKey *string, force bool, verbose bool, cost bool, costOnly bool, config utils.Config, headCommitHash string, amplificationLevel string, depthLevel int) error {
+
+func handleSync(remoteURL string, apiKey *string, force bool, verbose bool, cost bool, costOnly bool, config utils.Config, headCommitHash string, amplificationLevel string, depthLevel int) error {
 	startTime := time.Now()
 
 	// Get the current HEAD commit hash if not provided

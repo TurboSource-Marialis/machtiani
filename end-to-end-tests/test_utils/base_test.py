@@ -76,7 +76,8 @@ class BaseTestEndToEnd:
             cls.teardown.delete_chat_files() # Deletes files in .machtiani/chat
             if unstage_files:
                 cls.teardown.restore_untracked_changes()  # Added method call
-            stdout, stderr = cls.teardown.run_git_delete() # Uses mct git-delete internally
+
+            stdout, stderr = cls.teardown.run_remove() # Uses mct remove internally
             print("Teardown Output:", stdout)
             print("Teardown Errors:", stderr)
         except Exception as e:
@@ -93,7 +94,8 @@ class BaseTestEndToEnd:
         # Checkout master branch first to ensure we're syncing from a clean state
         self.setup.checkout_branch("master")
 
-        command = 'git checkout master && mct git-sync --amplify low --cost --force' # Changed command
+
+        command = 'git checkout master && mct sync --amplify low --cost --force' # Changed command
         stdout_normalized = self.run_mct_command(command) # Use renamed method
 
         expected_output = [
@@ -123,7 +125,8 @@ class BaseTestEndToEnd:
                             f"Expected line '{expected_line}' should not be the entire output.")
 
     def test_02_run_mct_sync_command_not_ready(self): # Renamed test
-        command = 'mct git-sync --amplify low --cost --force' # Changed command
+
+        command = 'mct sync --amplify low --cost --force' # Changed command
         stdout_mct, stderr_mct = run_mct_command(command, self.directory) # Use renamed function
         stdout_normalized = clean_output(stdout_mct)
 
@@ -140,7 +143,8 @@ class BaseTestEndToEnd:
         end_time = time.time()
 
         total_time_elapsed = end_time - start_time
-        print(f"Total time elapsed for running mct git-sync --amplify low: {total_time_elapsed:.2f} seconds") # Changed command name in message
+
+        print(f"Total time elapsed for running mct sync --amplify low: {total_time_elapsed:.2f} seconds") # Changed command name in message
 
         # Save the elapsed time to a file
         filename = create_elapsed_time_filename(total_time_elapsed)
@@ -148,7 +152,8 @@ class BaseTestEndToEnd:
 
         with open(file_path, 'w') as f:
             f.write(f"Test executed on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-            f.write(f"Total time elapsed for running mct git-sync --amplify low: {total_time_elapsed:.2f} seconds\n") # Changed command name in message
+
+            f.write(f"Total time elapsed for running mct sync --amplify low: {total_time_elapsed:.2f} seconds\n") # Changed command name in message
 
         print(f"Elapsed time written to file: {file_path}")
 
@@ -202,8 +207,9 @@ class BaseTestEndToEnd:
                     self.assertIsInstance(value, float)
 
     def test_04a_git_sync_invalid_flag_format(self):
-        """Test that the git-sync command fails properly with invalid flag format."""
-        command = 'mct git-sync amplify low --depth 1' # Changed command
+        """Test that the sync command fails properly with invalid flag format."""
+
+        command = 'mct sync amplify low --depth 1' # Changed command
 
         stdout_raw, stderr_raw = run_mct_command(command, self.directory) # Use renamed function
         stdout_clean = clean_output(stdout_raw)
@@ -216,8 +222,9 @@ class BaseTestEndToEnd:
         self.assertTrue(any("Did you mean '--amplify'?" in line for line in combined))
 
     def test_04b_git_sync_invalid_amplify_value(self):
-        """Test that the git-sync command validates amplify values."""
-        command = 'mct git-sync --amplify invalid --depth 1' # Changed command
+        """Test that the sync command validates amplify values."""
+
+        command = 'mct sync --amplify invalid --depth 1' # Changed command
 
         stdout_raw, stderr_raw = run_mct_command(command, self.directory) # Use renamed function
         stdout_clean = clean_output(stdout_raw)
@@ -228,8 +235,9 @@ class BaseTestEndToEnd:
         self.assertTrue(any("Must be one of: off, low, mid, high" in line for line in combined))
 
     def test_04c_git_sync_valid_flags(self):
-        """Test that the git-sync command works correctly with valid flags."""
-        command = 'mct git-sync --amplify low --depth 1 --force' # Changed command
+        """Test that the sync command works correctly with valid flags."""
+
+        command = 'mct sync --amplify low --depth 1 --force' # Changed command
 
         stdout_raw, _ = run_mct_command(command, self.directory) # Use renamed function
         stdout_clean = clean_output(stdout_raw)
@@ -254,7 +262,7 @@ class BaseTestEndToEnd:
 
 
     def test_06_run_mct_sync_command(self): # Renamed test
-        command = 'mct git-sync --amplify low --cost --force' # Changed command
+        command = 'mct sync --amplify low --cost --force' # Changed command
         stdout_mct, stderr_mct = run_mct_command(command, self.directory) # Use renamed function
         stdout_normalized = clean_output(stdout_mct)
 
@@ -283,7 +291,8 @@ class BaseTestEndToEnd:
 
     def test_07_sync_new_commits_and_prompt_command(self):
         # Step 2: Run git_sync and assert the output
-        command = 'git checkout feature && mct git-sync --amplify low --force --cost' # Changed command
+
+        command = 'git checkout feature && mct sync --amplify low --force --cost' # Changed command
         stdout_mct, stderr_mct = run_mct_command(command, self.directory) # Use renamed function
         stdout_normalized = clean_output(stdout_mct)
 
@@ -334,7 +343,7 @@ class BaseTestEndToEnd:
 
     #def test_09_run_mct_status_with_lock(self): # Renamed commented test
     #    def run_sync():
-    #        command = 'git checkout feature && mct git-sync --amplify low --force' # Changed command
+    #        command = 'git checkout feature && mct sync --amplify low --force' # Changed command
     #        run_mct_command(command, self.directory) # Use renamed function
 
     #    sync_thread = threading.Thread(target=run_sync)
@@ -362,7 +371,7 @@ class BaseTestEndToEnd:
         time.sleep(5)
 
         # Step 4: Run git_sync again and assert the output now shows the correct token counts
-        command = 'git checkout feature2 && mct git-sync --amplify low --cost --force' # Changed command
+        command = 'git checkout feature2 && mct sync --amplify low --cost --force' # Changed command
         stdout_mct, stderr_mct = run_mct_command(command, self.directory) # Use renamed function
         stdout_normalized = clean_output(stdout_mct)
 
@@ -396,7 +405,8 @@ class BaseTestEndToEnd:
         self.teardown_end_to_end(unstage_files=False)
 
     def test_11_run_mct_sync_command_not_ready(self): # Renamed test
-        command = 'mct git-sync --amplify low --force --cost' # Changed command
+
+        command = 'mct sync --amplify low --force --cost' # Changed command
         stdout_mct, stderr_mct = run_mct_command(command, self.directory) # Use renamed function
         stdout_normalized = clean_output(stdout_mct)
 
@@ -413,7 +423,7 @@ class BaseTestEndToEnd:
         end_time = time.time()
 
         total_time_elapsed = end_time - start_time
-        print(f"Total time elapsed for running mct git-sync --amplify low: {total_time_elapsed:.2f} seconds") # Changed command name in message
+        print(f"Total time elapsed for running mct sync --amplify low: {total_time_elapsed:.2f} seconds") # Changed command name in message
 
         # Save the elapsed time to a file
         filename = create_elapsed_time_filename(total_time_elapsed)
@@ -421,7 +431,7 @@ class BaseTestEndToEnd:
 
         with open(file_path, 'w') as f:
             f.write(f"Test executed on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-            f.write(f"Total time elapsed for running mct git-sync --amplify low: {total_time_elapsed:.2f} seconds\n") # Changed command name in message
+            f.write(f"Total time elapsed for running mct sync --amplify low: {total_time_elapsed:.2f} seconds\n") # Changed command name in message
 
         print(f"Elapsed time written to file: {file_path}")
 
@@ -696,7 +706,7 @@ class BaseTestEndToEnd:
 
     def test_19_run_mct_prompt_with_code_changes(self): # Renamed test
         """Test mct prompt command without chat mode to see patch application."""
-        # First run git-sync to ensure the repo is ready
+        # First run sync to ensure the repo is ready
         status_command = 'mct status' # Changed command
         wait_for_status_complete(status_command, self.directory) # Uses updated command
         time.sleep(3)
@@ -806,11 +816,12 @@ class ExtraTestEndToEnd:
 
     def test_cost_estimation_time_low_amplify(self):
         """
-        Tests the time and token counts for cost estimation using 'git-sync --amplify low --cost-only'.
+        Tests the time and token counts for cost estimation using 'sync --amplify low --cost-only'.
         Verifies the output contains the estimation time and it falls within 20-30 seconds.
         Verifies the specific token counts.
         """
-        command = 'mct git-sync --amplify low --cost-only --verbose' # Changed command
+
+        command = 'mct sync --amplify low --cost-only --verbose' # Changed command
         print(f"\nRunning command in {self.directory}: {command}")
         stdout_mct, stderr_mct = self.run_mct_command_in_machtiani_repo(command) # Use renamed method
 
@@ -838,11 +849,12 @@ class ExtraTestEndToEnd:
 
     def test_cost_estimation_time_no_amplify(self):
         """
-        Tests the time and token counts for cost estimation using 'git-sync --cost-only'.
+        Tests the time and token counts for cost estimation using 'sync --cost-only'.
         Verifies the output contains the estimation time and it falls within 3-5 seconds.
         Verifies the specific token counts.
         """
-        command = 'mct git-sync --cost-only --verbose' # Changed command
+
+        command = 'mct sync --cost-only --verbose' # Changed command
         print(f"\nRunning command in {self.directory}: {command}")
         stdout_mct, stderr_mct = self.run_mct_command_in_machtiani_repo(command) # Use renamed method
 
@@ -872,10 +884,11 @@ class ExtraTestEndToEnd:
 
     def test_cost_estimation_time_no_amplify_depth_1(self):
         """
-        Tests time and tokens for 'git-sync --cost-only --depth 1'.
+        Tests time and tokens for 'sync --cost-only --depth 1'.
         Expects time between 2-4 seconds and specific token counts.
         """
-        command = 'mct git-sync --cost-only --verbose --depth 1' # Changed command
+
+        command = 'mct sync --cost-only --verbose --depth 1' # Changed command
         print(f"\nRunning command in {self.directory}: {command}")
         stdout_mct, stderr_mct = self.run_mct_command_in_machtiani_repo(command) # Use renamed method
 
@@ -903,10 +916,11 @@ class ExtraTestEndToEnd:
 
     def test_cost_estimation_time_low_amplify_depth_1(self):
         """
-        Tests time and tokens for 'git-sync --amplify low --cost-only --depth 1'.
+        Tests time and tokens for 'sync --amplify low --cost-only --depth 1'.
         Expects time between 2-4 seconds and specific token counts.
         """
-        command = 'mct git-sync --amplify low --cost-only --verbose --depth 1' # Changed command
+
+        command = 'mct sync --amplify low --cost-only --verbose --depth 1' # Changed command
         print(f"\nRunning command in {self.directory}: {command}")
         stdout_mct, stderr_mct = self.run_mct_command_in_machtiani_repo(command) # Use renamed method
 
@@ -936,10 +950,11 @@ class ExtraTestEndToEnd:
 
     def test_cost_estimation_time_no_amplify_depth_137(self):
         """
-        Tests time and tokens for 'git-sync --cost-only --depth 137'.
+        Tests time and tokens for 'sync --cost-only --depth 137'.
         Expects time between 2-4 seconds and specific token counts.
         """
-        command = 'mct git-sync --cost-only --verbose --depth 137' # Changed command
+
+        command = 'mct sync --cost-only --verbose --depth 137' # Changed command
         print(f"\nRunning command in {self.directory}: {command}")
         stdout_mct, stderr_mct = self.run_mct_command_in_machtiani_repo(command) # Use renamed method
 
@@ -967,10 +982,11 @@ class ExtraTestEndToEnd:
 
     def test_cost_estimation_time_low_amplify_depth_137(self):
         """
-        Tests time and tokens for 'git-sync --amplify low --cost-only --depth 137'.
+        Tests time and tokens for 'sync --amplify low --cost-only --depth 137'.
         Expects time between 8-10 seconds and specific token counts.
         """
-        command = 'mct git-sync --amplify low --cost-only --verbose --depth 137' # Changed command
+
+        command = 'mct sync --amplify low --cost-only --verbose --depth 137' # Changed command
         print(f"\nRunning command in {self.directory}: {command}")
         stdout_mct, stderr_mct = self.run_mct_command_in_machtiani_repo(command) # Use renamed method
 

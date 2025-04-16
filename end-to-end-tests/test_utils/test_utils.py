@@ -13,9 +13,10 @@ class Teardown:
             raise ValueError(f"The specified directory '{git_directory}' is not a valid directory.")
         self.git_directory = git_directory
 
-    def run_git_delete(self):
-        """Run 'mct git-delete --force' in the specified git directory."""
-        command = "mct git-delete --force"
+
+    def run_remove(self):
+        """Run 'mct remove --force' in the specified git directory."""
+        command = "mct remove --force"
         stdout, stderr = run_mct_command(command, self.git_directory)
         return clean_output(stdout), clean_output(stderr)
 

@@ -114,8 +114,8 @@ func Execute() {
 		handleStatus(&config, remoteURL)
 		return // Exit after handling status
 
-	case "git-sync":
 
+	case "sync":
 		// Use the new validation function
 		err := utils.ValidateArgFormat(fs, os.Args[2:])
 		if err != nil {
@@ -137,25 +137,23 @@ func Execute() {
 
 		headCommitHash, err := git.GetHeadCommitHash()
 		if err != nil {
-			log.Printf("Error getting HEAD commit hash: %v", err) // Log error but continue
+			log.Printf("Error getting HEAD commit hash: %v", err)
 		}
 
-		// Use validated parameters
-		if err := handleGitSync(remoteURL, apiKey, *forceFlag, *verboseFlag, *costFlag, *costOnlyFlag, config, headCommitHash, *amplifyFlag, *depthFlag); err != nil {
-			log.Printf("Error handling git-sync: %v", err)
+		if err := handleSync(remoteURL, apiKey, *forceFlag, *verboseFlag, *costFlag, *costOnlyFlag, config, headCommitHash, *amplifyFlag, *depthFlag); err != nil {
+			log.Printf("Error handling sync: %v", err)
 			os.Exit(1)
 		}
 		return
-	case "git-delete":
-		utils.ParseFlags(fs, os.Args[2:]) // Use the new helper function
+
+	case "remove":
+		utils.ParseFlags(fs, os.Args[2:])
 		if remoteURL == "" {
 			log.Printf("Error: --remote must be provided.")
 			os.Exit(1)
 		}
-		// Define additional parameters for git-delete
-		vcsType := "git" // Set the VCS type as needed
-		// Call the handleGitDelete function
-		handleGitDelete(remoteURL, projectName, vcsType, apiKey, *forceFlag, config)
+		vcsType := "git"
+		handleRemove(remoteURL, projectName, vcsType, apiKey, *forceFlag, config)
 		return
 	case "help":
 		printHelp()

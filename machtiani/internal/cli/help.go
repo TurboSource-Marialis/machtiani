@@ -9,11 +9,11 @@ func printHelp() {
 
     Machtiani is a command-line interface (CLI) tool designed to facilitate code chat and information retrieval from code repositories.
 
+
     Commands:
-      git-store                    Add a repository to the Machtiani system.
-      git-sync                     Fetch and checkout a specific branch of the repository.
-      git-delete                   Remove a repository from the Machtiani system.
-      status                       Check the status of the current project.
+      sync                        Add or sync a repository with the Machtiani system.
+      remove                      Remove a repository from the Machtiani system.
+      status                      Check the status of the current project.
 
     Global Flags:
       -file string                 Path to the markdown file (optional).
@@ -26,22 +26,16 @@ func printHelp() {
 
     Subcommands:
 
-    git-store:
-      Usage: mct git-store --remote <remote_name> [--force]
-      Adds a repository to Machtiani system.
+
+    sync:
+      Usage: mct sync --remote <remote_name> [--force]
+      Syncs a repository with Machtiani system.
       Flags:
         --remote string            Name of the remote repository (default: "origin").
         --force                    Skip confirmation prompt.
 
-    git-sync:
-      Usage: mct git-sync --remote <remote_name> [--force]
-      Syncs with a specific branch of the repository.
-      Flags:
-        --remote string            Name of the remote repository (default: "origin").
-        --force                    Skip confirmation prompt.
-
-    git-delete:
-      Usage: mct git-delete --remote <remote_name> [--force]
+    remove:
+      Usage: mct remove --remote <remote_name> [--force]
       Removes a repository from Machtiani system.
       Flags:
         --remote string            Name of the remote repository (required).
@@ -57,8 +51,9 @@ func printHelp() {
       Specifying additional parameters:
         mct "Add a new endpoint to get stats." --model gpt-4o --mode pure-chat --match-strength high
 
+
       Using the '--force' flag to skip confirmation:
-        mct git-store --force
+        mct sync --force
 
     `
     fmt.Println(helpText)

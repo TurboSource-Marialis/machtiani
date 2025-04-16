@@ -10,11 +10,11 @@ import (
 
 var RepoManagerURL string = "http://localhost:5070"
 
-func handleGitDelete(remoteURL string, projectName string, vcsType string, apiKey *string, forceFlag bool, config utils.Config) {
-	// Call the updated DeleteStore function
+
+func handleRemove(remoteURL string, projectName string, vcsType string, apiKey *string, forceFlag bool, config utils.Config) {
 	response, err := api.DeleteStore(projectName, remoteURL, vcsType, apiKey, RepoManagerURL, forceFlag)
 	if err != nil {
-		log.Fatalf("Error deleting store: %v", err)
+		log.Fatalf("Error removing store: %v", err)
 	}
 
 	fmt.Println(response.Message)
