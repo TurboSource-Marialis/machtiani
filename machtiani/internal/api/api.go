@@ -609,6 +609,12 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 				continue
 			}
 
+			// ADD THIS CODE: If NewFilePaths is empty but NewContent has entries, populate NewFilePaths
+			if len(newFiles.NewFilePaths) == 0 && len(newFiles.NewContent) > 0 {
+				for path := range newFiles.NewContent {
+					newFiles.NewFilePaths = append(newFiles.NewFilePaths, path)
+				}
+			}
 
 			// Stash new files data locally
 			newFilesResult = &newFiles
@@ -665,9 +671,19 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 		NewFiles:              newFilesResult,
 	}
 
+	// Write patch files for updated files
+	if err := result.WritePatchToFile(); err != nil {
+		log.Printf("Error writing patch files for updated files: %v", err)
+	}
+
+	// ADD THIS NEW CODE: Write patch files for new files
+	if err := result.WriteNewFiles(); err != nil {
+		log.Printf("Error writing patch files for new files: %v", err)
+	}
+
 	// Modify the defer to conditionally stop the spinner
 	defer func() {
-		if len(updateContentResponse) == 0 {
+		if len(updateContentResponse) == 0 && (newFilesResult == nil || len(newFilesResult.NewContent) == 0) {
 			spinner.Stop()
 		}
 	}()
