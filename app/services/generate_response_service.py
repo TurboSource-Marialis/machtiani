@@ -217,10 +217,10 @@ async def generate_response(
                     entry for entry in file_paths_payload if entry["path"] in relevant_file_paths
                 ]
 
-                if not relevant_file_paths_payload:
-                    logger.error("No relevant entries found in the original payload after filtering.")
-                    yield {"error": "No relevant entries found in the original payload after filtering."}
-                    return
+                #if not relevant_file_paths_payload:
+                #    logger.error("No relevant entries found in the original payload after filtering.")
+                #    yield {"error": "No relevant entries found in the original payload after filtering."}
+                #    return
 
                 content_response = await client.post(
                     f"{base_url}/retrieve-file-contents/",
