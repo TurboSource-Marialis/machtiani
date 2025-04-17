@@ -1,6 +1,5 @@
 package api
 
-
 import (
 	"bytes"
 	"encoding/json"
@@ -9,7 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os/exec"
+    "os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -18,7 +17,6 @@ import (
 	"github.com/7db9a/machtiani/internal/utils"
 	"github.com/charmbracelet/glamour"
 )
-
 
 var (
 	HeadOID               string = "none"
@@ -29,13 +27,13 @@ var (
 )
 
 func extractRepoName(projectURL string) string {
-    parts := strings.Split(projectURL, "/")
-    for i := len(parts) - 1; i >= 0; i-- {
-        if parts[i] != "" {
-            return parts[i]
-        }
-    }
-    return projectURL
+	parts := strings.Split(projectURL, "/")
+	for i := len(parts) - 1; i >= 0; i-- {
+		if parts[i] != "" {
+			return parts[i]
+		}
+	}
+	return projectURL
 }
 
 var (
@@ -172,7 +170,6 @@ func FetchAndCheckoutBranch(codeURL, name, branchName string, apiKey *string, op
 		return "", fmt.Errorf("MACHTIANI_REPO_MANAGER_URL environment variable is not set")
 	}
 
-
 	// Initialize and start the spinner
 	spinner := NewSpinnerController()
 	spinner.Start()
@@ -227,9 +224,6 @@ func FetchAndCheckoutBranch(codeURL, name, branchName string, apiKey *string, op
 		return "", fmt.Errorf("error reading response body: %w", err)
 	}
 
-
-
-
 	type SyncResponse struct {
 		Message     string `json:"message"`
 		BranchName  string `json:"branch_name"`
@@ -244,7 +238,7 @@ func FetchAndCheckoutBranch(codeURL, name, branchName string, apiKey *string, op
 	}
 
 	repoName := extractRepoName(syncResp.ProjectName)
-    formattedMessage := fmt.Sprintf("Successfully synced '%s' branch of %s to the chat service\n - service message: %s",
+	formattedMessage := fmt.Sprintf("Successfully synced '%s' branch of %s to the chat service\n - service message: %s",
 		syncResp.BranchName, repoName, syncResp.Message)
 
 	return formattedMessage, nil
@@ -316,8 +310,6 @@ func DeleteStore(projectName string, codehostURL string, vcsType string, apiKey 
 	}
 }
 
-
-
 type UpdateFileContent struct {
 	UpdatedContent string   `json:"updated_content"`
 	Errors         []string `json:"errors"`
@@ -330,9 +322,6 @@ type NewFilesData struct {
 	Errors       []string          `json:"errors"`
 }
 
-
-
-
 type GenerateResponseResult struct {
 	LlmModelResponse      string                       `json:"llm_model_response"`
 	RawResponse           string                       `json:"llm_model_response"`
@@ -340,7 +329,7 @@ type GenerateResponseResult struct {
 	UpdateContentResponse map[string]UpdateFileContent `json:"update_content_response"`
 	HeadCommitHash        string                       `json:"head_commit_hash"`
 	spinner               *SpinnerController
-	NewFiles              *NewFilesData                `json:"new_files,omitempty"`
+	NewFiles              *NewFilesData `json:"new_files,omitempty"`
 }
 
 func init() {
@@ -423,7 +412,6 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 		return nil, fmt.Errorf("unprocessable entity: %s", body)
 	}
 
-
 	// Initialize variables
 	var completeResponse strings.Builder
 	var rawResponse strings.Builder // Initialize rawResponse
@@ -455,7 +443,6 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 
 	// Initialize SpinnerController
 	spinner := NewSpinnerController()
-
 
 	// Start the initial spinner
 	spinner.Start()
@@ -576,8 +563,6 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 			// log.Printf("Retrieved file paths: %v", retrievedFilePaths)
 		}
 
-
-
 		// NEW: handle updated files
 		if updated, ok := chunk["updated_file_contents"]; ok {
 			updatedJSON, err := json.Marshal(updated)
@@ -657,8 +642,6 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 		}
 	}
 
-
-
 	// Before returning the result, attach the spinner
 	result := &GenerateResponseResult{
 		LlmModelResponse:      completeResponse.String(),
@@ -667,8 +650,8 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 		UpdateContentResponse: updateContentResponse,
 		HeadCommitHash:        headCommitHash,
 
-		spinner:               spinner,
-		NewFiles:              newFilesResult,
+		spinner:  spinner,
+		NewFiles: newFilesResult,
 	}
 
 	// Write patch files for updated files
@@ -867,11 +850,10 @@ func GetInstallInfo() (bool, string, error) {
 	return returnedHeadOID == HeadOID, message, nil
 }
 
-
 func (res *GenerateResponseResult) WritePatchToFile() error {
 
 	if len(res.UpdateContentResponse) == 0 {
-        res.spinner.Stop()
+		res.spinner.Stop()
 		return nil
 	}
 
@@ -908,8 +890,6 @@ func (res *GenerateResponseResult) WritePatchToFile() error {
 			continue
 		}
 
-
-
 		// Sanitize filename for patch file
 		safeFilename := strings.ReplaceAll(filename, "/", "_")
 		safeFilename = strings.ReplaceAll(safeFilename, ":", "_") // Add more sanitization if needed
@@ -923,7 +903,6 @@ func (res *GenerateResponseResult) WritePatchToFile() error {
 			return fmt.Errorf("failed to ensure patches directory exists: %w", err)
 		}
 		fullPatchPath := fmt.Sprintf("%s/%s", patchesDir, patchFileName)
-
 
 		err := ioutil.WriteFile(fullPatchPath, []byte(update.UpdatedContent), 0644)
 		if err != nil {
@@ -943,7 +922,6 @@ func (res *GenerateResponseResult) WritePatchToFile() error {
 	if outputBuffer.Len() > 1 {
 		fmt.Print(outputBuffer.String())
 	}
-
 
 	return nil
 }
@@ -970,8 +948,6 @@ func (s *SpinnerController) Start() {
 	}
 }
 
-
-
 func (s *SpinnerController) Stop() {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
@@ -982,8 +958,7 @@ func (s *SpinnerController) Stop() {
 	}
 }
 
-
-// WriteNewFiles creates patch files for suggested new files
+// WriteNewFiles creates new files with provided content if they don't already exist
 func (res *GenerateResponseResult) WriteNewFiles() error {
 	if res.NewFiles == nil {
 		log.Println("No new files data available - skipping")
@@ -998,70 +973,51 @@ func (res *GenerateResponseResult) WriteNewFiles() error {
 	// Ensure spinner is stopped
 	res.spinner.Stop()
 
-	log.Printf("Starting creation of patches for %d new files", len(res.NewFiles.NewContent))
-	fmt.Printf("\nCreating patches for new files:\n")
-
-	// Get timestamp for unique filenames
-	timestamp := time.Now().Format("20060102_150405")
-	log.Printf("Using timestamp for patch files: %s", timestamp)
-
-	// Ensure patches directory exists
-	patchesDir := ".machtiani/patches"
-	if err := utils.EnsureDirExists(patchesDir); err != nil {
-		log.Printf("Failed to create patches directory: %v", err)
-		return fmt.Errorf("failed to create patches directory: %w", err)
-	}
-	log.Printf("Using patches directory: %s", patchesDir)
+	log.Printf("Creating new files for %d entries", len(res.NewFiles.NewContent))
+	fmt.Printf("\nCreating new files:\n")
 
 	var outputBuffer bytes.Buffer
 	var filesWritten int
 	var filesSkipped int
 
-	// Process each new file
 	for path, content := range res.NewFiles.NewContent {
-		// Skip if empty content
 		if strings.TrimSpace(content) == "" {
-			log.Printf("Skipping empty content for file: %s", path)
 			outputBuffer.WriteString(fmt.Sprintf("- %s (skipped - empty content)\n", path))
 			filesSkipped++
 			continue
 		}
 
-		// Check if file exists in git
-		cmd := exec.Command("git", "ls-files", "--error-unmatch", path)
-		err := cmd.Run()
-
-		if err == nil {
-			// File exists in git
-			log.Printf("File already exists in git: %s", path)
-			outputBuffer.WriteString(fmt.Sprintf("- %s (skipped - already exists in git)\n", path))
+		// Check if the file exists in the filesystem
+		if _, err := os.Stat(path); err == nil {
+			outputBuffer.WriteString(fmt.Sprintf("- %s (skipped - file already exists)\n", path))
 			filesSkipped++
 			continue
-		}
-
-		// Sanitize filename for patch file
-		safeFilename := strings.ReplaceAll(path, "/", "_")
-		safeFilename = strings.ReplaceAll(safeFilename, ":", "_")
-		log.Printf("Sanitized filename: %s -> %s", path, safeFilename)
-
-		// Create patch filename with .new.patch extension
-		patchFileName := fmt.Sprintf("%s_%s.new.patch", safeFilename, timestamp)
-		fullPatchPath := filepath.Join(patchesDir, patchFileName)
-		log.Printf("Creating patch file: %s", fullPatchPath)
-
-		// Write content to patch file
-		if err := ioutil.WriteFile(fullPatchPath, []byte(content), 0644); err != nil {
-			log.Printf("Error writing patch file %s: %v", fullPatchPath, err)
-			outputBuffer.WriteString(fmt.Sprintf("- %s (error writing patch: %v)\n", path, err))
+		} else if !os.IsNotExist(err) {
+			// Some other error checking the file
+			log.Printf("Error checking file %s: %v", path, err)
+			outputBuffer.WriteString(fmt.Sprintf("- %s (error checking existence: %v)\n", path, err))
 			continue
 		}
 
-		log.Printf("Successfully wrote patch file: %s", fullPatchPath)
-		outputBuffer.WriteString(fmt.Sprintf("- %s -> %s\n", path, fullPatchPath))
+		// Create parent directories
+		dir := filepath.Dir(path)
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			log.Printf("Error creating directories for %s: %v", path, err)
+			outputBuffer.WriteString(fmt.Sprintf("- %s (error creating directories: %v)\n", path, err))
+			continue
+		}
+
+		// Write the file
+		if err := ioutil.WriteFile(path, []byte(content), 0644); err != nil {
+			log.Printf("Error writing file %s: %v", path, err)
+			outputBuffer.WriteString(fmt.Sprintf("- %s (error writing file: %v)\n", path, err))
+			continue
+		}
+
+		outputBuffer.WriteString(fmt.Sprintf("- Created %s\n", path))
 		filesWritten++
 	}
 
-	// Print all output at once
 	if outputBuffer.Len() > 0 {
 		fmt.Print(outputBuffer.String())
 	}

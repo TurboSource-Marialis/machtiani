@@ -217,10 +217,11 @@ async def generate_response(
                     entry for entry in file_paths_payload if entry["path"] in relevant_file_paths
                 ]
 
-                #if not relevant_file_paths_payload:
-                #    logger.error("No relevant entries found in the original payload after filtering.")
-                #    yield {"error": "No relevant entries found in the original payload after filtering."}
-                #    return
+                # Handle empty file paths payload with warning instead of error
+                if not relevant_file_paths_payload:
+                    logger.warning("No relevant file paths remaining after filtering based on OpenAI's response")
+                    yield {"warning": "No relevant files found after analysis"}
+                    return
 
                 content_response = await client.post(
                     f"{base_url}/retrieve-file-contents/",
@@ -230,6 +231,7 @@ async def generate_response(
                         "ignore_files": ignore_files
                     }
                 )
+
                 content_response.raise_for_status()
 
                 file_content_response = FileContentResponse(**content_response.json())
