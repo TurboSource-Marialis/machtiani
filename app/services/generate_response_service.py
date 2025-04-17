@@ -347,28 +347,41 @@ async def generate_response(
                             "ignore_files": ignore_files or []
                         }
 
-                        logger.info(f"[new-files] Calling endpoint with payload: {new_files_payload}")
+
+                        logger.info(f"[new-files] Calling endpoint with payload: {json.dumps(new_files_payload, indent=2)}")
+                        logger.debug(f"[new-files] Instructions length: {len(final_response_text)} chars")
+                        logger.debug(f"[new-files] Model: {model}, Project: {project}")
 
                         # Use the same client we used for file-edit requests
                         new_files_response = await edit_client.post(new_files_url, json=new_files_payload)
                         new_files_response.raise_for_status()
                         new_files_data = new_files_response.json()
 
-                        logger.info(f"[new-files] Response: {new_files_data}")
+                        logger.info(f"[new-files] Response status: {new_files_response.status_code}")
+                        logger.debug(f"[new-files] Full response: {json.dumps(new_files_data, indent=2)}")
 
-                        # Check for valid data to yield
                         if new_files_data and isinstance(new_files_data, dict):
                             errors = new_files_data.get("errors", [])
+                            if errors:
+                                logger.warning(f"[new-files] Errors in response: {errors}")
+
                             new_content = new_files_data.get("new_content", {})
+                            logger.info(f"[new-files] Received {len(new_content)} new file suggestions")
 
                             if new_content and not any(errors):
-                                logger.info(f"[new-files] Yielding new files suggestion with {len(new_content)} files")
+                                logger.debug(f"[new-files] New file paths: {list(new_content.keys())}")
                                 yield {"new_files": new_files_data}
                             else:
-                                logger.info(f"[new-files] No valid new files to suggest or errors present: {errors}")
+                                logger.info("[new-files] No valid new files to suggest or errors present")
+                        else:
+                            logger.warning("[new-files] Empty response from new-files endpoint")
 
+
+                    except httpx.HTTPStatusError as e:
+                        logger.error(f"[new-files] HTTP error {e.response.status_code}: {e.response.text}")
+                        logger.debug(f"[new-files] Request details: URL={new_files_url}, Payload={new_files_payload}")
                     except Exception as e:
-                        logger.error(f"[new-files] Error calling new-files endpoint: {e}")
+                        logger.exception(f"[new-files] Unexpected error calling endpoint")
                         # Just log the error, don't yield it to avoid breaking the client
 
     except httpx.RequestError as exc:

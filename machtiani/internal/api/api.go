@@ -966,33 +966,48 @@ func (s *SpinnerController) Stop() {
 	}
 }
 
+
 // WriteNewFiles creates patch files for suggested new files
 func (res *GenerateResponseResult) WriteNewFiles() error {
-	if res.NewFiles == nil || len(res.NewFiles.NewContent) == 0 {
+	if res.NewFiles == nil {
+		log.Println("No new files data available - skipping")
+		return nil
+	}
+
+	if len(res.NewFiles.NewContent) == 0 {
+		log.Println("New files content is empty - nothing to write")
 		return nil
 	}
 
 	// Ensure spinner is stopped
 	res.spinner.Stop()
 
+	log.Printf("Starting creation of patches for %d new files", len(res.NewFiles.NewContent))
 	fmt.Printf("\nCreating patches for new files:\n")
 
 	// Get timestamp for unique filenames
 	timestamp := time.Now().Format("20060102_150405")
+	log.Printf("Using timestamp for patch files: %s", timestamp)
 
 	// Ensure patches directory exists
 	patchesDir := ".machtiani/patches"
 	if err := utils.EnsureDirExists(patchesDir); err != nil {
+		log.Printf("Failed to create patches directory: %v", err)
 		return fmt.Errorf("failed to create patches directory: %w", err)
 	}
+	log.Printf("Using patches directory: %s", patchesDir)
 
 	var outputBuffer bytes.Buffer
+	var filesWritten int
+	var filesSkipped int
 
 	// Process each new file
 	for path, content := range res.NewFiles.NewContent {
 		// Skip if empty content
 		if strings.TrimSpace(content) == "" {
+			log.Printf("Skipping empty content for file: %s", path)
 			outputBuffer.WriteString(fmt.Sprintf("- %s (skipped - empty content)\n", path))
+			filesSkipped++
 			continue
 		}
 
@@ -1002,25 +1017,32 @@ func (res *GenerateResponseResult) WriteNewFiles() error {
 
 		if err == nil {
 			// File exists in git
+			log.Printf("File already exists in git: %s", path)
 			outputBuffer.WriteString(fmt.Sprintf("- %s (skipped - already exists in git)\n", path))
+			filesSkipped++
 			continue
 		}
 
 		// Sanitize filename for patch file
 		safeFilename := strings.ReplaceAll(path, "/", "_")
 		safeFilename = strings.ReplaceAll(safeFilename, ":", "_")
+		log.Printf("Sanitized filename: %s -> %s", path, safeFilename)
 
 		// Create patch filename with .new.patch extension
 		patchFileName := fmt.Sprintf("%s_%s.new.patch", safeFilename, timestamp)
 		fullPatchPath := filepath.Join(patchesDir, patchFileName)
+		log.Printf("Creating patch file: %s", fullPatchPath)
 
 		// Write content to patch file
 		if err := ioutil.WriteFile(fullPatchPath, []byte(content), 0644); err != nil {
+			log.Printf("Error writing patch file %s: %v", fullPatchPath, err)
 			outputBuffer.WriteString(fmt.Sprintf("- %s (error writing patch: %v)\n", path, err))
 			continue
 		}
 
+		log.Printf("Successfully wrote patch file: %s", fullPatchPath)
 		outputBuffer.WriteString(fmt.Sprintf("- %s -> %s\n", path, fullPatchPath))
+		filesWritten++
 	}
 
 	// Print all output at once
@@ -1028,5 +1050,6 @@ func (res *GenerateResponseResult) WriteNewFiles() error {
 		fmt.Print(outputBuffer.String())
 	}
 
+	log.Printf("New files processing complete - %d written, %d skipped", filesWritten, filesSkipped)
 	return nil
 }

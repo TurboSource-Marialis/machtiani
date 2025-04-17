@@ -24,7 +24,13 @@ except ModuleNotFoundError as e:
     logger.error("Failed to import the module. Please check the paths and directory structure.")
 
 
+
 async def generate_filename(context: str, llm_model_api_key: str, llm_model_base_url: HttpUrl, llm_model_base_url_other: Optional[str] = None, llm_model_api_key_other: Optional[str] = None) -> str:
+    logger.info("Generating filename for context (length: %d chars)", len(context))
+    logger.debug("Using LLM base URL: %s", llm_model_base_url)
+    if llm_model_base_url_other:
+        logger.debug("Using alternate LLM base URL: %s", llm_model_base_url_other)
+
     filename_prompt = (
         f"Generate a unique filename for the following context: '{context}'.\n"
         "Respond ONLY with the filename in snake_case, wrapped in <filename> and </filename> tags.\n"
@@ -36,18 +42,23 @@ async def generate_filename(context: str, llm_model_api_key: str, llm_model_base
     response_tokens = []
 
     try:
+
         # Instantiate LlmModel
+        logger.debug("Initializing LLM model with API key (length: %d)", len(llm_model_api_key or ""))
         llm_model = LlmModel(api_key=llm_model_api_key, base_url=str(llm_model_base_url))
 
-        # Asynchronously iterate over each token yielded by send_prompt_to_openai_streaming
+        logger.debug("Sending prompt to LLM model")
         async for token_json in llm_model.send_prompt_streaming(filename_prompt):
             # Parse the JSON string to extract the token
             token_data = json.loads(token_json)
             token = token_data.get("token", "")
             response_tokens.append(token)
+            logger.debug("Received token: %s", token)
+
 
         # Concatenate all tokens to form the complete response string
         response = ''.join(response_tokens)
+        logger.debug("Full LLM response: %s", response)
 
     except Exception as e:
         # Handle potential errors during token retrieval
@@ -60,14 +71,17 @@ async def generate_filename(context: str, llm_model_api_key: str, llm_model_base
 
     if match:
         filename = match.group(1).strip()
-        # Process the filename to remove all extensions and append .md
+        logger.debug("Extracted filename: %s", filename)
+
+        # Process the filename to remove all extensions
         base = filename
         while True:
             base, ext = os.path.splitext(base)
             if not ext:
                 break
         processed_filename = base
+        logger.info("Generated final filename: %s", processed_filename)
         return processed_filename
     else:
-        # If no valid filename is found, raise an HTTP exception
+        logger.error("Could not extract filename from response: %s", response)
         raise HTTPException(status_code=400, detail="Invalid response format from OpenAI API.")
