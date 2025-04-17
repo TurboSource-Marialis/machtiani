@@ -654,10 +654,11 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 		NewFiles: newFilesResult,
 	}
 
-	// Write patch files for updated files
-	if err := result.WritePatchToFile(); err != nil {
-		log.Printf("Error writing patch files for updated files: %v", err)
-	}
+
+	// Write patch files for updated files - REMOVED TO FIX DUPLICATE PATCH ISSUE
+	// if err := result.WritePatchToFile(); err != nil {
+	//	log.Printf("Error writing patch files for updated files: %v", err)
+	// }
 
 	// ADD THIS NEW CODE: Write patch files for new files
 	if err := result.WriteNewFiles(); err != nil {
