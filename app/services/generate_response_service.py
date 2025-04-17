@@ -326,16 +326,16 @@ async def generate_response(
                             logger.error(f"[file-edit] Error editing {file_path}: {e}")
                             updated_contents[file_path] = {
                                 "updated_content": f"[Error updating file: {e}]",
+
                                 "errors": [str(e)],
                             }
 
+                    # Yield updated contents if any were successful
+                    if updated_contents:
+                        logger.info(f"updated_file_contents: {updated_contents}")
+                        yield {"updated_file_contents": updated_contents}
 
-                if updated_contents:
-                    logger.info(f"updated_file_contents: {updated_contents}")
-                    yield {"updated_file_contents": updated_contents}
-
-                # Call new-files endpoint to get suggestions for new files
-                if mode == SearchMode.default:
+                    # Call new-files endpoint using the same client
                     try:
                         new_files_url = f"{base_url}/new-files/"
                         new_files_payload = {
@@ -347,12 +347,11 @@ async def generate_response(
                             "ignore_files": ignore_files or []
                         }
 
-
                         logger.info(f"[new-files] Calling endpoint with payload: {json.dumps(new_files_payload, indent=2)}")
                         logger.debug(f"[new-files] Instructions length: {len(final_response_text)} chars")
                         logger.debug(f"[new-files] Model: {model}, Project: {project}")
 
-                        # Use the same client we used for file-edit requests
+                        # Use the existing edit_client
                         new_files_response = await edit_client.post(new_files_url, json=new_files_payload)
                         new_files_response.raise_for_status()
                         new_files_data = new_files_response.json()
@@ -375,7 +374,6 @@ async def generate_response(
                                 logger.info("[new-files] No valid new files to suggest or errors present")
                         else:
                             logger.warning("[new-files] Empty response from new-files endpoint")
-
 
                     except httpx.HTTPStatusError as e:
                         logger.error(f"[new-files] HTTP error {e.response.status_code}: {e.response.text}")
