@@ -1,5 +1,6 @@
 package api
 
+
 import (
 	"bytes"
 	"encoding/json"
@@ -8,6 +9,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os/exec"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -314,10 +317,19 @@ func DeleteStore(projectName string, codehostURL string, vcsType string, apiKey 
 }
 
 
+
 type UpdateFileContent struct {
 	UpdatedContent string   `json:"updated_content"`
 	Errors         []string `json:"errors"`
 }
+
+// NewFilesData stores information about suggested new files
+type NewFilesData struct {
+	NewContent   map[string]string `json:"new_content"`
+	NewFilePaths []string          `json:"new_file_paths"`
+	Errors       []string          `json:"errors"`
+}
+
 
 
 
@@ -328,6 +340,7 @@ type GenerateResponseResult struct {
 	UpdateContentResponse map[string]UpdateFileContent `json:"update_content_response"`
 	HeadCommitHash        string                       `json:"head_commit_hash"`
 	spinner               *SpinnerController
+	NewFiles              *NewFilesData                `json:"new_files,omitempty"`
 }
 
 func init() {
@@ -443,8 +456,11 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 	// Initialize SpinnerController
 	spinner := NewSpinnerController()
 
+
 	// Start the initial spinner
 	spinner.Start()
+
+	var newFilesResult *NewFilesData
 
 	for {
 		var chunk map[string]interface{}
@@ -561,6 +577,7 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 		}
 
 
+
 		// NEW: handle updated files
 		if updated, ok := chunk["updated_file_contents"]; ok {
 			updatedJSON, err := json.Marshal(updated)
@@ -576,6 +593,33 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 			for path, updateObj := range updatedMap {
 				updateContentResponse[path] = updateObj
 			}
+		}
+
+		// Handle new files suggestions
+		if newFilesData, ok := chunk["new_files"]; ok {
+			newFilesJSON, err := json.Marshal(newFilesData)
+			if err != nil {
+				log.Printf("Error marshaling new_files: %v", err)
+				continue
+			}
+
+			var newFiles NewFilesData
+			if err := json.Unmarshal(newFilesJSON, &newFiles); err != nil {
+				log.Printf("Error unmarshaling new_files: %v", err)
+				continue
+			}
+
+
+			// Stash new files data locally
+			newFilesResult = &newFiles
+
+			// Print information about suggested new files
+			spinner.Stop()
+			fmt.Printf("\nSuggested new files:\n")
+			for _, path := range newFiles.NewFilePaths {
+				fmt.Printf("- %s\n", path)
+			}
+			spinner.Start()
 		}
 	}
 
@@ -616,7 +660,9 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 		RetrievedFilePaths:    retrievedFilePaths,
 		UpdateContentResponse: updateContentResponse,
 		HeadCommitHash:        headCommitHash,
+
 		spinner:               spinner,
+		NewFiles:              newFilesResult,
 	}
 
 	// Modify the defer to conditionally stop the spinner
@@ -909,6 +955,7 @@ func (s *SpinnerController) Start() {
 }
 
 
+
 func (s *SpinnerController) Stop() {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
@@ -917,4 +964,69 @@ func (s *SpinnerController) Stop() {
 		s.spinning = false
 		fmt.Print("\r ") // Clear the spinner line
 	}
+}
+
+// WriteNewFiles creates patch files for suggested new files
+func (res *GenerateResponseResult) WriteNewFiles() error {
+	if res.NewFiles == nil || len(res.NewFiles.NewContent) == 0 {
+		return nil
+	}
+
+	// Ensure spinner is stopped
+	res.spinner.Stop()
+
+	fmt.Printf("\nCreating patches for new files:\n")
+
+	// Get timestamp for unique filenames
+	timestamp := time.Now().Format("20060102_150405")
+
+	// Ensure patches directory exists
+	patchesDir := ".machtiani/patches"
+	if err := utils.EnsureDirExists(patchesDir); err != nil {
+		return fmt.Errorf("failed to create patches directory: %w", err)
+	}
+
+	var outputBuffer bytes.Buffer
+
+	// Process each new file
+	for path, content := range res.NewFiles.NewContent {
+		// Skip if empty content
+		if strings.TrimSpace(content) == "" {
+			outputBuffer.WriteString(fmt.Sprintf("- %s (skipped - empty content)\n", path))
+			continue
+		}
+
+		// Check if file exists in git
+		cmd := exec.Command("git", "ls-files", "--error-unmatch", path)
+		err := cmd.Run()
+
+		if err == nil {
+			// File exists in git
+			outputBuffer.WriteString(fmt.Sprintf("- %s (skipped - already exists in git)\n", path))
+			continue
+		}
+
+		// Sanitize filename for patch file
+		safeFilename := strings.ReplaceAll(path, "/", "_")
+		safeFilename = strings.ReplaceAll(safeFilename, ":", "_")
+
+		// Create patch filename with .new.patch extension
+		patchFileName := fmt.Sprintf("%s_%s.new.patch", safeFilename, timestamp)
+		fullPatchPath := filepath.Join(patchesDir, patchFileName)
+
+		// Write content to patch file
+		if err := ioutil.WriteFile(fullPatchPath, []byte(content), 0644); err != nil {
+			outputBuffer.WriteString(fmt.Sprintf("- %s (error writing patch: %v)\n", path, err))
+			continue
+		}
+
+		outputBuffer.WriteString(fmt.Sprintf("- %s -> %s\n", path, fullPatchPath))
+	}
+
+	// Print all output at once
+	if outputBuffer.Len() > 0 {
+		fmt.Print(outputBuffer.String())
+	}
+
+	return nil
 }

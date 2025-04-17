@@ -329,9 +329,47 @@ async def generate_response(
                                 "errors": [str(e)],
                             }
 
+
                 if updated_contents:
                     logger.info(f"updated_file_contents: {updated_contents}")
                     yield {"updated_file_contents": updated_contents}
+
+                # Call new-files endpoint to get suggestions for new files
+                if mode == SearchMode.default:
+                    try:
+                        new_files_url = f"{base_url}/new-files/"
+                        new_files_payload = {
+                            "project": project,
+                            "instructions": final_response_text,
+                            "llm_model_api_key": llm_model_api_key_to_use,
+                            "llm_model_base_url": str(llm_model_base_url_to_use),
+                            "model": model,
+                            "ignore_files": ignore_files or []
+                        }
+
+                        logger.info(f"[new-files] Calling endpoint with payload: {new_files_payload}")
+
+                        # Use the same client we used for file-edit requests
+                        new_files_response = await edit_client.post(new_files_url, json=new_files_payload)
+                        new_files_response.raise_for_status()
+                        new_files_data = new_files_response.json()
+
+                        logger.info(f"[new-files] Response: {new_files_data}")
+
+                        # Check for valid data to yield
+                        if new_files_data and isinstance(new_files_data, dict):
+                            errors = new_files_data.get("errors", [])
+                            new_content = new_files_data.get("new_content", {})
+
+                            if new_content and not any(errors):
+                                logger.info(f"[new-files] Yielding new files suggestion with {len(new_content)} files")
+                                yield {"new_files": new_files_data}
+                            else:
+                                logger.info(f"[new-files] No valid new files to suggest or errors present: {errors}")
+
+                    except Exception as e:
+                        logger.error(f"[new-files] Error calling new-files endpoint: {e}")
+                        # Just log the error, don't yield it to avoid breaking the client
 
     except httpx.RequestError as exc:
         logger.error(f"Request error: {exc}")
