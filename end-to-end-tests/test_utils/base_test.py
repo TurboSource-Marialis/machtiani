@@ -767,8 +767,56 @@ class BaseTestEndToEnd:
         # Verify the regular response was still saved
         self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_normalized)) # Path unchanged
 
+
         # Make sure the prompt was processed (README mentioned)
         self.assertTrue(any("README" in line for line in stdout_normalized))
+
+    def test_20_run_mct_prompt_add_contributor_guide(self):
+        """Test mct prompt command to modify README and add contributor guide."""
+        # First run sync to ensure the repo is ready
+        status_command = 'mct status'
+        wait_for_status_complete(status_command, self.directory)
+        time.sleep(3)
+
+        # Run command without --mode chat flag to trigger file changes
+        command = 'mct "Add a comment to the README explaining the project is a video processing library. And add a short and concise contributor guide as a separate file."'
+        stdout_mct, stderr_mct = run_mct_command(command, self.directory)
+
+        # Poll for "Response saved" message and file changes
+        response_saved = False
+        timeout = 180  # 3 minutes in seconds
+        start_time = time.time()
+
+        # Check if README.md was modified and contributor guide exists
+        git_check = 'git status --porcelain'
+        contrib_found = False
+        while time.time() - start_time < timeout:
+            # Check for README modification
+            stdout_git, stderr_git = run_mct_command(git_check, self.directory)
+            readme_modified = any("M README.md" in line for line in stdout_git)
+
+            # Check for contributor guide file
+            files = os.listdir(self.directory)
+            contrib_files = [f for f in files if re.match(r'(?i)^contrib.*\.md$', f)]
+            contrib_found = len(contrib_files) > 0
+
+            if readme_modified and contrib_found:
+                response_saved = True
+                break
+
+            time.sleep(5)
+
+        if not response_saved:
+            self.fail("Prompt command did not complete successfully - changes not detected after 3 minutes")
+
+        stdout_normalized = clean_output(stdout_mct)
+
+        # Check for patch processing and response save
+        self.assertTrue(any("README" in line for line in stdout_normalized))
+        self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_normalized))
+
+        # Verify contributor guide exists
+        self.assertTrue(contrib_found, "No contributor guide file (CONTRIBUTOR.md or similar) found")
 
 
 class ExtraTestEndToEnd:
