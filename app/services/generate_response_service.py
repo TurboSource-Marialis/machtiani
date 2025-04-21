@@ -283,8 +283,17 @@ async def generate_response(
 
             final_response_text = ''.join(response_tokens)
 
+
             # Call file-edit for each retrieved file path, log response
             if mode == SearchMode.default:
+                # Notify the client that we're about to call file-edit
+                yield {
+                    "event": "file_edit_start",
+                    "message": "Waiting on file-edit requests…",
+                    "file_count": len(retrieved_file_paths),
+                    "retrieved_file_paths": retrieved_file_paths,
+                }
+                # now actually fire the file-edit calls
                 file_edit_url = f"{base_url}/file-edit/"
                 updated_contents = {}
                 async with httpx.AsyncClient(timeout=600) as edit_client:

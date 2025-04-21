@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-    "os"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -175,7 +175,6 @@ func FetchAndCheckoutBranch(codeURL, name, branchName string, apiKey *string, op
 	spinner.Start()
 	defer spinner.Stop() // Ensure spinner stops on exit
 
-
 	fetchAndCheckoutBranchRequestData := map[string]interface{}{
 		"codehost_url":        codeURL,
 		"project_name":        name,
@@ -187,7 +186,7 @@ func FetchAndCheckoutBranch(codeURL, name, branchName string, apiKey *string, op
 		"use_mock_llm":        useMockLLM,
 		"amplification_level": amplificationLevel,
 		"depth_level":         depthLevel,
-        "commit_oid":          headCommitHash,
+		"commit_oid":          headCommitHash,
 	}
 
 	// Only add branch_name to the request if it's provided and not empty
@@ -464,6 +463,14 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 			return nil, fmt.Errorf("failed to decode JSON response: %w", err)
 		}
 
+		// ────────────────────────────────────────────────────────────────────────
+		// catch the file_edit_start event and print a waiting banner
+		if ev, ok := chunk["event"].(string); ok && ev == "file_edit_start" {
+			fmt.Println("\n\n\n→ waiting on file‑edits …")
+			continue
+		}
+		// ────
+
 		// Handle error messages
 		if errMsg, ok := chunk["error"].(string); ok {
 			return nil, fmt.Errorf("API error: %s", errMsg)
@@ -659,7 +666,6 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 		spinner:  spinner,
 		NewFiles: newFilesResult,
 	}
-
 
 	// Write patch files for updated files - REMOVED TO FIX DUPLICATE PATCH ISSUE
 	// if err := result.WritePatchToFile(); err != nil {
