@@ -12,74 +12,10 @@
 Let's use machtiani! Doing the following in the `machtiani-commit-file-retrieval` submodule of machtiani.
 
 ```
-$ pwd
-/home/david/projects/machtiani/machtiani-commit-file-retrieval
-
-
-$ mct --model gpt-4o \
+$ mct \
   "Explain how machtiani gets the correct context from files through the git history, \
    and how is this different than common indexing strategies"
-
-# User
-
-Explain how machtiani gets the correct context from files through the git history, and how is this different than common indexing strategies
-
-# Assistant
-
-The code you provided outlines a system built for handling Git commit data, generating embeddings for those commits, and finding the most relevant commits based on input queries. The key components of this system include:
-
-1. **Commit Embedding Generation**:
-   - The `CommitEmbeddingGenerator` class processes commit logs, filters out any commits that already have embeddings, and generates new embeddings for any newly identified commits. This class uses the OpenAI API to generate these embeddings based on commit messages, with the purpose of creating a searchable vector space for the commits.
-
-2. **Commit Embedding Matching**:
-   - The `CommitEmbeddingMatcher` class is responsible for searching through the generated embeddings to find the most relevant commits to a given input query. It uses cosine similarity to compare the embeddings of the input query against the stored commit embeddings, in order to rank and return the most similar commits.
-
-3. **File Summary Embedding**:
-   - The `FileSummaryEmbeddingGenerator` class extends the functionality by generating embeddings for file summaries. It retrieves file content from the repository, summarizes the content using OpenAI's language models, and then generates embeddings for these summaries. This provides a more granular level of searchability, focusing on the contents of files rather than just commit messages.
-
-4. **Git Commit Management**:
-   - The `GitCommitManager` class handles the extraction of commit data from the Git history, including commit messages, file changes, and diffs. It provides methods for amplifying commit messages, checking file deletion status, and counting tokens in files changed by commits.
-
-### How Machtiani Gets the Correct Context from Files through Git History:
-
-The system employs a few key strategies to ensure it captures the correct context from files through Git history:
-
-- **Commit Logs and Diffs**: By maintaining a list of commit logs and analyzing diffs between commits, the system can track changes at a file level. This allows it to capture the context of changes and their significance.
-
-- **Embedding Generation**: By generating embeddings for commit messages and file summaries, the system creates a semantic representation of the changes. This enables it to capture the meaning and context beyond just the textual content.
-
-- **File Content Summarization**: Summarizing file contents before embedding ensures that the system focuses on the key information, which is essential for capturing the context effectively.
-
-- **Filtering and Deduplication**: By filtering out already embedded commits and focusing on new changes, the system reduces redundancy and ensures that only relevant, new information is processed.
-
-### Difference from Common Indexing Strategies:
-
-- **Semantic Search**: Unlike traditional search and indexing strategies that rely on keyword matching, this system uses embeddings to perform semantic search. This allows it to find relevant content based on meaning rather than just exact keyword matches.
-
-- **Dynamic and Incremental Updates**: The system can dynamically update its index of embeddings as new commits are made, which contrasts with static indexing strategies that require re-indexing entire datasets.
-
-- **Contextual Understanding**: By using AI models to summarize and embed content, the system captures a deeper level of understanding about the context of changes, which is not typically achievable with simple text-based indexing.
-
-- **Focus on Changes**: The system emphasizes indexing changes rather than static content, which is particularly useful in a version-controlled environment where understanding the evolution of code is important.
-
-In summary, the system's use of embeddings, semantic search, and focus on dynamic, change-oriented indexing sets it apart from traditional indexing methods that prioritize static, keyword-based approaches.
-
----
-
-# Retrieved File Paths
-
-- app/main.py
-- lib/indexer/commit_indexer.py
-- lib/search/commit_embedding_matcher.py
-- lib/indexer/file_summary_indexer.py
-- lib/vcs/git_commit_manager.py
-
-Response saved to .machtiani/chat/machtiani_context_retrieval_vs_indexing.md
 ```
-
-A very reasonable response. We could ask probing questions into how the commits indexing strategy works, but I'll just add this:
-
-Machtiani actually reconstructs a full commit history when you put a project on it. So your thoughtful commits will only make it better, but it will work great regardless.
 
 ## Limitations
 
