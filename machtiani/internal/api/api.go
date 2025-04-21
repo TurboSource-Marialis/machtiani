@@ -175,10 +175,10 @@ func FetchAndCheckoutBranch(codeURL, name, branchName string, apiKey *string, op
 	spinner.Start()
 	defer spinner.Stop() // Ensure spinner stops on exit
 
+
 	fetchAndCheckoutBranchRequestData := map[string]interface{}{
 		"codehost_url":        codeURL,
 		"project_name":        name,
-		"branch_name":         branchName,
 		"api_key":             apiKey,
 		"llm_model_api_key":   openAIAPIKey,
 		"llm_model_base_url":  config.Environment.ModelBaseURL,
@@ -187,6 +187,12 @@ func FetchAndCheckoutBranch(codeURL, name, branchName string, apiKey *string, op
 		"use_mock_llm":        useMockLLM,
 		"amplification_level": amplificationLevel,
 		"depth_level":         depthLevel,
+        "commit_oid":          headCommitHash,
+	}
+
+	// Only add branch_name to the request if it's provided and not empty
+	if branchName != "" {
+		fetchAndCheckoutBranchRequestData["branch_name"] = branchName
 	}
 
 	fetchAndCheckoutBranchRequestJson, err := json.Marshal(fetchAndCheckoutBranchRequestData)

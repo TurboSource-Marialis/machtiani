@@ -347,6 +347,7 @@ func GetBranch() (string, error) {
 	return branchName, nil
 }
 
+
 // GetHeadCommitHash returns the current HEAD commit hash of the git repository.
 func GetHeadCommitHash() (string, error) {
 	cmd := exec.Command("git", "rev-parse", "HEAD")
@@ -373,6 +374,28 @@ func GetHeadCommitHash() (string, error) {
 		return "", errors.New("empty commit hash returned from git rev-parse HEAD")
 	}
 	return commitHash, nil
+}
+
+// IsDetachedHead checks if the current git repository is in detached HEAD state.
+func IsDetachedHead() (bool, error) {
+	// Run the git command to get the current branch name
+	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	if err != nil {
+		if strings.Contains(stderr.String(), "not a git repository") {
+			return false, errors.New("not a git repository")
+		}
+		return false, fmt.Errorf("failed to get current branch name: %w, stderr: %s", err, stderr.String())
+	}
+
+	branchName := strings.TrimSpace(stdout.String())
+
+	// If branchName is "HEAD", we're in detached HEAD state
+	return branchName == "HEAD", nil
 }
 
 // --- START NEW FUNCTION ---

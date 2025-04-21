@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+    "log"
 	"strings"
 	"time"
 
@@ -24,14 +25,29 @@ func handleSync(remoteURL string, apiKey *string, force bool, verbose bool, cost
 	}
 
 	// Validate that the HEAD commit matches the remote branch
-	err = utils.ValidateHeadCommitExistsOnRemote(headCommitHash)
-	if err != nil && !force {
-		return fmt.Errorf("Validation failed: %w. Use --force to bypass this validation.", err)
-	} else if err != nil && force {
-		fmt.Printf("Warning: %v. Proceeding anyway due to --force flag.\n", err)
-	}
+	//err = utils.ValidateHeadCommitExistsOnRemote(headCommitHash)
+	//if err != nil && !force {
+	//	return fmt.Errorf("Validation failed: %w. Use --force to bypass this validation.", err)
+	//} else if err != nil && force {
+	//	fmt.Printf("Warning: %v. Proceeding anyway due to --force flag.\n", err)
+	//}
 
-	branchName, err := git.GetBranch()
+    var branchName string
+    detached, err := git.IsDetachedHead()
+    if err != nil {
+        // we couldn't even tell—we'll warn and send no branch
+        log.Printf("Warning: unable to determine detached HEAD status: %v", err)
+    }
+    if !detached {
+        // only when we're *not* detached do we send a branch
+        branchName, err = git.GetBranch()
+        if err != nil {
+            log.Printf("Warning: unable to read current branch name: %v", err)
+            // leave branchName empty
+            branchName = ""
+        }
+    }
+
 	if err != nil {
 		return fmt.Errorf("Error retrieving current branch name: %w", err)
 	}
