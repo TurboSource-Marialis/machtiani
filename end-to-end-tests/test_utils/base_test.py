@@ -284,7 +284,7 @@ class BaseTestEndToEnd:
             "Estimated inference tokens: 0", # Common line
             "---", # Common line
             "Successfully synced 'master' branch of chastler to the chat service",
-            "- service message: Fetched and checked out branch 'master' for project"
+            "- service message: Fetched and checked out branch master for project"
         ]
 
         expected_output = [line.strip() for line in expected_output if line.strip()]
@@ -316,7 +316,7 @@ class BaseTestEndToEnd:
             "---",
             "",
             "Successfully synced 'feature' branch of chastler to the chat service",
-            "- service message: Fetched and checked out branch 'feature' for project"
+            "- service message: Fetched and checked out branch feature for project"
         ]
         expected_output = [line.strip() for line in expected_output if line.strip()]
         stdout_normalized = strip_spinner_lines(stdout_normalized)
