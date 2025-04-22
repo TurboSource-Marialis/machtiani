@@ -1,31 +1,72 @@
 # machtiani
 
-**Machtiani** is a command-line interface and local service to chat with git repositories, even if it has thousands of files and commits.
+**Machtiani** is an experimental command-line interface and local service to chat with git projects, even if it has thousands of files and commits. It understands your git-history and your files to get the right answer.
 
-- Git strategy is o(n) time, so this will scale to enormous projects.
-- Currently, it's fast enough to work on projects that are as large as a few thousand files and commits.
-- We aim to optimize syncing and retrieval time by an order of magnitude, reaching for enormous projects.
-- It doesn't have an abundance of features (e.g. web search, multiple models), yet!
+It can be used as your daily driver or alongside other agents. It's for freedom, not to lock you in or to do so slowly overtime.
 
-## How it Works
+ - [ x ] Open source with first-in-class capabilities for chatting and working with existing, complex, projects and not just new ones.
 
-Let's use machtiani! Doing the following in the `machtiani-commit-file-retrieval` submodule of machtiani.
+ - [ x ] Work offs the terminal, without locking you into a chat specific terminal or IDE replacement.
 
-```
-$ mct \
-  "Explain how machtiani gets the correct context from files through the git history, \
-   and how is this different than common indexing strategies"
-```
+ - [ x ] Chat that understands the context of your project and files.
+
+ - [ x ] Your chat history and index data are stored locally.
+
+ - [ x ] Optionally will apply suggested changes and create new files.
+
+ - [ x ] Works with any model on open-router.
+
+ - [ x ] Rewards developer experience and talent - the more thoughtful and well-organized the commit history, the more powerful it is.
+
+ - [ x ] Forgiving towards inexperienced developers - it will construct a parallel git-history, so that there is a baseline level of performance.
+
+         (It won't modify or mess with your git history or git, so don't worry. All the extra git data is stored in the local service separetely).
+
+
+For most use cases, we believe machtiani in our experience is better than closed source AI coding tools. With your support, we can implement the next iteration that will be drastically better and faster.
 
 ## Limitations
 
-- Works only in the terminal - we want also a local web app.
-- Works only with OpenAI - we want this to work for any model with plugins.
-- Works only with Github - we want to expand to all codehosts, even local git servers.
-- Input token costs are off by 10-20% - we want it to be exact, not relying on generalized formula.
+- Requires OpenAI for embeddings - you can still select OpenRouter and any of its models for prompts.
+- The project must exist on a git codehost (e.g. Github), but it's cross platform and all for Codeberg, etc.
 - The largest project we tried was 4000 commits and 4000 files in git - we want these numbers to grow, rapidly.
+- File editing can be slow and janky at times - we have a path to drastically improve. You can disable auto edits with `--chat mode` flag.
 
-These are straightforward to overcome (e.g. support all git servers), doable with some work (e.g. optimize speed), or will get there with some support (e.g. web search).
+## How it Works
+
+Let's sync the [insert project].
+
+[ insert short screencast ]
+
+```
+$ mct sync
+```
+
+Let's ask how do it [insert prompt] on the [insert project].
+
+[ insert short screencast ]
+
+```
+$ mct [prompt]
+```
+
+## Comparison to Claude Code, Codex, and Augment Code
+
+undici
+
+[ insert video of side by side comparison of results on identical prompts]
+
+## Machtiani vs Other Code Assistants (Code Generation Comparison)
+
+See how Machtiani performs on a coding task compared to other popular code assistants in a split-screen video demonstration. This comparison highlights differences in approach, context utilization, and the quality of generated code when working with a codebase.
+
+The video shows Machtiani receiving the same prompt alongside:
+- Augment Code
+- Claude Code
+- OpenAI Codex
+
+**[Insert your split-screen comparison video embed or link here]**
+*(Video showing the same coding task being attempted by Machtiani and the other tools simultaneously)*
 
 ## Todo
 
