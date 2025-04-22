@@ -265,41 +265,54 @@ func ValidateDepthFlag(value int) error {
 	return nil
 }
 
-// ValidateHeadCommitExistsOnRemote checks if the HEAD commit matches the origin remote's current branch.
-// Returns nil if commits match, error if they differ or validation fails.
+
+// ValidateHeadCommitExistsOnRemote checks if the HEAD commit exists on any remote branch.
+// Returns nil if the commit is found on at least one remote branch,
+// error if it's not found on any remote branch or if validation fails.
 func ValidateHeadCommitExistsOnRemote(headCommitHash string) error {
-	// Get the current branch name
-	branchName, err := git.GetBranch()
-	if err != nil {
-		return fmt.Errorf("failed to get current branch: %w", err)
-	}
-	remoteName := "origin"
-	remoteBranch := branchName
-
-	// Fetch the latest from the remote without specifying branch
-	// This fetches all branches without requiring upstream configuration
-	fetchCmd := exec.Command("git", "fetch", "--quiet", remoteName)
+	// Fetch from all remotes to ensure we have up-to-date information about all remote branches.
+	// This is necessary to accurately check if the commit exists on *any* remote branch,
+	// not just the one corresponding to the current local branch.
+	fetchCmd := exec.Command("git", "fetch", "--all", "--quiet")
 	if fetchOutput, fetchErr := fetchCmd.CombinedOutput(); fetchErr != nil {
-		return fmt.Errorf("failed to fetch from remote %s: %w, output: %s",
-			remoteName, fetchErr, strings.TrimSpace(string(fetchOutput)))
+		// It's important to include the command output in the error message for debugging
+		return fmt.Errorf("failed to fetch from all remotes: %w, output: %s",
+			fetchErr, strings.TrimSpace(string(fetchOutput)))
 	}
 
-	// Get the commit hash of the remote branch
-	remoteCommitCmd := exec.Command("git", "rev-parse", fmt.Sprintf("%s/%s", remoteName, remoteBranch))
-	remoteCommitOutput, remoteCommitErr := remoteCommitCmd.CombinedOutput()
-	if remoteCommitErr != nil {
-		return fmt.Errorf("failed to get remote commit hash for %s/%s: %w, output: %s",
-			remoteName, remoteBranch, remoteCommitErr, strings.TrimSpace(string(remoteCommitOutput)))
-	}
-	remoteCommitHash := strings.TrimSpace(string(remoteCommitOutput))
+	// Check if the headCommitHash exists on any remote branch.
+	// `git branch -r --contains <commit>` lists all remote-tracking branches that contain the specified commit.
+	checkCmd := exec.Command("git", "branch", "-r", "--contains", headCommitHash)
+	output, err := checkCmd.CombinedOutput() // Use CombinedOutput to capture both stdout and stderr
 
-	// Compare with local head commit
-	if remoteCommitHash != headCommitHash {
-		return fmt.Errorf("local commit %s does not match remote %s/%s (remote has %s)",
-			headCommitHash, remoteName, remoteBranch, remoteCommitHash)
+	// Trim whitespace from the output
+	outputStr := strings.TrimSpace(string(output))
+
+	// git branch --contains will exit with status 0 if the commit is found
+	// on at least one branch, and non-zero (typically 1) if it's not found on any.
+	// If there's an error *and* the output string is empty, it likely means
+	// the commit was not found, which is the condition we're testing for.
+	// If there's an error *and* there IS output, something else went wrong.
+	if err != nil && outputStr != "" {
+		// An error occurred that isn't just the commit not being found.
+		return fmt.Errorf("failed to check remote branches for commit %s: %w, output: %s",
+			headCommitHash, err, outputStr)
+	}
+	// If err is not nil but outputStr is empty, the next check will handle it.
+	// If err is nil, outputStr contains the list of branches (or is empty).
+
+	// If the output string is empty after trimming, it means no remote branch contains the commit.
+	if outputStr == "" {
+		// This is the validation failure case: the commit does not exist on any remote branch.
+		return fmt.Errorf("local commit %s does not exist on any remote branch", headCommitHash)
 	}
 
-	return nil
+	// If we reach here, outputStr is not empty, meaning at least one remote branch contains the commit.
+	// The validation passes.
+	// Optional: Log the branches found for debugging/information.
+	log.Printf("Commit %s found on the following remote branches:\n%s", headCommitHash, outputStr)
+
+	return nil // Success: commit found on at least one remote branch
 }
 
 // ParseFlagsWithValidation combines argument format validation with flag parsing

@@ -25,12 +25,12 @@ func handleSync(remoteURL string, apiKey *string, force bool, verbose bool, cost
 	}
 
 	// Validate that the HEAD commit matches the remote branch
-	//err = utils.ValidateHeadCommitExistsOnRemote(headCommitHash)
-	//if err != nil && !force {
-	//	return fmt.Errorf("Validation failed: %w. Use --force to bypass this validation.", err)
-	//} else if err != nil && force {
-	//	fmt.Printf("Warning: %v. Proceeding anyway due to --force flag.\n", err)
-	//}
+	err = utils.ValidateHeadCommitExistsOnRemote(headCommitHash)
+	if err != nil && !force {
+		return fmt.Errorf("Validation failed: %w. Use --force to bypass this validation.", err)
+	} else if err != nil && force {
+		fmt.Printf("Warning: %v. Proceeding anyway due to --force flag.\n", err)
+	}
 
     var branchName string
     detached, err := git.IsDetachedHead()
