@@ -380,7 +380,7 @@ class BaseTestEndToEnd:
         time.sleep(5)
 
         # Step 4: Run git_sync again and assert the output now shows the correct token counts
-        command = 'git checkout feature2 && mct sync --amplify low --cost --force' # Changed command
+        command = 'git checkout 7078ecda662103319304730ecdd31ec01b6ce786 && mct sync --amplify low --cost --force' # Changed command
         stdout_mct, stderr_mct = run_mct_command(command, self.directory) # Use renamed function
         stdout_normalized = clean_output(stdout_mct)
 
