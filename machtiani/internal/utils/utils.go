@@ -1,4 +1,3 @@
-
 package utils
 
 import (
@@ -140,7 +139,7 @@ func LoadConfigAndIgnoreFiles() (Config, []string, error) {
 	return config, ignoreFiles, nil
 }
 
-// ReadIgnoreFile reads a `machtiani.ignore` file and returns a list of file paths
+// ReadIgnoreFile reads a `machtiani.ignore》 file and returns a list of file paths
 func ReadIgnoreFile(fileName string) ([]string, error) {
 	var filePaths []string
 
@@ -268,23 +267,23 @@ func ValidateDepthFlag(value int) error {
 }
 
 
-// ValidateHeadCommitExistsOnRemote checks if the HEAD commit exists on any remote branch.
+// ValidateHeadCommitExistsOnRemote checks if the HEAD commit exists on any branch of the origin remote.
 // Returns nil if the commit is found on at least one remote branch,
 // error if it's not found on any remote branch or if validation fails.
 func ValidateHeadCommitExistsOnRemote(headCommitHash string) error {
-	// Fetch from all remotes to ensure we have up-to-date information about all remote branches.
-	// This is necessary to accurately check if the commit exists on *any* remote branch,
-	// not just the one corresponding to the current local branch.
-	fetchCmd := exec.Command("git", "fetch", "--all", "--quiet")
+	// Fetch from origin to ensure we have up-to-date information about its branches.
+	// This is necessary to accurately check if the commit exists on any branch of origin.
+	fetchCmd := exec.Command("git", "fetch", "origin", "--quiet")
 	if fetchOutput, fetchErr := fetchCmd.CombinedOutput(); fetchErr != nil {
 		// It's important to include the command output in the error message for debugging
-		return fmt.Errorf("failed to fetch from all remotes: %w, output: %s",
+		return fmt.Errorf("failed to fetch from origin: %w, output: %s",
 			fetchErr, strings.TrimSpace(string(fetchOutput)))
 	}
 
-	// Check if the headCommitHash exists on any remote branch.
+	// Check if the headCommitHash exists on any branch of origin.
 	// `git branch -r --contains <commit>` lists all remote-tracking branches that contain the specified commit.
-	checkCmd := exec.Command("git", "branch", "-r", "--contains", headCommitHash)
+	// We filter for only origin branches using grep
+	checkCmd := exec.Command("sh", "-c", fmt.Sprintf("git branch -r --contains %s | grep '^  origin/'", headCommitHash))
 	output, err := checkCmd.CombinedOutput() // Use CombinedOutput to capture both stdout and stderr
 
 	// Trim whitespace from the output
@@ -297,24 +296,24 @@ func ValidateHeadCommitExistsOnRemote(headCommitHash string) error {
 	// If there's an error *and* there IS output, something else went wrong.
 	if err != nil && outputStr != "" {
 		// An error occurred that isn't just the commit not being found.
-		return fmt.Errorf("failed to check remote branches for commit %s: %w, output: %s",
+		return fmt.Errorf("failed to check origin branches for commit %s: %w, output: %s",
 			headCommitHash, err, outputStr)
 	}
 	// If err is not nil but outputStr is empty, the next check will handle it.
 	// If err is nil, outputStr contains the list of branches (or is empty).
 
-	// If the output string is empty after trimming, it means no remote branch contains the commit.
+	// If the output string is empty after trimming, it means no origin branch contains the commit.
 	if outputStr == "" {
-		// This is the validation failure case: the commit does not exist on any remote branch.
-		return fmt.Errorf("local commit %s does not exist on any remote branch", headCommitHash)
+		// This is the validation failure case: the commit does not exist on any origin branch.
+		return fmt.Errorf("local commit %s does not exist on any origin branch", headCommitHash)
 	}
 
-	// If we reach here, outputStr is not empty, meaning at least one remote branch contains the commit.
+	// If we reach here, outputStr is not empty, meaning at least one origin branch contains the commit.
 	// The validation passes.
 	// Optional: Log the branches found for debugging/information.
-	log.Printf("Commit %s found on the following remote branches:\n%s", headCommitHash, outputStr)
+	log.Printf("Commit %s found on the following origin branches:\n%s", headCommitHash, outputStr)
 
-	return nil // Success: commit found on at least one remote branch
+	return nil // Success: commit found on at least one origin branch
 }
 
 // ParseFlagsWithValidation combines argument format validation with flag parsing

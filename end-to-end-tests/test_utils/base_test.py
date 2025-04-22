@@ -115,8 +115,8 @@ class BaseTestEndToEnd:
             "Repository confirmation received.",
             "---",
             "Estimating token cost...",
-            "Estimated embedding tokens: 3000",
-            "Estimated inference tokens: 10396",
+            "Estimated embedding tokens: 3,000",
+            "Estimated inference tokens: 10,396",
             "---",
             "VCSType.git repository added successfully",
             "---",
@@ -311,12 +311,13 @@ class BaseTestEndToEnd:
             "",
             "---",
             "Estimating token cost...",
-            "Estimated embedding tokens: 1000",
+            "Estimated embedding tokens: 1,000",
             "Estimated inference tokens: 85",
             "---",
             "",
-            "Successfully synced 'feature' branch of chastler to the chat service",
-            "- service message: Fetched and checked out branch feature for project"
+            "Successfully synced '' branch of chastler to the chat service",
+
+            "- service message: Fetched and checked out commit 7078ecda662103319304730ecdd31ec01b6ce786 for project"
         ]
         expected_output = [line.strip() for line in expected_output if line.strip()]
         stdout_normalized = strip_spinner_lines(stdout_normalized)
@@ -392,8 +393,8 @@ class BaseTestEndToEnd:
             "Repository confirmation received.", # Added based on actual output (-)
             "---", # Added based on actual output (-)
             "Estimating token cost...", # Added based on actual output (-)
-            "Estimated embedding tokens: 6000", # Common line
-            "Estimated inference tokens: 10605", # Common line
+            "Estimated embedding tokens: 6,000", # Common line
+            "Estimated inference tokens: 10,605", # Common line
             "---", # Common line
             "VCSType.git repository added successfully", # Common line
             "---", # Common line
@@ -884,12 +885,12 @@ class ExtraTestEndToEnd:
 
         # Check for specific token counts
         self.assertTrue(
-            any(line.strip() == "Estimated embedding tokens: 531000" for line in stdout_mct),
-            "Expected 'Estimated embedding tokens: 531000' not found in stdout."
+            any(line.strip() == "Estimated embedding tokens: 531,000" for line in stdout_mct),
+            "Expected 'Estimated embedding tokens: 531,000' not found in stdout."
         )
         self.assertTrue(
-            any(line.strip() == "Estimated inference tokens: 550098" for line in stdout_mct),
-            "Expected 'Estimated inference tokens: 550098' not found in stdout."
+            any(line.strip() == "Estimated inference tokens: 550,098" for line in stdout_mct),
+            "Expected 'Estimated inference tokens: 550,098' not found in stdout."
         )
 
         # Extract and assert time
@@ -917,12 +918,12 @@ class ExtraTestEndToEnd:
 
         # Check for specific token counts
         self.assertTrue(
-            any(line.strip() == "Estimated embedding tokens: 265500" for line in stdout_mct),
-            "Expected 'Estimated embedding tokens: 265500' not found in stdout."
+            any(line.strip() == "Estimated embedding tokens: 265,500" for line in stdout_mct),
+            "Expected 'Estimated embedding tokens: 265,500' not found in stdout."
         )
         self.assertTrue(
-            any(line.strip() == "Estimated inference tokens: 36343" for line in stdout_mct),
-            "Expected 'Estimated inference tokens: 36343' not found in stdout."
+            any(line.strip() == "Estimated inference tokens: 36,343" for line in stdout_mct),
+            "Expected 'Estimated inference tokens: 36,343' not found in stdout."
         )
 
         # Extract and assert time
@@ -983,8 +984,8 @@ class ExtraTestEndToEnd:
 
         # Check for specific token counts
         self.assertTrue(
-            any(line.strip() == "Estimated embedding tokens: 1000" for line in stdout_mct),
-            "Expected 'Estimated embedding tokens: 1000' not found in stdout (depth 1, low amplify)."
+            any(line.strip() == "Estimated embedding tokens: 1,000" for line in stdout_mct),
+            "Expected 'Estimated embedding tokens: 1,000' not found in stdout (depth 1, low amplify)."
         )
         self.assertTrue(
             any(line.strip() == "Estimated inference tokens: 161" for line in stdout_mct),
@@ -1017,12 +1018,12 @@ class ExtraTestEndToEnd:
 
         # Check for specific token counts
         self.assertTrue(
-            any(line.strip() == "Estimated embedding tokens: 68500" for line in stdout_mct),
-            "Expected 'Estimated embedding tokens: 68500' not found in stdout (depth 137, no amplify)."
+            any(line.strip() == "Estimated embedding tokens: 68,500" for line in stdout_mct),
+            "Expected 'Estimated embedding tokens: 68,500' not found in stdout (depth 137, no amplify)."
         )
         self.assertTrue(
-            any(line.strip() == "Estimated inference tokens: 5210" for line in stdout_mct),
-            "Expected 'Estimated inference tokens: 5210' not found in stdout (depth 137, no amplify)."
+            any(line.strip() == "Estimated inference tokens: 5,210" for line in stdout_mct),
+            "Expected 'Estimated inference tokens: 5,210' not found in stdout (depth 137, no amplify)."
         )
 
         # Extract and assert time
@@ -1049,12 +1050,12 @@ class ExtraTestEndToEnd:
 
         # Check for specific token counts
         self.assertTrue(
-            any(line.strip() == "Estimated embedding tokens: 137000" for line in stdout_mct),
-            "Expected 'Estimated embedding tokens: 137000' not found in stdout (depth 137, low amplify)."
+            any(line.strip() == "Estimated embedding tokens: 137,000" for line in stdout_mct),
+            "Expected 'Estimated embedding tokens: 137,000' not found in stdout (depth 137, low amplify)."
         )
         self.assertTrue(
-            any(line.strip() == "Estimated inference tokens: 126125" for line in stdout_mct),
-            "Expected 'Estimated inference tokens: 126125' not found in stdout (depth 137, low amplify)."
+            any(line.strip() == "Estimated inference tokens: 126,125" for line in stdout_mct),
+            "Expected 'Estimated inference tokens: 126,125' not found in stdout (depth 137, low amplify)."
         )
 
         # Extract and assert time
