@@ -168,8 +168,8 @@ func estimateAndPrintCost(remoteURL string, apiKey *string, verbose bool, startT
 	if err != nil {
 		return fmt.Errorf("error getting token count: %w", err)
 	}
-	fmt.Printf("Estimated embedding tokens: %d\n", tokenCountEmbedding)
-	fmt.Printf("Estimated inference tokens: %d\n", tokenCountInference)
+	fmt.Printf("Estimated embedding tokens: %s\n", utils.FormatIntWithCommas(tokenCountEmbedding))
+	fmt.Printf("Estimated inference tokens: %s\n", utils.FormatIntWithCommas(tokenCountInference))
 	fmt.Println("---")
 
 	if verbose {

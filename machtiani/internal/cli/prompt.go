@@ -336,6 +336,7 @@ func readMarkdownFile(path string) string {
 }
 
 // printVerboseInfo - unchanged
+
 func printVerboseInfo(markdown, model, matchStrength, mode, prompt string) {
 	_, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
 	if err != nil {
@@ -364,4 +365,7 @@ func printVerboseInfo(markdown, model, matchStrength, mode, prompt string) {
 		truncatedPrompt = prompt[:maxPromptLen] + "..."
 	}
 	fmt.Printf("  Prompt: %s\n", truncatedPrompt)
+	// If you want to print token counts here, use:
+	// fmt.Printf("  Embedding tokens: %s\n", utils.FormatIntWithCommas(embeddingTokens))
+	// fmt.Printf("  Inference tokens: %s\n", utils.FormatIntWithCommas(inferenceTokens))
 }

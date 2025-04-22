@@ -1,3 +1,4 @@
+
 package utils
 
 import (
@@ -9,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -356,10 +358,40 @@ func GetCodehostURLFromCurrentRepository() (string, error) {
 	return codehostURL, nil
 }
 
+
+
 // confirmProceed prompts the user for confirmation to proceed
 func ConfirmProceed() bool {
 	var response string
 	fmt.Print("Do you wish to proceed? (y/n): ")
 	fmt.Scanln(&response)
 	return strings.ToLower(response) == "y"
+}
+
+// FormatIntWithCommas returns an int as a string with commas, e.g. 12345 -> "12,345"
+func FormatIntWithCommas(n int) string {
+	s := strconv.Itoa(n)
+	if len(s) <= 3 {
+		return s
+	}
+	neg := false
+	if n < 0 {
+		neg = true
+		s = s[1:]
+	}
+	var out []byte
+	pre := len(s) % 3
+	if pre > 0 {
+		out = append(out, s[:pre]...)
+	}
+	for i := pre; i < len(s); i += 3 {
+		if len(out) > 0 {
+			out = append(out, ',')
+		}
+		out = append(out, s[i:i+3]...)
+	}
+	if neg {
+		return "-" + string(out)
+	}
+	return string(out)
 }
