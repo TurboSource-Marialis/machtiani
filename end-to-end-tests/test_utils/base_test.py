@@ -315,9 +315,9 @@ class BaseTestEndToEnd:
             "Estimated inference tokens: 85",
             "---",
             "",
-            "Successfully synced '' branch of chastler to the chat service",
+            "Successfully synced 'feature' branch of chastler to the chat service",
 
-            "- service message: Fetched and checked out commit 7078ecda662103319304730ecdd31ec01b6ce786 for project"
+            "- service message: Fetched and checked out branch feature for project"
         ]
         expected_output = [line.strip() for line in expected_output if line.strip()]
         stdout_normalized = strip_spinner_lines(stdout_normalized)
