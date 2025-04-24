@@ -190,7 +190,6 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
 func handleAPIResponse(prompt, openaiResponse string, retrievedFilePaths []string, filename, fileFlag string, isAnswerOnlyMode bool) {
     // In answer-only mode, just print the raw response without any file operations
     if isAnswerOnlyMode {
-        fmt.Print(openaiResponse)
         return
     }
 
