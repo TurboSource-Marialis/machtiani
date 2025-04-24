@@ -208,9 +208,10 @@ func ValidateFlags(modelFlag, matchStrengthFlag, modeFlag *string) {
 		log.Fatalf("Error: Invalid match strength selected. Choose either 'high', 'mid', or 'low'.")
 	}
 
+
 	mode := *modeFlag
-	if mode != "chat" && mode != "pure-chat" && mode != "default" {
-		log.Fatalf("Error: Invalid mode selected. Choose either chat, pure-chat, or default.")
+	if mode != "chat" && mode != "pure-chat" && mode != "default" && mode != "answer-only" {
+		log.Fatalf("Error: Invalid mode selected. Choose either chat, pure-chat, answer-only, or default.")
 	}
 }
 

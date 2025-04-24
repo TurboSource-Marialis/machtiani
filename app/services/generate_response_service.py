@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 # Define token limits for different models
 MAX_TOKENS = 128000
 
+
 async def generate_response(
     prompt: str,
     project: str,
@@ -40,6 +41,8 @@ async def generate_response(
     llm_model_base_url_other: Optional[str] = None,
     llm_model_api_key_other: Optional[str] = None,
 ):
+    # The function treats answer-only mode the same as default mode
+    # The answer-only handling is managed client-side in the Go code
 
     logger.debug("Begin generate_response service")
     logger.debug(f"Input parameters: prompt ({len(prompt)} chars), project: {project}, mode: {mode}, model: {model}, match_strength: {match_strength}")

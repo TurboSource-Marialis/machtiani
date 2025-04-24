@@ -424,8 +424,19 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 	var tokenBuffer bytes.Buffer     // Buffer to accumulate tokens
 	var inCodeBlock bool             // Track if we're inside a code block
 	var codeBlockBuffer bytes.Buffer // Buffer to accumulate code block content
+	var answerOnlyBuffer strings.Builder // Buffer for answer-only mode
 
 	updateContentResponse := make(map[string]UpdateFileContent)
+
+	// Check if we're in answer-only mode
+	answerOnlyMode := mode == "answer-only"
+	var spinner *SpinnerController
+
+	// Only create and start spinner if not in answer-only mode
+	if !answerOnlyMode {
+		spinner = NewSpinnerController()
+		spinner.Start()
+	}
 
 	// Use a JSON decoder to read multiple JSON objects from the response stream
 	decoder := json.NewDecoder(resp.Body)
@@ -440,17 +451,18 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 		header = fmt.Sprintf("# User\n\n%s\n\n# Assistant\n\n", prompt)
 	}
 
-	if err := renderMarkdown(header); err != nil {
-		return nil, fmt.Errorf("failed to render header: %w", err)
+	if !answerOnlyMode {
+		if err := renderMarkdown(header); err != nil {
+			return nil, fmt.Errorf("failed to render header: %w", err)
+		}
 	}
 	completeResponse.WriteString(header)
 	rawResponse.WriteString(header)
 
-	// Initialize SpinnerController
-	spinner := NewSpinnerController()
-
-	// Start the initial spinner
-	spinner.Start()
+	// If in answer-only mode, add the header to the buffer
+	if answerOnlyMode {
+		answerOnlyBuffer.WriteString(header)
+	}
 
 	var newFilesResult *NewFilesData
 
@@ -466,7 +478,9 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 		// ────────────────────────────────────────────────────────────────────────
 		// catch the file_edit_start event and print a waiting banner
 		if ev, ok := chunk["event"].(string); ok && ev == "file_edit_start" {
-			fmt.Println("\n\n\n→ waiting on file‑edits …")
+			if !answerOnlyMode {
+				fmt.Println("\n\n\n→ waiting on file‑edits …")
+			}
 			continue
 		}
 		// ────
@@ -480,6 +494,12 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 		if token, ok := chunk["token"].(string); ok {
 			tokenBuffer.WriteString(token)
 			rawResponse.WriteString(token) // Append to rawResponse
+
+			// In answer-only mode, just accumulate tokens
+			if answerOnlyMode {
+				answerOnlyBuffer.WriteString(token)
+				continue // Skip the rendering in answer-only mode
+			}
 
 			// Check if buffer contains two consecutive newlines indicating a potential block end
 			content := tokenBuffer.String()
@@ -618,12 +638,14 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 			newFilesResult = &newFiles
 
 			// Print information about suggested new files
-			spinner.Stop()
-			fmt.Printf("\nSuggested new files:\n")
-			for _, path := range newFiles.NewFilePaths {
-				fmt.Printf("- %s\n", path)
+			if !answerOnlyMode {
+				spinner.Stop()
+				fmt.Printf("\nSuggested new files:\n")
+				for _, path := range newFiles.NewFilePaths {
+					fmt.Printf("- %s\n", path)
+				}
+				spinner.Start()
 			}
-			spinner.Start()
 		}
 	}
 
@@ -632,8 +654,10 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 		remainingContent := tokenBuffer.String()
 		trimmedContent := strings.TrimRight(remainingContent, "\r\n")
 		trimmedContent = strings.ReplaceAll(trimmedContent, "\r\n", "\n")
-		if err := renderMarkdown(trimmedContent); err != nil {
-			log.Printf("Error rendering remaining content: %v", err)
+		if !answerOnlyMode {
+			if err := renderMarkdown(trimmedContent); err != nil {
+				log.Printf("Error rendering remaining content: %v", err)
+			}
 		}
 		completeResponse.WriteString(trimmedContent)
 	}
@@ -649,10 +673,19 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 		completeResponse.WriteString(retrievedFilePathsMarkdown)
 		rawResponse.WriteString(retrievedFilePathsMarkdown)
 
-		// Render the Markdown so it appears in the stream
-		if err := renderMarkdown(retrievedFilePathsMarkdown); err != nil {
-			log.Printf("Error rendering retrieved file paths: %v", err)
+		if answerOnlyMode {
+			answerOnlyBuffer.WriteString(retrievedFilePathsMarkdown)
+		} else {
+			// Render the Markdown so it appears in the stream
+			if err := renderMarkdown(retrievedFilePathsMarkdown); err != nil {
+				log.Printf("Error rendering retrieved file paths: %v", err)
+			}
 		}
+	}
+
+	// If in answer-only mode, output the accumulated content now
+	if answerOnlyMode {
+		fmt.Println(answerOnlyBuffer.String())
 	}
 
 	// Before returning the result, attach the spinner
@@ -662,9 +695,8 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 		RetrievedFilePaths:    retrievedFilePaths,
 		UpdateContentResponse: updateContentResponse,
 		HeadCommitHash:        headCommitHash,
-
-		spinner:  spinner,
-		NewFiles: newFilesResult,
+		spinner:               spinner, // Will be nil for answer-only mode
+		NewFiles:              newFilesResult,
 	}
 
 	// Write patch files for updated files - REMOVED TO FIX DUPLICATE PATCH ISSUE
@@ -679,7 +711,7 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 
 	// Modify the defer to conditionally stop the spinner
 	defer func() {
-		if len(updateContentResponse) == 0 && (newFilesResult == nil || len(newFilesResult.NewContent) == 0) {
+		if !answerOnlyMode && len(updateContentResponse) == 0 && (newFilesResult == nil || len(newFilesResult.NewContent) == 0) {
 			spinner.Stop()
 		}
 	}()
@@ -866,12 +898,16 @@ func GetInstallInfo() (bool, string, error) {
 func (res *GenerateResponseResult) WritePatchToFile() error {
 
 	if len(res.UpdateContentResponse) == 0 {
-		res.spinner.Stop()
+		if res.spinner != nil {
+			res.spinner.Stop()
+		}
 		return nil
 	}
 
 	// Ensure the spinner stops running during file writes
-	res.spinner.Stop()
+	if res.spinner != nil {
+		res.spinner.Stop()
+	}
 
 	var outputBuffer bytes.Buffer // Use a buffer to collect messages
 
@@ -983,8 +1019,10 @@ func (res *GenerateResponseResult) WriteNewFiles() error {
 		return nil
 	}
 
-	// Ensure spinner is stopped
-	res.spinner.Stop()
+	// Ensure spinner is stopped if it exists (might be nil in answer-only mode)
+	if res.spinner != nil {
+		res.spinner.Stop()
+	}
 
 	log.Printf("Creating new files for %d entries", len(res.NewFiles.NewContent))
 	fmt.Printf("\nCreating new files:\n")
