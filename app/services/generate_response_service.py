@@ -288,20 +288,20 @@ async def generate_response(
 
 
             # Call file-edit for each retrieved file path, log response
+
             if mode == SearchMode.default:
-                # Notify the client that we're about to call file-edit
+                # Notify the client that we're about to call file-edit and new-files in parallel
                 yield {
                     "event": "file_edit_start",
-                    "message": "Waiting on file-edit requests…",
+                    "message": "Waiting on file-edit/new-files requests…",
                     "file_count": len(retrieved_file_paths),
                     "retrieved_file_paths": retrieved_file_paths,
                 }
-                # now actually fire the file-edit calls
                 file_edit_url = f"{base_url}/file-edit/"
                 updated_contents = {}
                 async with httpx.AsyncClient(timeout=600) as edit_client:
-                    # Create tasks for all file-edit requests
-                    tasks = []
+                    # Create file-edit tasks for each file
+                    file_edit_tasks = []
                     for file_path in retrieved_file_paths:
                         payload = {
                             "project": project,
@@ -312,89 +312,79 @@ async def generate_response(
                             "model": model,
                             "ignore_files": ignore_files or []
                         }
-                        tasks.append(edit_client.post(file_edit_url, json=payload))
+                        file_edit_tasks.append(edit_client.post(file_edit_url, json=payload))
 
-                    # Execute all tasks concurrently
-                    responses = await asyncio.gather(*tasks, return_exceptions=True)
+                    # Create new-files task (just one)
+                    new_files_url = f"{base_url}/new-files/"
+                    new_files_payload = {
+                        "project": project,
+                        "instructions": final_response_text,
+                        "llm_model_api_key": llm_model_api_key_to_use,
+                        "llm_model_base_url": str(llm_model_base_url_to_use),
+                        "model": model,
+                        "ignore_files": ignore_files or []
+                    }
+                    new_files_task = edit_client.post(new_files_url, json=new_files_payload)
 
-                    # Process each response
-                    for file_path, resp in zip(retrieved_file_paths, responses):
+                    # Combine all tasks
+                    all_tasks = file_edit_tasks + [new_files_task]
+
+                    # Run all concurrently
+                    responses = await asyncio.gather(*all_tasks, return_exceptions=True)
+
+                    # The first N are for file edits, the last is for new-files
+                    for i, resp in enumerate(responses):
                         try:
                             if isinstance(resp, Exception):
-                                raise resp  # Re-raise caught exceptions for uniform handling
+                                raise resp
 
                             resp.raise_for_status()
                             resp_json = resp.json()
-                            logger.info(f"[file-edit] {file_path} response: {resp_json}")
 
-                            errors = resp_json.get("errors", [])
-                            if errors:
-                                logger.warning(f"[file-edit] Skipping update for {file_path} due to errors: {errors}")
-                                continue
+                            # File edit responses
+                            if i < len(file_edit_tasks):
+                                file_path = retrieved_file_paths[i]
+                                errors = resp_json.get("errors", [])
+                                if errors:
+                                    logger.warning(f"[file-edit] Skipping update for {file_path} due to errors: {errors}")
+                                    continue
+                                updated_contents[file_path] = {
+                                    "updated_content": resp_json.get("updated_content", ""),
+                                    "errors": errors,
+                                }
+                            # New-files response (last task)
+                            else:
+                                logger.info(f"[new-files] Response status: {resp.status_code}")
+                                if resp_json and isinstance(resp_json, dict):
+                                    errors = resp_json.get("errors", [])
+                                    if errors:
+                                        logger.warning(f"[new-files] Errors in response: {errors}")
+                                    new_content = resp_json.get("new_content", {})
+                                    logger.info(f"[new-files] Received {len(new_content)} new file suggestions")
+                                    if new_content and not any(errors):
+                                        logger.debug(f"[new-files] New file paths: {list(new_content.keys())}")
+                                        yield {"new_files": resp_json}
+                                    else:
+                                        logger.info("[new-files] No valid new files to suggest or errors present")
+                                else:
+                                    logger.warning("[new-files] Empty response from new-files endpoint")
 
-                            updated_contents[file_path] = {
-                                "updated_content": resp_json.get("updated_content", ""),
-                                "errors": errors,
-                            }
                         except Exception as e:
-                            logger.error(f"[file-edit] Error editing {file_path}: {e}")
-                            updated_contents[file_path] = {
-                                "updated_content": f"[Error updating file: {e}]",
+                            if i < len(file_edit_tasks):
+                                file_path = retrieved_file_paths[i]
+                                logger.error(f"[file-edit] Error editing {file_path}: {e}")
+                                updated_contents[file_path] = {
+                                    "updated_content": f"[Error updating file: {e}]",
+                                    "errors": [str(e)],
+                                }
+                            else:
+                                logger.exception(f"[new-files] Unexpected error calling endpoint")
+                                # Just log error; don't yield to client
 
-                                "errors": [str(e)],
-                            }
-
-                    # Yield updated contents if any were successful
+                    # Yield updated file contents if any
                     if updated_contents:
                         logger.info(f"updated_file_contents: {updated_contents}")
                         yield {"updated_file_contents": updated_contents}
-
-                    # Call new-files endpoint using the same client
-                    try:
-                        new_files_url = f"{base_url}/new-files/"
-                        new_files_payload = {
-                            "project": project,
-                            "instructions": final_response_text,
-                            "llm_model_api_key": llm_model_api_key_to_use,
-                            "llm_model_base_url": str(llm_model_base_url_to_use),
-                            "model": model,
-                            "ignore_files": ignore_files or []
-                        }
-
-                        logger.info(f"[new-files] Calling endpoint with payload: {json.dumps(new_files_payload, indent=2)}")
-                        logger.debug(f"[new-files] Instructions length: {len(final_response_text)} chars")
-                        logger.debug(f"[new-files] Model: {model}, Project: {project}")
-
-                        # Use the existing edit_client
-                        new_files_response = await edit_client.post(new_files_url, json=new_files_payload)
-                        new_files_response.raise_for_status()
-                        new_files_data = new_files_response.json()
-
-                        logger.info(f"[new-files] Response status: {new_files_response.status_code}")
-                        logger.debug(f"[new-files] Full response: {json.dumps(new_files_data, indent=2)}")
-
-                        if new_files_data and isinstance(new_files_data, dict):
-                            errors = new_files_data.get("errors", [])
-                            if errors:
-                                logger.warning(f"[new-files] Errors in response: {errors}")
-
-                            new_content = new_files_data.get("new_content", {})
-                            logger.info(f"[new-files] Received {len(new_content)} new file suggestions")
-
-                            if new_content and not any(errors):
-                                logger.debug(f"[new-files] New file paths: {list(new_content.keys())}")
-                                yield {"new_files": new_files_data}
-                            else:
-                                logger.info("[new-files] No valid new files to suggest or errors present")
-                        else:
-                            logger.warning("[new-files] Empty response from new-files endpoint")
-
-                    except httpx.HTTPStatusError as e:
-                        logger.error(f"[new-files] HTTP error {e.response.status_code}: {e.response.text}")
-                        logger.debug(f"[new-files] Request details: URL={new_files_url}, Payload={new_files_payload}")
-                    except Exception as e:
-                        logger.exception(f"[new-files] Unexpected error calling endpoint")
-                        # Just log the error, don't yield it to avoid breaking the client
 
     except httpx.RequestError as exc:
         logger.error(f"Request error: {exc}")
