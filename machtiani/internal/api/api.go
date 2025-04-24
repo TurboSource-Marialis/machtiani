@@ -434,12 +434,6 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 	answerOnlyMode := mode == "answer-only"
 	var spinner *SpinnerController
 
-	// Only create and start spinner if not in answer-only mode
-	if !answerOnlyMode {
-		spinner = NewSpinnerController()
-		spinner.Start()
-	}
-
 	// Use a JSON decoder to read multiple JSON objects from the response stream
 	decoder := json.NewDecoder(resp.Body)
 
@@ -474,6 +468,12 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 	}
 
 	var newFilesResult *NewFilesData
+
+	// Only create and start spinner if not in answer-only mode
+	if !answerOnlyMode {
+		spinner = NewSpinnerController()
+		spinner.Start()
+	}
 
 	for {
 		var chunk map[string]interface{}
