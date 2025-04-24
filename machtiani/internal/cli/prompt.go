@@ -186,18 +186,28 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
 
 
 
+
 func handleAPIResponse(prompt, openaiResponse string, retrievedFilePaths []string, filename, fileFlag string, isAnswerOnlyMode bool) {
 	// Save the response to the markdown file with the provided filename
-	tempFile, err := utils.CreateTempMarkdownFile(openaiResponse, filename)
+	// For answer-only mode, don't modify the output formatting
+	var finalContent string
+	if isAnswerOnlyMode {
+		// In answer-only mode, use the raw response without adding headers
+		finalContent = openaiResponse
+	} else {
+		// In other modes, use the existing markdown structure
+		finalContent = openaiResponse
+	}
+
+	tempFile, err := utils.CreateTempMarkdownFile(finalContent, filename)
 	if err != nil {
 		// Log error but don't necessarily stop the whole application
-
 		if !isAnswerOnlyMode {
 			log.Printf("Error creating markdown file '%s': %v", filename+".md", err)
 			// Optionally print the response to stdout as a fallback?
 			fmt.Println("\n--- Start Fallback Response Output ---")
 		}
-		fmt.Println(openaiResponse)
+		fmt.Println(finalContent)
 		if !isAnswerOnlyMode {
 			fmt.Println("--- End Fallback Response Output ---")
 		}

@@ -443,14 +443,21 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 	// Use a JSON decoder to read multiple JSON objects from the response stream
 	decoder := json.NewDecoder(resp.Body)
 
-	// Check if the prompt already starts with the User header
+
+	// Check if we're in answer-only mode
 	var header string
-	if strings.HasPrefix(strings.TrimSpace(prompt), "# User") {
-		// If the prompt already contains the User header, use it as is
-		header = fmt.Sprintf("%s\n# Assistant\n\n", prompt)
+	if answerOnlyMode {
+		// In answer-only mode, don't add the User/Assistant headers
+		header = prompt
 	} else {
-		// Otherwise, prepend the User header
-		header = fmt.Sprintf("# User\n\n%s\n\n# Assistant\n\n", prompt)
+		// In other modes, use the existing header logic
+		if strings.HasPrefix(strings.TrimSpace(prompt), "# User") {
+			// If the prompt already contains the User header, use it as is
+			header = fmt.Sprintf("%s\n# Assistant\n\n", prompt)
+		} else {
+			// Otherwise, prepend the User header
+			header = fmt.Sprintf("# User\n\n%s\n\n# Assistant\n\n", prompt)
+		}
 	}
 
 	if !answerOnlyMode {
