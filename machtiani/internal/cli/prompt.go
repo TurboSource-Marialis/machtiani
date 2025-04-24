@@ -104,28 +104,20 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
 
 	// Only process patches in default mode
 	if *modeFlag == defaultMode {
-		if !isAnswerOnlyMode {
-			fmt.Println(createSeparator("Writing & Applying File Patches"))
-		}
+		utils.PrintIfNotAnswerOnly(isAnswerOnlyMode, "%s", createSeparator("Writing & Applying File Patches"))
 
 		patchDir := filepath.Join(".machtiani", "patches")
 
 		// Get list of existing patch files BEFORE writing new ones
 		existingPatchFiles, err := filepath.Glob(filepath.Join(patchDir, "*.patch"))
 		if err != nil {
-
-			if !isAnswerOnlyMode {
-				log.Printf("Warning: Error finding existing patch files: %v", err)
-			}
+			utils.LogErrorIfNotAnswerOnly(isAnswerOnlyMode, err, "Warning: Error finding existing patch files")
 			existingPatchFiles = []string{}
 		}
 
 		// Write the new patch files (this part remains here)
 		if err := result.WritePatchToFile(); err != nil {
-
-			if !isAnswerOnlyMode {
-				log.Printf("Error writing patch file(s): %v", err)
-			}
+			utils.LogErrorIfNotAnswerOnly(isAnswerOnlyMode, err, "Error writing patch file(s)")
 			// Decide if we should proceed to apply patches even if writing failed?
 			// Let's assume if writing failed, there are no *new* patches to apply.
 		} else {
@@ -133,19 +125,14 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
 			// Call the function from git_utils to apply the patches
 			err = git.ApplyGitPatches(patchDir, existingPatchFiles)
 			if err != nil {
-
-				if !isAnswerOnlyMode {
-					log.Printf("Error during patch application process: %v", err)
-				}
+				utils.LogErrorIfNotAnswerOnly(isAnswerOnlyMode, err, "Error during patch application process")
 			}
 			// --- END REFACTOR ---
 		}
 
 
 		// Add a separator after writing/applying patches only if not answer-only
-		if !isAnswerOnlyMode {
-			fmt.Println(createSeparator(""))
-		}
+		utils.PrintIfNotAnswerOnly(isAnswerOnlyMode, "%s", createSeparator(""))
 	}
 
 	// Collect the final OpenAI response for further processing if needed
@@ -175,9 +162,7 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
 	}
 
 
-	if !isAnswerOnlyMode {
-		fmt.Println(createSeparator("Saving Chat Response"))
-	}
+	utils.PrintIfNotAnswerOnly(isAnswerOnlyMode, "%s", createSeparator("Saving Chat Response"))
 
 
 	// Handle the final API response with structured data, passing the isAnswerOnlyMode flag

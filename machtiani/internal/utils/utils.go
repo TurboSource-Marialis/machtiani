@@ -368,6 +368,7 @@ func ConfirmProceed() bool {
 	return strings.ToLower(response) == "y"
 }
 
+
 // FormatIntWithCommas returns an int as a string with commas, e.g. 12345 -> "12,345"
 func FormatIntWithCommas(n int) string {
 	s := strconv.Itoa(n)
@@ -394,4 +395,54 @@ func FormatIntWithCommas(n int) string {
 		return "-" + string(out)
 	}
 	return string(out)
+}
+
+// IsAnswerOnlyMode checks if the application is running in answer-only mode
+// by examining command line arguments
+func IsAnswerOnlyMode() bool {
+    for i, arg := range os.Args {
+        if arg == "--mode" && i+1 < len(os.Args) && os.Args[i+1] == "answer-only" {
+            return true
+        }
+        if strings.HasPrefix(arg, "--mode=answer-only") {
+            return true
+        }
+    }
+    return false
+}
+
+// PrintIfNotAnswerOnly prints the formatted message only if not in answer-only mode
+//
+// Example:
+//
+//     isAnswerOnlyMode := IsAnswerOnlyMode()
+//     PrintIfNotAnswerOnly(isAnswerOnlyMode, "Using remote URL: %s\n", remoteURL)
+func PrintIfNotAnswerOnly(isAnswerOnly bool, format string, args ...interface{}) {
+    if !isAnswerOnly {
+        fmt.Printf(format, args...)
+    }
+}
+
+// LogIfNotAnswerOnly logs the formatted message only if not in answer-only mode
+//
+// Example:
+//
+//     LogIfNotAnswerOnly(isAnswerOnlyMode, "Warning: failed to parse system message frequency: %v", err)
+func LogIfNotAnswerOnly(isAnswerOnly bool, format string, args ...interface{}) {
+    if !isAnswerOnly {
+        log.Printf(format, args...)
+    }
+}
+
+// LogErrorIfNotAnswerOnly logs an error message only if the error is not nil and not in answer-only mode
+//
+// Example:
+//
+//     if err := git.SaveSystemMessage(systemMsg); err != nil {
+//         LogErrorIfNotAnswerOnly(isAnswerOnlyMode, err, "Failed to save system message")
+//     }
+func LogErrorIfNotAnswerOnly(isAnswerOnly bool, err error, message string) {
+    if err != nil && !isAnswerOnly {
+        log.Printf("%s: %v", message, err)
+    }
 }
