@@ -718,8 +718,10 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 	//	log.Printf("Error writing patch files for updated files: %v", err)
 	// }
 
+
 	// ADD THIS NEW CODE: Write patch files for new files
-	if err := result.WriteNewFiles(); err != nil {
+	_, err = result.WriteNewFiles()
+	if err != nil {
 		log.Printf("Error writing patch files for new files: %v", err)
 	}
 
@@ -1023,72 +1025,68 @@ func (s *SpinnerController) Stop() {
 	}
 }
 
+
 // WriteNewFiles creates new files with provided content if they don't already exist
-func (res *GenerateResponseResult) WriteNewFiles() error {
-	if res.NewFiles == nil {
-		log.Println("No new files data available - skipping")
-		return nil
-	}
+func (res *GenerateResponseResult) WriteNewFiles() (string, error) {
+    var outputBuffer bytes.Buffer
+    var filesWritten int
+    var filesSkipped int
 
-	if len(res.NewFiles.NewContent) == 0 {
-		log.Println("New files content is empty - nothing to write")
-		return nil
-	}
+    if res.NewFiles == nil {
+        outputBuffer.WriteString("No new files data available - skipping\n")
+        return outputBuffer.String(), nil
+    }
 
-	// Ensure spinner is stopped if it exists (might be nil in answer-only mode)
-	if res.spinner != nil {
-		res.spinner.Stop()
-	}
+    if len(res.NewFiles.NewContent) == 0 {
+        outputBuffer.WriteString("New files content is empty - nothing to write\n")
+        return outputBuffer.String(), nil
+    }
 
-	log.Printf("Creating new files for %d entries", len(res.NewFiles.NewContent))
-	fmt.Printf("\nCreating new files:\n")
+    // Ensure spinner is stopped if it exists (might be nil in answer-only mode)
+    if res.spinner != nil {
+        res.spinner.Stop()
+    }
 
-	var outputBuffer bytes.Buffer
-	var filesWritten int
-	var filesSkipped int
+    outputBuffer.WriteString(fmt.Sprintf("Creating new files for %d entries\n", len(res.NewFiles.NewContent)))
 
-	for path, content := range res.NewFiles.NewContent {
-		if strings.TrimSpace(content) == "" {
-			outputBuffer.WriteString(fmt.Sprintf("- %s (skipped - empty content)\n", path))
-			filesSkipped++
-			continue
-		}
+    for path, content := range res.NewFiles.NewContent {
+        if strings.TrimSpace(content) == "" {
+            outputBuffer.WriteString(fmt.Sprintf("- %s (skipped - empty content)\n", path))
+            filesSkipped++
+            continue
+        }
 
-		// Check if the file exists in the filesystem
-		if _, err := os.Stat(path); err == nil {
-			outputBuffer.WriteString(fmt.Sprintf("- %s (skipped - file already exists)\n", path))
-			filesSkipped++
-			continue
-		} else if !os.IsNotExist(err) {
-			// Some other error checking the file
-			log.Printf("Error checking file %s: %v", path, err)
-			outputBuffer.WriteString(fmt.Sprintf("- %s (error checking existence: %v)\n", path, err))
-			continue
-		}
+        // Check if the file exists in the filesystem
+        if _, err := os.Stat(path); err == nil {
+            outputBuffer.WriteString(fmt.Sprintf("- %s (skipped - file already exists)\n", path))
+            filesSkipped++
+            continue
+        } else if !os.IsNotExist(err) {
+            // Some other error checking the file
+            log.Printf("Error checking file %s: %v", path, err)
+            outputBuffer.WriteString(fmt.Sprintf("- %s (error checking existence: %v)\n", path, err))
+            continue
+        }
 
-		// Create parent directories
-		dir := filepath.Dir(path)
-		if err := os.MkdirAll(dir, 0755); err != nil {
-			log.Printf("Error creating directories for %s: %v", path, err)
-			outputBuffer.WriteString(fmt.Sprintf("- %s (error creating directories: %v)\n", path, err))
-			continue
-		}
+        // Create parent directories
+        dir := filepath.Dir(path)
+        if err := os.MkdirAll(dir, 0755); err != nil {
+            log.Printf("Error creating directories for %s: %v", path, err)
+            outputBuffer.WriteString(fmt.Sprintf("- %s (error creating directories: %v)\n", path, err))
+            continue
+        }
 
-		// Write the file
-		if err := ioutil.WriteFile(path, []byte(content), 0644); err != nil {
-			log.Printf("Error writing file %s: %v", path, err)
-			outputBuffer.WriteString(fmt.Sprintf("- %s (error writing file: %v)\n", path, err))
-			continue
-		}
+        // Write the file
+        if err := ioutil.WriteFile(path, []byte(content), 0644); err != nil {
+            log.Printf("Error writing file %s: %v", path, err)
+            outputBuffer.WriteString(fmt.Sprintf("- %s (error writing file: %v)\n", path, err))
+            continue
+        }
 
-		outputBuffer.WriteString(fmt.Sprintf("- Created %s\n", path))
-		filesWritten++
-	}
+        outputBuffer.WriteString(fmt.Sprintf("- Created %s\n", path))
+        filesWritten++
+    }
 
-	if outputBuffer.Len() > 0 {
-		fmt.Print(outputBuffer.String())
-	}
-
-	log.Printf("New files processing complete - %d written, %d skipped", filesWritten, filesSkipped)
-	return nil
+    outputBuffer.WriteString(fmt.Sprintf("\nNew files processing complete - %d written, %d skipped\n", filesWritten, filesSkipped))
+    return outputBuffer.String(), nil
 }

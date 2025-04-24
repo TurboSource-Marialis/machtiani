@@ -131,7 +131,19 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
 		}
 
 
-		// Add a separator after writing/applying patches only if not answer-only
+		// New section for writing new files
+		utils.PrintIfNotAnswerOnly(isAnswerOnlyMode, "%s", createSeparator("Writing New Files"))
+
+		// Call the modified WriteNewFiles function and print its output
+		output, err := result.WriteNewFiles()
+		if output != "" {
+			utils.PrintIfNotAnswerOnly(isAnswerOnlyMode, "%s", output)
+		}
+		if err != nil {
+			utils.LogErrorIfNotAnswerOnly(isAnswerOnlyMode, err, "Error writing new files")
+		}
+
+		// Add a separator after writing/applying patches and new files
 		utils.PrintIfNotAnswerOnly(isAnswerOnlyMode, "%s", createSeparator(""))
 	}
 
