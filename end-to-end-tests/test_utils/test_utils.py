@@ -361,8 +361,8 @@ def append_future_features_to_chat_file(base_directory):
     # Get the list of files in the directory
     files = [f for f in os.listdir(chat_directory) if os.path.isfile(os.path.join(chat_directory, f))]
 
-    if len(files) != 1:
-        raise FileNotFoundError(f"There should be exactly one file in {chat_directory}, found {len(files)} files.")
+    if len(files) != 2:
+        raise FileNotFoundError(f"There should be exactly 2 files in {chat_directory}, found {len(files)} files.")
 
     chat_file = files[0]
 

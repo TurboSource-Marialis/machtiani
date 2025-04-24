@@ -260,7 +260,7 @@ class BaseTestEndToEnd:
         wait_for_status_complete(status_command, self.directory) # Uses updated command
         time.sleep(3)
 
-        command = 'mct  "what does the readme say?" --force --mode chat' # Changed command
+        command = 'mct  "what does the readme say? does it say anything other than chastler? " --force --mode chat' # Changed command
         stdout_mct, stderr_mct = run_mct_command(command, self.directory) # Use renamed function
         stdout_normalized = clean_output(stdout_mct)
 
