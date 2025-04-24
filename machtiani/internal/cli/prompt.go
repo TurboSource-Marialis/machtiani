@@ -152,25 +152,25 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
 	rawResponse := result.RawResponse
 	retrievedFilePaths := result.RetrievedFilePaths
 
-	// Determine the filename to save the response
-	filename := path.Base(*fileFlag)
 
-	// Strip all extensions from the filename
-	for ext := path.Ext(filename); ext != ""; ext = path.Ext(filename) {
-		filename = strings.TrimSuffix(filename, ext)
-	}
+	// In answer-only mode, we don't need to generate any filename
+	var filename string
+	if !isAnswerOnlyMode {
+		// Determine the filename to save the response
+		filename = path.Base(*fileFlag)
 
-	// Generate a filename if necessary
+		// Strip all extensions from the filename
+		for ext := path.Ext(filename); ext != ""; ext = path.Ext(filename) {
+			filename = strings.TrimSuffix(filename, ext)
+		}
 
-	// Generate a filename if necessary
-	if filename == "" || filename == "." {
-		filename, err = generateFilename(prompt, config.Environment.ModelAPIKey, config.Environment.ModelBaseURL)
-		if err != nil {
-
-			if !isAnswerOnlyMode {
-				log.Printf("Warning: Error generating filename: %v. Using default.", err) // Log warning instead of fatal
+		// Generate a filename if necessary
+		if filename == "" || filename == "." {
+			filename, err = generateFilename(prompt, config.Environment.ModelAPIKey, config.Environment.ModelBaseURL)
+			if err != nil {
+				log.Printf("Warning: Error generating filename: %v. Using default.", err)
+				filename = "machtiani-response"
 			}
-			filename = "machtiani-response"                                          // Provide a default filename
 		}
 	}
 
@@ -188,35 +188,26 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
 
 
 func handleAPIResponse(prompt, openaiResponse string, retrievedFilePaths []string, filename, fileFlag string, isAnswerOnlyMode bool) {
-	// Save the response to the markdown file with the provided filename
-	// For answer-only mode, don't modify the output formatting
-	var finalContent string
-	if isAnswerOnlyMode {
-		// In answer-only mode, use the raw response without adding headers
-		finalContent = openaiResponse
-	} else {
-		// In other modes, use the existing markdown structure
-		finalContent = openaiResponse
-	}
+    // In answer-only mode, just print the raw response without any file operations
+    if isAnswerOnlyMode {
+        fmt.Print(openaiResponse)
+        return
+    }
 
-	tempFile, err := utils.CreateTempMarkdownFile(finalContent, filename)
-	if err != nil {
-		// Log error but don't necessarily stop the whole application
-		if !isAnswerOnlyMode {
-			log.Printf("Error creating markdown file '%s': %v", filename+".md", err)
-			// Optionally print the response to stdout as a fallback?
-			fmt.Println("\n--- Start Fallback Response Output ---")
-		}
-		fmt.Println(finalContent)
-		if !isAnswerOnlyMode {
-			fmt.Println("--- End Fallback Response Output ---")
-		}
-		return
-	}
+    // For other modes, continue with file creation and structured output
+    var finalContent string
+    finalContent = openaiResponse
 
-	if !isAnswerOnlyMode {
-		fmt.Printf("Response saved to %s\n", tempFile)
-	}
+    tempFile, err := utils.CreateTempMarkdownFile(finalContent, filename)
+    if err != nil {
+        log.Printf("Error creating markdown file '%s': %v", filename+".md", err)
+        fmt.Println("\n--- Start Fallback Response Output ---")
+        fmt.Println(finalContent)
+        fmt.Println("--- End Fallback Response Output ---")
+        return
+    }
+
+    fmt.Printf("Response saved to %s\n", tempFile)
 }
 
 
