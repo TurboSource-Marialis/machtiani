@@ -134,8 +134,9 @@ func AddRepository(codeURL, name string, apiKey *string, openAIAPIKey, repoManag
 	}
 	req.Header.Set(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE)
 
+
 	client := &http.Client{
-		Timeout: 20 * time.Minute,
+		Timeout: 60 * time.Minute, // Increased to 60 minutes
 	}
 	resp, err := client.Do(req) // Use the client to execute the request
 	if err != nil {
@@ -210,8 +211,9 @@ func FetchAndCheckoutBranch(codeURL, name, branchName string, apiKey *string, op
 	}
 	req.Header.Set(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE)
 
+
 	client := &http.Client{
-		Timeout: 20 * time.Minute,
+		Timeout: 60 * time.Minute, // Increased to 60 minutes
 	}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -283,8 +285,9 @@ func DeleteStore(projectName string, codehostURL string, vcsType string, apiKey 
 		}
 		req.Header.Set(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE)
 
+
 		client := &http.Client{
-			Timeout: 20 * time.Minute,
+			Timeout: 60 * time.Minute, // Increased to 60 minutes
 		}
 		resp, err := client.Do(req)
 		if err != nil {
@@ -401,8 +404,9 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 	req.Header.Set(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE)
 
 	// Create a new HTTP client with a timeout
+
 	client := &http.Client{
-		Timeout: 20 * time.Minute,
+		Timeout: 60 * time.Minute, // Increased to 60 minutes
 	}
 
 	resp, err := client.Do(req)
@@ -769,7 +773,8 @@ func getTokenCount(endpoint string, buffer *bytes.Buffer) (int, int, error) {
 		req.Header.Set(API_GATEWAY_HOST_KEY, config.Environment.APIGatewayHostValue)
 	}
 
-	client := &http.Client{Timeout: 20 * time.Minute}
+
+	client := &http.Client{Timeout: 60 * time.Minute} // Increased to 60 minutes
 	response, err := client.Do(req)
 	if err != nil {
 		return 0, 0, fmt.Errorf("error sending request to token count endpoint: %w", err)
@@ -823,7 +828,8 @@ func CheckStatus(codehostURL string) (StatusResponse, error) {
 	}
 	req.Header.Set(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE)
 
-	client := &http.Client{Timeout: 20 * time.Minute}
+
+	client := &http.Client{Timeout: 60 * time.Minute} // Increased to 60 minutes
 	resp, err := client.Do(req)
 	if err != nil {
 		return StatusResponse{}, fmt.Errorf("error sending request to status endpoint: %w", err)
