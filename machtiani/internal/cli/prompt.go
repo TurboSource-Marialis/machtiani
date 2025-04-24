@@ -48,6 +48,7 @@ func createSeparator(message string) string {
 	return fmt.Sprintf("\n%s\n%s\n%s\n", separator, message, separator)
 }
 
+
 func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey *string, headCommitHash string) {
 	fs := pflag.NewFlagSet("machtiani", pflag.ContinueOnError)
 	modelFlag := fs.String("model", defaultModel, "Model to use (options: gpt-4o, gpt-4o-mini)")
@@ -62,6 +63,15 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
 	err := fs.Parse(args)
 	if err != nil {
 		log.Fatalf("Error parsing flags: %v", err)
+	}
+
+
+	// Check if we're in answer-only mode early
+	isAnswerOnlyMode := *modeFlag == "answer-only"
+
+	// Suppress all logging output if mode is answer-only
+	if isAnswerOnlyMode {
+		log.SetOutput(ioutil.Discard)
 	}
 
 	// Collect non-flag arguments (the prompt)
@@ -79,10 +89,9 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
 		log.Fatal("Error: No prompt provided. Please provide either a prompt or a markdown file.")
 	}
 
-	if *verboseFlag {
+	if *verboseFlag && *modeFlag != "answer-only" {
 		printVerboseInfo(*fileFlag, *modelFlag, *matchStrengthFlag, *modeFlag, prompt)
 	}
-
 
 	// Call GenerateResponse to get the streamed response
 	result, err := api.GenerateResponse(prompt, *remoteURL, *modeFlag, *modelFlag, *matchStrengthFlag, *forceFlag, headCommitHash)
@@ -92,23 +101,31 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
 	}
 
 
+
 	// Only process patches in default mode
 	if *modeFlag == defaultMode {
-		fmt.Println(createSeparator("Writing & Applying File Patches"))
+		if !isAnswerOnlyMode {
+			fmt.Println(createSeparator("Writing & Applying File Patches"))
+		}
 
 		patchDir := filepath.Join(".machtiani", "patches")
 
 		// Get list of existing patch files BEFORE writing new ones
 		existingPatchFiles, err := filepath.Glob(filepath.Join(patchDir, "*.patch"))
 		if err != nil {
-			// Log warning but continue, ApplyGitPatches might still work or log its own error
-			log.Printf("Warning: Error finding existing patch files: %v", err)
-			existingPatchFiles = []string{} // If error, assume no existing files
+
+			if !isAnswerOnlyMode {
+				log.Printf("Warning: Error finding existing patch files: %v", err)
+			}
+			existingPatchFiles = []string{}
 		}
 
 		// Write the new patch files (this part remains here)
 		if err := result.WritePatchToFile(); err != nil {
-			log.Printf("Error writing patch file(s): %v", err)
+
+			if !isAnswerOnlyMode {
+				log.Printf("Error writing patch file(s): %v", err)
+			}
 			// Decide if we should proceed to apply patches even if writing failed?
 			// Let's assume if writing failed, there are no *new* patches to apply.
 		} else {
@@ -116,14 +133,19 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
 			// Call the function from git_utils to apply the patches
 			err = git.ApplyGitPatches(patchDir, existingPatchFiles)
 			if err != nil {
-				// This error would likely be from filepath.Glob inside ApplyGitPatches
-				log.Printf("Error during patch application process: %v", err)
+
+				if !isAnswerOnlyMode {
+					log.Printf("Error during patch application process: %v", err)
+				}
 			}
 			// --- END REFACTOR ---
 		}
 
-		// Add a separator after writing/applying patches
-		fmt.Println(createSeparator(""))
+
+		// Add a separator after writing/applying patches only if not answer-only
+		if !isAnswerOnlyMode {
+			fmt.Println(createSeparator(""))
+		}
 	}
 
 	// Collect the final OpenAI response for further processing if needed
@@ -144,48 +166,47 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
 	if filename == "" || filename == "." {
 		filename, err = generateFilename(prompt, config.Environment.ModelAPIKey, config.Environment.ModelBaseURL)
 		if err != nil {
-			log.Printf("Warning: Error generating filename: %v. Using default.", err) // Log warning instead of fatal
+
+			if !isAnswerOnlyMode {
+				log.Printf("Warning: Error generating filename: %v. Using default.", err) // Log warning instead of fatal
+			}
 			filename = "machtiani-response"                                          // Provide a default filename
 		}
 	}
 
-	fmt.Println(createSeparator("Saving Chat Response"))
 
-	// Handle the final API response with structured data
-	handleAPIResponse(prompt, rawResponse, retrievedFilePaths, filename, *fileFlag)
-}
-
-func handleAPIResponse(prompt, openaiResponse string, retrievedFilePaths []string, filename, fileFlag string) {
-	// Create markdown content with the prompt, OpenAI response, and retrieved file paths
-	//markdownContent := createMarkdownContent(prompt, openaiResponse, retrievedFilePaths, fileFlag)
-
-	// Render the markdown content (assuming renderMarkdown handles the display)
-	//renderMarkdown(markdownContent)
-
-
-	// Save the response to the markdown file with the provided filename
-	tempFile, err := utils.CreateTempMarkdownFile(openaiResponse, filename) // Pass the filename
-	if err != nil {
-		// Log error but don't necessarily stop the whole application
-		log.Printf("Error creating markdown file '%s': %v", filename+".md", err)
-		// Optionally print the response to stdout as a fallback?
-		fmt.Println("\n--- Start Fallback Response Output ---")
-		fmt.Println(openaiResponse)
-		fmt.Println("--- End Fallback Response Output ---")
-		return // Stop further processing in this function if save failed
+	if !isAnswerOnlyMode {
+		fmt.Println(createSeparator("Saving Chat Response"))
 	}
 
-	fmt.Printf("Response saved to %s\n", tempFile)
 
-	// Optionally, handle retrieved file paths further if needed
-	//if len(retrievedFilePaths) > 0 {
-	//    log.Println("Retrieved File Paths:")
-	//    for _, path := range retrievedFilePaths {
-	//        log.Println(path)
-	//    }
-	//} else {
-	//    log.Println("No file paths were retrieved.")
-	//}
+	// Handle the final API response with structured data, passing the isAnswerOnlyMode flag
+	handleAPIResponse(prompt, rawResponse, retrievedFilePaths, filename, *fileFlag, isAnswerOnlyMode)
+}
+
+
+
+func handleAPIResponse(prompt, openaiResponse string, retrievedFilePaths []string, filename, fileFlag string, isAnswerOnlyMode bool) {
+	// Save the response to the markdown file with the provided filename
+	tempFile, err := utils.CreateTempMarkdownFile(openaiResponse, filename)
+	if err != nil {
+		// Log error but don't necessarily stop the whole application
+
+		if !isAnswerOnlyMode {
+			log.Printf("Error creating markdown file '%s': %v", filename+".md", err)
+			// Optionally print the response to stdout as a fallback?
+			fmt.Println("\n--- Start Fallback Response Output ---")
+		}
+		fmt.Println(openaiResponse)
+		if !isAnswerOnlyMode {
+			fmt.Println("--- End Fallback Response Output ---")
+		}
+		return
+	}
+
+	if !isAnswerOnlyMode {
+		fmt.Printf("Response saved to %s\n", tempFile)
+	}
 }
 
 

@@ -349,6 +349,7 @@ func init() {
 	})
 }
 
+
 func GenerateResponse(prompt, project, mode, model, matchStrength string, force bool, headCommitHash string) (*GenerateResponseResult, error) {
 	config, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
 	if err != nil {
@@ -427,6 +428,7 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 	var answerOnlyBuffer strings.Builder // Buffer for answer-only mode
 
 	updateContentResponse := make(map[string]UpdateFileContent)
+
 
 	// Check if we're in answer-only mode
 	answerOnlyMode := mode == "answer-only"
@@ -682,6 +684,7 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 			}
 		}
 	}
+
 
 	// If in answer-only mode, output the accumulated content now
 	if answerOnlyMode {
