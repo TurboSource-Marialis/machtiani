@@ -780,7 +780,7 @@ class BaseTestEndToEnd:
         time.sleep(3)
 
         # Run command without --mode chat flag to trigger file changes
-        command = 'mct "Add a comment to the README explaining the project is a video processing library. And add a short and concise contributor guide as a separate file."'
+        command = 'mct "Add a comment to the README explaining the project is a video processing library. And add a short and concise contributor guide as a separate file." --model gpt-4.1'
         stdout_mct, stderr_mct = run_mct_command(command, self.directory)
 
         # Poll for "Response saved" message and file changes
