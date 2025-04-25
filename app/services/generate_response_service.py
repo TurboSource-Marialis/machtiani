@@ -103,6 +103,7 @@ async def generate_response(
                 combined_prompt = prompt
                 retrieved_file_paths = []
             else:
+
                 infer_params = {
                     "prompt": prompt,
                     "project": project,
@@ -112,6 +113,7 @@ async def generate_response(
                     "llm_model_api_key": llm_model_api_key,
                     "llm_model_base_url": str(llm_model_base_url),
                     "embeddings_model_api_key": llm_model_api_key, # We will change it to refer to embedding_model_api_key
+                    "embeddings_model": "all-MiniLM-L6-v2",
                     "ignore_files": ignore_files,
                     "head": head_commit_hash,
                 }
