@@ -71,7 +71,15 @@ def separate_file_paths_by_type(file_search_responses: List[FileSearchResponse])
 
     return commit_file_paths, file_file_paths, localization_file_paths
 
+
 async def count_tokens(text: str) -> int:
+    """Estimate the number of tokens in a text string."""
+    if not text:
+        return 0
+
+    # Simplified method: count characters and divide by average token size
+    # This is a very rough approximation and will not be as accurate as a proper tokenizer
+    # Average English token is about 4-5 characters
     return len(text) // 4 + 1
 
 
