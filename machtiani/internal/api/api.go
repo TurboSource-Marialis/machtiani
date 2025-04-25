@@ -134,7 +134,6 @@ func AddRepository(codeURL, name string, apiKey *string, openAIAPIKey, repoManag
 	}
 	req.Header.Set(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE)
 
-
 	client := &http.Client{
 		Timeout: 60 * time.Minute, // Increased to 60 minutes
 	}
@@ -211,7 +210,6 @@ func FetchAndCheckoutBranch(codeURL, name, branchName string, apiKey *string, op
 	}
 	req.Header.Set(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE)
 
-
 	client := &http.Client{
 		Timeout: 60 * time.Minute, // Increased to 60 minutes
 	}
@@ -285,7 +283,6 @@ func DeleteStore(projectName string, codehostURL string, vcsType string, apiKey 
 		}
 		req.Header.Set(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE)
 
-
 		client := &http.Client{
 			Timeout: 60 * time.Minute, // Increased to 60 minutes
 		}
@@ -344,14 +341,14 @@ func init() {
 	rendererOnce.Do(func() {
 		renderer, rendererErr = glamour.NewTermRenderer(
 			glamour.WithAutoStyle(),
-			glamour.WithWordWrap(120),
+			//glamour.WithWordWrap(100),        // Reduce width slightly for better readability
+			glamour.WithPreservedNewLines(), // This helps with preserving intentional line breaks
 		)
 		if rendererErr != nil {
 			log.Fatalf("Error creating renderer: %v", rendererErr)
 		}
 	})
 }
-
 
 func GenerateResponse(prompt, project, mode, model, matchStrength string, force bool, headCommitHash string) (*GenerateResponseResult, error) {
 	config, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
@@ -426,13 +423,12 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 	var completeResponse strings.Builder
 	var rawResponse strings.Builder // Initialize rawResponse
 	var retrievedFilePaths []string
-	var tokenBuffer bytes.Buffer     // Buffer to accumulate tokens
-	var inCodeBlock bool             // Track if we're inside a code block
-	var codeBlockBuffer bytes.Buffer // Buffer to accumulate code block content
+	var tokenBuffer bytes.Buffer         // Buffer to accumulate tokens
+	var inCodeBlock bool                 // Track if we're inside a code block
+	var codeBlockBuffer bytes.Buffer     // Buffer to accumulate code block content
 	var answerOnlyBuffer strings.Builder // Buffer for answer-only mode
 
 	updateContentResponse := make(map[string]UpdateFileContent)
-
 
 	// Check if we're in answer-only mode
 	answerOnlyMode := mode == "answer-only"
@@ -440,7 +436,6 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 
 	// Use a JSON decoder to read multiple JSON objects from the response stream
 	decoder := json.NewDecoder(resp.Body)
-
 
 	// Check if we're in answer-only mode
 	var header string
@@ -696,7 +691,6 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 		}
 	}
 
-
 	// If in answer-only mode, output the accumulated content now
 	if answerOnlyMode {
 		fmt.Println(answerOnlyBuffer.String())
@@ -717,7 +711,6 @@ func GenerateResponse(prompt, project, mode, model, matchStrength string, force 
 	// if err := result.WritePatchToFile(); err != nil {
 	//	log.Printf("Error writing patch files for updated files: %v", err)
 	// }
-
 
 	// ADD THIS NEW CODE: Write patch files for new files
 	_, err = result.WriteNewFiles()
@@ -775,7 +768,6 @@ func getTokenCount(endpoint string, buffer *bytes.Buffer) (int, int, error) {
 		req.Header.Set(API_GATEWAY_HOST_KEY, config.Environment.APIGatewayHostValue)
 	}
 
-
 	client := &http.Client{Timeout: 60 * time.Minute} // Increased to 60 minutes
 	response, err := client.Do(req)
 	if err != nil {
@@ -829,7 +821,6 @@ func CheckStatus(codehostURL string) (StatusResponse, error) {
 		req.Header.Set(API_GATEWAY_HOST_KEY, config.Environment.APIGatewayHostValue)
 	}
 	req.Header.Set(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE)
-
 
 	client := &http.Client{Timeout: 60 * time.Minute} // Increased to 60 minutes
 	resp, err := client.Do(req)
@@ -1025,68 +1016,67 @@ func (s *SpinnerController) Stop() {
 	}
 }
 
-
 // WriteNewFiles creates new files with provided content if they don't already exist
 func (res *GenerateResponseResult) WriteNewFiles() (string, error) {
-    var outputBuffer bytes.Buffer
-    var filesWritten int
-    var filesSkipped int
+	var outputBuffer bytes.Buffer
+	var filesWritten int
+	var filesSkipped int
 
-    if res.NewFiles == nil {
-        outputBuffer.WriteString("No new files data available - skipping\n")
-        return outputBuffer.String(), nil
-    }
+	if res.NewFiles == nil {
+		outputBuffer.WriteString("No new files data available - skipping\n")
+		return outputBuffer.String(), nil
+	}
 
-    if len(res.NewFiles.NewContent) == 0 {
-        outputBuffer.WriteString("New files content is empty - nothing to write\n")
-        return outputBuffer.String(), nil
-    }
+	if len(res.NewFiles.NewContent) == 0 {
+		outputBuffer.WriteString("New files content is empty - nothing to write\n")
+		return outputBuffer.String(), nil
+	}
 
-    // Ensure spinner is stopped if it exists (might be nil in answer-only mode)
-    if res.spinner != nil {
-        res.spinner.Stop()
-    }
+	// Ensure spinner is stopped if it exists (might be nil in answer-only mode)
+	if res.spinner != nil {
+		res.spinner.Stop()
+	}
 
-    outputBuffer.WriteString(fmt.Sprintf("Creating new files for %d entries\n", len(res.NewFiles.NewContent)))
+	outputBuffer.WriteString(fmt.Sprintf("Creating new files for %d entries\n", len(res.NewFiles.NewContent)))
 
-    for path, content := range res.NewFiles.NewContent {
-        if strings.TrimSpace(content) == "" {
-            outputBuffer.WriteString(fmt.Sprintf("- %s (skipped - empty content)\n", path))
-            filesSkipped++
-            continue
-        }
+	for path, content := range res.NewFiles.NewContent {
+		if strings.TrimSpace(content) == "" {
+			outputBuffer.WriteString(fmt.Sprintf("- %s (skipped - empty content)\n", path))
+			filesSkipped++
+			continue
+		}
 
-        // Check if the file exists in the filesystem
-        if _, err := os.Stat(path); err == nil {
-            outputBuffer.WriteString(fmt.Sprintf("- %s (skipped - file already exists)\n", path))
-            filesSkipped++
-            continue
-        } else if !os.IsNotExist(err) {
-            // Some other error checking the file
-            log.Printf("Error checking file %s: %v", path, err)
-            outputBuffer.WriteString(fmt.Sprintf("- %s (error checking existence: %v)\n", path, err))
-            continue
-        }
+		// Check if the file exists in the filesystem
+		if _, err := os.Stat(path); err == nil {
+			outputBuffer.WriteString(fmt.Sprintf("- %s (skipped - file already exists)\n", path))
+			filesSkipped++
+			continue
+		} else if !os.IsNotExist(err) {
+			// Some other error checking the file
+			log.Printf("Error checking file %s: %v", path, err)
+			outputBuffer.WriteString(fmt.Sprintf("- %s (error checking existence: %v)\n", path, err))
+			continue
+		}
 
-        // Create parent directories
-        dir := filepath.Dir(path)
-        if err := os.MkdirAll(dir, 0755); err != nil {
-            log.Printf("Error creating directories for %s: %v", path, err)
-            outputBuffer.WriteString(fmt.Sprintf("- %s (error creating directories: %v)\n", path, err))
-            continue
-        }
+		// Create parent directories
+		dir := filepath.Dir(path)
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			log.Printf("Error creating directories for %s: %v", path, err)
+			outputBuffer.WriteString(fmt.Sprintf("- %s (error creating directories: %v)\n", path, err))
+			continue
+		}
 
-        // Write the file
-        if err := ioutil.WriteFile(path, []byte(content), 0644); err != nil {
-            log.Printf("Error writing file %s: %v", path, err)
-            outputBuffer.WriteString(fmt.Sprintf("- %s (error writing file: %v)\n", path, err))
-            continue
-        }
+		// Write the file
+		if err := ioutil.WriteFile(path, []byte(content), 0644); err != nil {
+			log.Printf("Error writing file %s: %v", path, err)
+			outputBuffer.WriteString(fmt.Sprintf("- %s (error writing file: %v)\n", path, err))
+			continue
+		}
 
-        outputBuffer.WriteString(fmt.Sprintf("- Created %s\n", path))
-        filesWritten++
-    }
+		outputBuffer.WriteString(fmt.Sprintf("- Created %s\n", path))
+		filesWritten++
+	}
 
-    outputBuffer.WriteString(fmt.Sprintf("\nNew files processing complete - %d written, %d skipped\n", filesWritten, filesSkipped))
-    return outputBuffer.String(), nil
+	outputBuffer.WriteString(fmt.Sprintf("\nNew files processing complete - %d written, %d skipped\n", filesWritten, filesSkipped))
+	return outputBuffer.String(), nil
 }
