@@ -1,49 +1,116 @@
-```
 # machtiani
 
-**Machtiani** is an experimental command-line interface and local service to chat with git projects, even if it has thousands of files and commits. It understands your git-history and your files to get the right answer.
+**Machtiani (mct)** is an experimental terminal based, locally ran code chat service. It's designed to work with real projects. Thousands of commits. Thousands of files. It rewards developer experience, but doesn't punish inexperience either.
 
-It can be used as your daily driver or alongside other agents. It's for freedom, not to lock you in or to do so slowly overtime.
+So why vibe when you can fly?
 
- - [ x ] Open source with first-in-class capabilities for chatting and working with existing, complex, projects and not just new ones.
+- Unrivaled at finding the right answer based on precise context out of thousands of files in a project.
 
- - [ x ] Work offs the terminal, without locking you into a chat specific terminal or IDE replacement.
+- Choose any API provider that adheres to OpenAI API spec, including locally ran ollama or mxl-lm.
 
- - [ x ] Chat that understands the context of your project and files.
-
- - [ x ] Your chat history and index data are stored locally.
-
- - [ x ] Optionally will apply suggested changes and create new files.
-
- - [ x ] Works with any model on open-router.
-
- - [ x ] Rewards developer experience and talent - the more thoughtful and well-organized the commit history, the more powerful it is.
-
- - [ x ] Forgiving towards inexperienced developers - it will construct a parallel git-history, so that there is a baseline level of performance.
-
-         (It won't modify or mess with your git history or git, so don't worry. All the extra git data is stored in the local service separetely).
+- Stands on own, but composes in the terminal with other command line tools, such Claude Code or Codex.
 
 
-For most use cases, we believe machtiani in our experience is better than closed source AI coding tools. With your support, we can implement the next iteration that will be drastically better and faster.
+***But Codex can be directed to run tests, execute code, etc, which is very complimentary. You could have it also run `mct`, all together.***
 
-## Limitations
+## Quick Launch
 
-- Requires OpenAI for embeddings - you can still select OpenRouter and any of its models for prompts.
-- The project must exist on a git codehost (e.g. Github), but it's cross platform and all for Codeberg, etc.
-- The largest project we tried was 4000 commits and 4000 files in git - we want these numbers to grow, rapidly.
-- File editing can be slow and janky at times - we have a path to drastically improve. You can disable auto edits with `--chat mode` flag.
+1. Clone this project.
+
+   ```bash
+   git clone --recurse-submodules https://github.com/TurboSource-Marialis/machtiani
+   ```
+
+2. Install `mct`
+
+   ```bash
+   cd mct
+   go install \
+     -ldflags="$(go run ./generate_ldflags)" \
+     ./cmd/mct
+   cd -
+   ```
+
+   If you're curious, `-ldflags` runs `mct/generate_ldflags/main.go` to set the version (git OID) so that `mct` can let you know if you're using an incompatible version of the local chat service.
+
+
+3. Launch the local chat service.
+
+   Make sure n machtiani project root directory where `docker-compose.yml` resides.
+
+   ```bash
+   docker-compose up --build --remove-orphans
+   ```
+
+4. Set your OpenAI api key and base url.
+
+   ```
+   export MODEL_BASE_URL="https://api.openai.com/v1"
+   export OPENAI_API_KEY=sk...
+   ```
+
+   If you're using another API provider, for example OpenRouter.
+
+   ```
+   export MODEL_BASE_URL="https://openrouter.ai/api/v1"
+   export MODEL_API_KEY=sk...
+   ```
+
+   If the git remote url (e.g. on Github) of the project you intend to use `mct` with is private (i.e., requires password or api key).
+
+   ```
+   export CODE_HOST_API_KEY=ghp...
+   ```
+
+   This works for any codehost, so it's not locked into Github.
+
+5. Put a project on machtiani.
+
+   In a git project you want to work on, run
+
+   ```bash
+   mct sync
+   ```
+
+   Give it time to finish. Run `mct status` to check back if completed.
+
+6. Chat with the project
+
+
+   ```bash
+
+    mct "Ask whatever you want here"
+    ```
+
+7. Sync any new commits you pushed to your remote `origin`.
+
+   ```bash
+   mct sync
+   ```
+
+   Any local git commits must be pushed to the git remote for `mct` to sync it.
+
+`mct` stands on its own, and is generally more performant based on direct experience on the vast majority of real world problems than with mainstream agents today. But we can go further together. We believe mct + Codex combo exceeds anything you ever tried.
+
+ No 'yolo'. mct agentic ability is constrained to:
+
+ - applying git patches
+
+ - reading files checked into git
+
+ - saving chat convos and patch history to `.machtiani/`
 
 ## How it Works
 
-Let's sync the [insert project].
+Let's sync the commits [insert project]. You must do this whether you have one initial commit or 1,000 commits in history (or more). It will make some inference requests, then **locally** generate and save some embeddings (cpu + 8GB RAM is just fine).
 
 [ insert short screencast ]
 
-```
-$ mct sync
-```
+``` $ mct sync ```
 
-Let's ask how do it [insert prompt] on the [insert project].
+Initial sync of a fresh project to mct of a few hundred commits will take a couple minutes and cost few pennies (default is 4o-mini). But once it's done it's done. It saves the data locally.
+
+***Time and cost is practically nothing on incremental syncs on new commits.*** You can sync as many commits as needed (thousands upon thousands).
 
 [ insert short screencast ]
 
@@ -51,164 +118,63 @@ Let's ask how do it [insert prompt] on the [insert project].
 $ mct [prompt]
 ```
 
-## Comparison to Claude Code, Codex, and Augment Code
+It will apply code changes, if applicable. If it's not in git, **it doesn't exist**. Just remember that. So if you want to agentically run tests, or some other follow up workflow, use Codex. Codex can also more easily investigate '90% there' or run tests on a slam-dunk by mct, then trying itself from scratch (expensive and gets confused when it gets more complicated).
 
-undici
+Now you can choose any model. If you have OpenRouter, you can use any openrouter model. Otherwise, plug in whatever your provider offers and it complies with OpenAI API format.
 
-[ insert video of side by side comparison of results on identical prompts]
+```
+$ mct [prompt] --model deepseek/deepseek-r1
+```
 
-## Machtiani vs Other Code Assistants (Code Generation Comparison)
+Also, you can choose for it not to edit or create new files based on the conversation.
 
-See how Machtiani performs on a coding task compared to other popular code assistants in a split-screen video demonstration. This comparison highlights differences in approach, context utilization, and the quality of generated code when working with a codebase.
+```
+$ mct [prompt] --mode chat
+```
 
-The video shows Machtiani receiving the same prompt alongside:
-- Augment Code
-- Claude Code
-- OpenAI Codex
+## FYI
 
-**[Insert your split-screen comparison video embed or link here]**
-*(Video showing the same coding task being attempted by Machtiani and the other tools simultaneously)*
+If we do `mct sync` with `amplify` flag, it will drastically increase the accuracy. This is a bail out if your commit history is poor and not well organized, but it costs more. Or if you want to guaranteee absolute peak performance.
 
-## Todo
+```
+$ mct sync --amplify low
+```
 
-- [ ] Get it to work on any git-line codehost.
-- [ ] Increase store and sync speed by an order of magnitude (so even bigger, and bigger projects).
-- [ ] Increase response time by an order of magnitue.
-- [ ] Web retrieval.
+`sync --amplify low` is about 2 times more costly and somewhat slower.
 
+For example, say we have 15,000 commits. With low amplification, that would be about $0.50 with 4o-mini (default).
 
-## Quick Launch
+But we could instead
 
-1. Clone this project.
+```
+mct sync --amplify high --depth 5000
+```
 
-   ```bash
-   git clone --recurse-submodules <repo-url>.git machtiani
-   ```
+And that would only sync the most 5000 commits.
 
-2. Create a `~/.machtiani-config.yml`.
+But let's scratch that for a sec and say we want all the commits available to machtiani. We could sync 9,999 of the oldest to newest.
 
-   ```yaml
-   environment:
-     MODEL_API_KEY: "your_openapi_api_key"
-   ```
+```
+git checkout HEAD~5000
+mct sync
+```
 
-   If you want to work with private repos you have access to, add `CODE_HOST_API_KEY`.
+Then to sync the most recent 5001 commits
 
-   ```yaml
-   environment:
-     MODEL_API_KEY: "your_openapi_api_key"
-     CODE_HOST_API_KEY: "your_github_key"
-   ```
+```
+git checkout master
+mct sync --amplify low
+```
 
-   You can override the global config per project by placing a `.machtiani-config.yml` into your git project's root directory.
+That way we have full coverage.
 
-3. Install `mct`
+## Peak Performance
 
-   ```bash
-   go install \
-      -ldflags="$(go run github.com/turboSource-marialis/machtiani/mct/generate_ldflags@latest)" \
-      github.com/turboSource-marialis/machtiani/mct/cmd/mct@latest
-   ```
+`sync --amplify high` is about **20 times more costly and 5 times slower**, compared to only **2 times** the cost and somewhat slower with `low`.
 
-   If curious, `-ldflags` runs `mct/generate_ldflags/main.go` to set the version (git OID) so that `mct` can let you know if you're using an incompatible version.
+So it's always a good option for incremental syncs and will make sure you have peak performance going forward, or if you're not terribly cost sensitive for initial syncs.
 
-
-   Or if you want to build from your git cloned copy of machtiani.
-
-   ```bash
-   cd machtiani/mct
-   go install \
-     -ldflags="$(go run ./generate_ldflags)" \
-     ./cmd/mct
-   ```
-
-4. Launch the application.
-
-   In the machtiani project root directory.
-
-   ```bash
-   docker-compose up --build --remove-orphans
-   ```
-
-   Or
-
-   ```
-   docker build \
-     -t machtiani:latest \
-     -f Dockerfile \
-     .
-
-   docker build \
-     -t commit-file-retrieval:latest \
-     -f ./machtiani-commit-file-retrieval/Dockerfile \
-     ./machtiani-commit-file-retrieval
-
-   docker network create machtiani-network
-   docker volume create commit_file_retrieval
-
-
-   docker run -d \
-     --name machtiani \
-     --network machtiani-network \
-     --memory 500m \
-     --add-host host.docker.internal:host-gateway \
-     -p 5071:5071 \
-     -v "$(pwd)":/app \
-     -v "$(pwd)/data":/data \
-     -e PYTHONUNBUFFERED=1 \
-     -e LOG_LEVEL=INFO \
-     -e MLX_SERVER_URL="http://host.docker.internal:8080" \
-     machtiani:latest \
-     poetry run uvicorn app.main:app \
-       --host 0.0.0.0 --port 5071 --reload
-
-   docker run -d \
-     --name commit-file-retrieval \
-     --network machtiani-network \
-     --memory 750m \
-     --add-host host.docker.internal:host-gateway \
-     -p 5070:5070 \
-     -v "$(pwd)/machtiani-commit-file-retrieval:/app" \
-     -v commit_file_retrieval:/data \
-     -e PYTHONUNBUFFERED=1 \
-     -e LOG_LEVEL=INFO \
-     -e MLX_SERVER_URL="http://host.docker.internal:8080" \
-     commit-file-retrieval:latest \
-     poetry run uvicorn app.main:app \
-       --host 0.0.0.0 --port 5070 --reload
-   ```
-
-5. Put a project on machtiani.
-
-  ```bash
-
-
-  mct sync
-  ```
-
-  Replace master with main, if that is the default branch.
-
-6. Chat with the project
-
-
-  ```bash
-
-   mct "Ask whatever you want here"
-   ```
-
-7. Sync any new commits you pushed to your remote `origin` on Github.
-
-  ```bash
-
-
-  mct sync
-  ```
-
-  Replace master with main, if that is the default branch.
-
-  If you have local changes in you git that aren't pushed to Github, machtiani won't find changes to sync.
-
-## Go CLI Usage
+## mct CLI Usage
 
 ### Overview
 
@@ -255,56 +221,47 @@ mct [flags] [prompt]
 
    ```bash
 
-   mct git-store --force
+   mct sync --force
    ```
 
 ### Different Modes
 
 In `commit` mode, it searches commits for possible files to help answer the prompt. In `pure-chat` mode, it does not retrieve any files.
 
-#### `git-store`
+#### `sync`
 
-The `git-store` command allows you to add a repository to the Machtiani system.
-
-**Usage:**
-```bash
-
-mct git-store --remote <remote_name> [--force]
-```
-
-**Example:**
-```bash
-mct git-store --force
-```
-
-#### `git-sync`
-
-The `git-sync` command is used to fetch and checkout a specific branch of the repository.
+The `sync` command is used to fetch and checkout a specific branch of the repository.
 
 **Usage:**
 ```bash
 
-mct git-sync --remote <remote_name> [--force]
+mct sync [--force] [--cost-only]
 ```
 
 **Example:**
 ```bash
-mct git-sync --force
+mct sync --force
 ```
 
-### `git-delete`
+If you just want to estimate how many tokens it will require to sync.
 
-The `git-delete` command allows you to remove a repository from the Machtiani system.
+```bash
+mct sync --cost-only
+```
+
+### `remove`
+
+The `remove` command allows you to remove a repository from the Machtiani system.
 
 **Usage:**
 ```bash
 
-mct git-delete --remote <remote_name> [--force]
+mct remove [--force]
 ```
 
 **Example:**
 ```bash
-mct git-delete --remote origin --force
+mct remove
 ```
 
 ### Ignoring Files with `.machtiani.ignore`
@@ -321,13 +278,6 @@ go.mod
 ### Output
 
 The CLI will stream the response and save the chat in `.machtiani/chat/` in the directory you ran the prompt. It also gives a descriptive name to the chat file for you convenience
-
-## Features
-
-
-Machtiani will let you know if you should pull latest changes so you can get the most powerful version available.
-
-It checks for any latest system messages every so often from Machtiani's codehost (currently GitHub) using the git protocol. It simply does a shallow clone of Machtiani's repo, gets the latest system message, and throws away the clone. This ensures the tool doesn't 'phone home' to external services beyond the codehost, maintaining user privacy.
 
 ## Developer Section
 
@@ -347,9 +297,9 @@ This project includes several end-to-end tests that validate the functionality o
    git lfs install
    ```
 
-Make sure to run after doing the above.
+   Make sure to run after doing the above.
 
-`git lfs install`
+   `git lfs install`
 
 2. **Create and activate a Python virtual environment in the project root:**
 
@@ -424,7 +374,4 @@ To run all tests, you can still use:
 
 ```bash
 python -m unittest discover .
-```
-
-
 ```
