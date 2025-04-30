@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     container_name: git-server
     ports:
-      - "5072:80"
+      - "80:80"
     restart: always
     volumes:
       - git-data:/srv/git
