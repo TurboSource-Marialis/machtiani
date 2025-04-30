@@ -82,9 +82,9 @@ async def generate_response(
                 raise HTTPException(status_code=403, detail="Pull access denied.")
 
             # Safely determine which API key to use
-            llm_model_base_url_to_use = llm_model_base_url_other if llm_model_base_url_other is not None else llm_model_base_url
+            llm_model_base_url_to_use = llm_model_base_url_other if llm_model_base_url_other else llm_model_base_url
 
-            llm_model_api_key_to_use = llm_model_api_key_other if llm_model_api_key_other is not None else llm_model_api_key
+            llm_model_api_key_to_use = llm_model_api_key_other if llm_model_api_key_other else llm_model_api_key
 
 
 
@@ -304,8 +304,8 @@ async def generate_response(
                             "project": project,
                             "file_path": file_path,
                             "instructions": final_response_text,
-                            "llm_model_api_key": llm_model_api_key_other,
-                            "llm_model_base_url": str(llm_model_base_url_other),
+                            "llm_model_api_key": llm_model_api_key_to_use,
+                            "llm_model_base_url": str(llm_model_base_url_to_use),
                             "model": model,
                             "ignore_files": ignore_files or []
                         }
