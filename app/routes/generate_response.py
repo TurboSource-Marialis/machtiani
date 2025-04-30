@@ -17,7 +17,7 @@ async def generate_response_route(
     project: str = Body(..., description="The project to search"),
 
     mode: str = Body(..., description="Search mode: chat, pure-chat, answer-only, or default"),
-    model: str = Body(..., description="The embedding model used"),
+    model: str = Body(..., description="The model used for inference"),
     match_strength: str = Body(..., description="The strength of the match"),
     llm_model_api_key: str = Body(..., description="API key for OpenAI model"),
     llm_model_base_url: HttpUrl = Body(..., description="LLM base url"),

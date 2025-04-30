@@ -165,7 +165,7 @@ func handlePrompt(args []string, config *utils.Config, remoteURL *string, apiKey
 
 		// Generate a filename if necessary
 		if filename == "" || filename == "." {
-			filename, err = generateFilename(prompt, config.Environment.ModelAPIKey, config.Environment.ModelBaseURL)
+			filename, err = generateFilename(prompt, *modelFlag, config.Environment.ModelAPIKey, config.Environment.ModelBaseURL)
 			if err != nil {
 				log.Printf("Warning: Error generating filename: %v. Using default.", err)
 				filename = "machtiani-response"
@@ -207,7 +207,7 @@ func handleAPIResponse(prompt, openaiResponse string, retrievedFilePaths []strin
 }
 
 
-func generateFilename(context string, llmModelApiKey string, llmModelBaseUrl string) (string, error) {
+func generateFilename(context string, llmModel string, llmModelApiKey string, llmModelBaseUrl string) (string, error) {
 	config, err := utils.LoadConfig()
 	if err != nil {
 		// Don't make this fatal within this specific function
@@ -230,6 +230,9 @@ func generateFilename(context string, llmModelApiKey string, llmModelBaseUrl str
 	params := url.Values{}
 	params.Add("context", context)
 	// Only add keys/URLs if they are actually configured/needed by the endpoint
+	if llmModel != "" {
+		params.Add("llm_model", llmModel)
+	}
 	if llmModelApiKey != "" {
 		params.Add("llm_model_api_key", llmModelApiKey)
 	}

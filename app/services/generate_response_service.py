@@ -84,19 +84,12 @@ async def generate_response(
             # Safely determine which API key to use
             llm_model_base_url_to_use = llm_model_base_url_other if llm_model_base_url_other is not None else llm_model_base_url
 
+            llm_model_api_key_to_use = llm_model_api_key_other if llm_model_api_key_other is not None else llm_model_api_key
 
-            # Only use llm_model_api_key_other if it has a valid string value
-            if llm_model_api_key_other and isinstance(llm_model_api_key_other, str) and llm_model_api_key_other.strip():
-                llm_model_api_key_to_use = llm_model_api_key_other
-                if model == 'reason':
-                    model = "deepseek-reasoner"
-            else:
-                llm_model_api_key_to_use = llm_model_api_key
-                if model == 'reason':
-                    model = "o3-mini"
 
-            # Initialize LlmModel with the selected API key
-            logger.debug(f"Using LLM model URL: {llm_model_base_url_to_use} and API key: {llm_model_api_key_to_use}")
+            logger.info(f"Using LLM model URL: {llm_model_base_url_to_use} and API key: {llm_model_base_url_to_use}")
+            logger.info(f"Using LLM model KEY: {llm_model_api_key_to_use} and API key: {llm_model_api_key_to_use}")
+
             llm_model = LlmModel(api_key=llm_model_api_key_to_use, base_url=str(llm_model_base_url_to_use), model=model)
 
             if mode == SearchMode.pure_chat:
@@ -108,11 +101,12 @@ async def generate_response(
                     "prompt": prompt,
                     "project": project,
                     "mode": mode,
-                    "model": "gpt-4o-mini", # model not actuall needed as infer uses a method of GitCommitManager where its not needed. It only needs to do embeddings.
+                    # model will be used for file localization inference, as infer uses a local hosted embedding model.
+                    "model": model,
                     "match_strength": match_strength,
-                    "llm_model_api_key": llm_model_api_key,
-                    "llm_model_base_url": str(llm_model_base_url),
-                    "embeddings_model_api_key": llm_model_api_key, # We will change it to refer to embedding_model_api_key
+                    "llm_model_api_key": llm_model_api_key_to_use,
+                    "llm_model_base_url": str(llm_model_base_url_to_use),
+                    "embeddings_model_api_key": llm_model_api_key_to_use, # We will change it to refer to embedding_model_api_key
                     "embeddings_model": "all-MiniLM-L6-v2",
                     "ignore_files": ignore_files,
                     "head": head_commit_hash,
@@ -128,30 +122,30 @@ async def generate_response(
                 commit_paths, file_paths, localization_paths = separate_file_paths_by_type(list_file_search_response)
 
                 # Get top 5 commit paths
-                top_commit_paths = commit_paths[:5]
+                top_commit_paths = commit_paths[:1]
                 logger.info(f"Top 5 commit paths before removing duplicates: {top_commit_paths}\n")
 
                 # Get top 5 file paths
-                top_file_paths = file_paths[:5]
+                top_file_paths = file_paths[:1]
                 logger.info(f"Top 5 file paths before removing duplicates: {top_file_paths}\n")
 
                 # Get top 5 localization paths
-                top_localization_paths = localization_paths[:5]
+                top_localization_paths = localization_paths[:1]
                 logger.info(f"Top 5 localization paths before removing duplicates: {top_localization_paths}\n")
 
                 list_file_path_entry = top_commit_paths.copy()
                 list_file_path_entry.extend(top_file_paths)
-                list_file_path_entry.extend(top_localization_paths)
+                #list_file_path_entry.extend(top_localization_paths)
                 logger.info(f"list of file paths before removing duplicates: {list_file_path_entry}")
                 if list_file_path_entry:
                     list_file_path_entry = await remove_duplicate_file_paths(list_file_path_entry)
                     logger.info(f"list of file paths after removing duplicates: {list_file_path_entry}")
                     list_file_path_entry = [entry for entry in list_file_path_entry if entry.path not in ignore_files]
                     logger.info(f"list of file paths after transformation: {list_file_path_entry}")
-                    file_paths_payload = [entry.dict() for entry in list_file_path_entry]
+                    file_paths_payload = [entry.dict() for entry in top_localization_paths]
                 else:
                     file_paths_payload = []
-                logger.info(f"Payload for retrieve-file-contents: {file_paths_payload}")
+                logger.info(f"Payload for retrieve-file-contents: {list_file_path_entry}")
 
                 if not file_paths_payload:
                     yield {"machtiani": "no files found"}

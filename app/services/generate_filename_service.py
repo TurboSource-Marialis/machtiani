@@ -23,9 +23,7 @@ except ModuleNotFoundError as e:
     logger.error(f"ModuleNotFoundError: {e}")
     logger.error("Failed to import the module. Please check the paths and directory structure.")
 
-
-
-async def generate_filename(context: str, llm_model_api_key: str, llm_model_base_url: HttpUrl, llm_model_base_url_other: Optional[str] = None, llm_model_api_key_other: Optional[str] = None) -> str:
+async def generate_filename(context: str, llm_model: str, llm_model_api_key: str, llm_model_base_url: HttpUrl, llm_model_base_url_other: Optional[str] = None, llm_model_api_key_other: Optional[str] = None) -> str:
     logger.info("Generating filename for context (length: %d chars)", len(context))
     logger.debug("Using LLM base URL: %s", llm_model_base_url)
     if llm_model_base_url_other:
@@ -41,11 +39,16 @@ async def generate_filename(context: str, llm_model_api_key: str, llm_model_base
 
     response_tokens = []
 
-    try:
+    # Safely determine which API key to use
+    llm_model_base_url_to_use = llm_model_base_url_other if llm_model_base_url_other is not None else llm_model_base_url
 
+    llm_model_api_key_to_use = llm_model_api_key_other if llm_model_api_key_other is not None else llm_model_api_key
+
+    logger.info(f"Using LLM model to create file: {llm_model_base_url_to_use} and API key: {llm_model_api_key_to_use}")
+
+    try:
         # Instantiate LlmModel
-        logger.debug("Initializing LLM model with API key (length: %d)", len(llm_model_api_key or ""))
-        llm_model = LlmModel(api_key=llm_model_api_key, base_url=str(llm_model_base_url))
+        llm_model = LlmModel(model=llm_model, api_key=llm_model_api_key_to_use, base_url=str(llm_model_base_url_to_use))
 
         logger.debug("Sending prompt to LLM model")
         async for token_json in llm_model.send_prompt_streaming(filename_prompt):
