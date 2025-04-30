@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  git-server:
+    build:
+      context: ./git-server
+      dockerfile: Dockerfile
+    container_name: git-server
+    ports:
+      - "5072:9418"
+    restart: always
+    volumes:
+      - git-data:/srv/git
+
+volumes:
+  git-data:
+
