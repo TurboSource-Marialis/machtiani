@@ -87,8 +87,9 @@ async def generate_response(
             llm_model_api_key_to_use = llm_model_api_key_other if llm_model_api_key_other is not None else llm_model_api_key
 
 
-            logger.info(f"Using LLM model URL: {llm_model_base_url_to_use} and API key: {llm_model_base_url_to_use}")
-            logger.info(f"Using LLM model KEY: {llm_model_api_key_to_use} and API key: {llm_model_api_key_to_use}")
+
+            logger.info(f"Using LLM model URL: {llm_model_base_url_to_use}")
+            logger.info(f"Using LLM model API key: {llm_model_api_key_to_use}")
 
             llm_model = LlmModel(api_key=llm_model_api_key_to_use, base_url=str(llm_model_base_url_to_use), model=model)
 
