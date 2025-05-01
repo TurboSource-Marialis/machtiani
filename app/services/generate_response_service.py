@@ -125,15 +125,15 @@ async def generate_response(
                 # Separate file paths by type
                 commit_paths, file_paths, localization_paths = separate_file_paths_by_type(list_file_search_response)
 
-                # Get top 5 commit paths
+                # Get top 3 commit paths
                 scores = adjusted_file_scores(list_file_search_response)  # Dict[str, float]
                 if not scores:                          # no commit hits at all
                     logger.critical(f"adjusted scoring of file paths failed")
-                    top_commit_paths = commit_paths[:5] #fall back to old scoring if fails.
+                    top_commit_paths = commit_paths[:1] #fall back to old scoring if fails.
                 else:
                     top_commit_paths = [
                         FilePathEntry(path=p)               # return proper object, not bare str
-                        for p, _ in top_n_files(scores, 5)
+                        for p, _ in top_n_files(scores, 3)
                     ]
                 logger.info(f"Top {len(top_commit_paths)} commit paths before dedup: {top_commit_paths}")
 
@@ -143,28 +143,31 @@ async def generate_response(
                 top_file_paths = file_paths[:5]
                 logger.info(f"Top 5 file paths before removing duplicates: {top_file_paths}\n")
 
-                # Get top 5 localization paths
-                top_localization_paths = localization_paths[:5]
-                logger.info(f"Top 5 localization paths before removing duplicates: {top_localization_paths}\n")
+                # Get top 1 localization paths
+                top_localization_paths = localization_paths[:2]
+                logger.info(f"Top 2 localization paths before removing duplicates: {top_localization_paths}\n")
 
                 list_file_path_entry = top_commit_paths.copy()
                 list_file_path_entry.extend(top_file_paths)
                 list_file_path_entry.extend(top_localization_paths)
                 logger.info(f"list of file paths before removing duplicates: {list_file_path_entry}")
                 if list_file_path_entry:
+                    # dedupe & filter
                     list_file_path_entry = await remove_duplicate_file_paths(list_file_path_entry)
-                    logger.info(f"list of file paths after removing duplicates: {list_file_path_entry}")
-                    list_file_path_entry = [entry for entry in list_file_path_entry if entry.path not in ignore_files]
-                    logger.info(f"list of file paths after transformation: {list_file_path_entry}")
-                    file_paths_payload = [entry.dict() for entry in top_localization_paths]
+                    list_file_path_entry = [
+                        entry for entry in list_file_path_entry
+                        if entry.path not in ignore_files
+                    ]
+                    # prefer localization, else fall back to everything
+                    payload_entries = top_localization_paths or list_file_path_entry
+                    file_paths_payload = [entry.dict() for entry in payload_entries]
                 else:
                     file_paths_payload = []
-                logger.info(f"Payload for retrieve-file-contents: {list_file_path_entry}")
+
+                logger.info(f"Payload for retrieve-file-contents: {file_paths_payload}")
 
                 if not file_paths_payload:
                     yield {"machtiani": "no files found"}
-                    return
-
 
                 file_summaries = {}
                 file_paths_to_summarize = [entry["path"] for entry in file_paths_payload]
