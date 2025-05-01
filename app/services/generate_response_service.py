@@ -122,10 +122,24 @@ async def generate_response(
                 list_file_search_response = [FileSearchResponse(**item) for item in response.json()]
                 logger.debug("Response from infer-file: %s", list_file_search_response)
 
+
                 # Separate file paths by type
                 commit_paths, file_paths, localization_paths = separate_file_paths_by_type(list_file_search_response)
 
-                # Get top 3 commit paths
+                # Adjust number of files based on match_strength
+                num_commit_files = 3
+                num_file_files = 0
+                num_localization_files = 3
+                if match_strength == "mid":
+                    num_commit_files = 5
+                    num_file_files = 0
+                    num_localization_files = 5
+                elif match_strength == "low":
+                    num_commit_files = 10
+                    num_file_files = 0
+                    num_localization_files = 10
+
+                # Get top n commit paths
                 scores = adjusted_file_scores(list_file_search_response)  # Dict[str, float]
                 if not scores:                          # no commit hits at all
                     logger.critical(f"adjusted scoring of file paths failed")
@@ -133,24 +147,25 @@ async def generate_response(
                 else:
                     top_commit_paths = [
                         FilePathEntry(path=p)               # return proper object, not bare str
-                        for p, _ in top_n_files(scores, 3)
+                        for p, _ in top_n_files(scores, num_commit_files)
                     ]
                 logger.info(f"Top {len(top_commit_paths)} commit paths before dedup: {top_commit_paths}")
 
                 logger.debug(f"file scores for commits:\n\n {scores}")
 
-                # Get top 5 file paths
-                top_file_paths = file_paths[:5]
-                logger.info(f"Top 5 file paths before removing duplicates: {top_file_paths}\n")
+                # Get top n file paths
+                top_file_paths = file_paths[:num_file_files]
+                logger.info(f"Top {len(top_file_paths)} file paths before removing duplicates: {top_file_paths}\n")
 
-                # Get top 1 localization paths
-                top_localization_paths = localization_paths[:2]
-                logger.info(f"Top 2 localization paths before removing duplicates: {top_localization_paths}\n")
+                # Get top n localization paths
+                top_localization_paths = localization_paths[:num_localization_files]
+                logger.info(f"Top {len(top_localization_paths)} localization paths before removing duplicates: {top_localization_paths}\n")
 
                 list_file_path_entry = top_commit_paths.copy()
                 list_file_path_entry.extend(top_file_paths)
                 list_file_path_entry.extend(top_localization_paths)
                 logger.info(f"list of file paths before removing duplicates: {list_file_path_entry}")
+
                 if list_file_path_entry:
                     # dedupe & filter
                     list_file_path_entry = await remove_duplicate_file_paths(list_file_path_entry)
