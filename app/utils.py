@@ -2,8 +2,10 @@ import sys
 import os
 import asyncio
 import json
+import heapq
 import logging
-from typing import List, Tuple
+from typing import List, Tuple, Dict
+from collections import defaultdict
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +73,42 @@ def separate_file_paths_by_type(file_search_responses: List[FileSearchResponse])
 
     return commit_file_paths, file_file_paths, localization_file_paths
 
+def adjusted_file_scores(responses: List[FileSearchResponse]) -> Dict[str, float]:
+    """
+    Aggregate and normalize similarity scores, but **only** for FileSearchResponse
+    objects whose path_type is 'commit'.
+
+    Scores sum up to 1.0.
+    """
+    scores: Dict[str, float] = defaultdict(float)
+
+    for resp in responses:
+        if resp.path_type != "commit":
+            continue
+        for fp in resp.file_paths:
+            scores[fp.path] += resp.similarity
+
+    total = sum(scores.values())
+    if total:
+        for p in scores:
+            scores[p] /= total
+
+    return dict(scores)
+
+def top_n_files(scores: Dict[str, float], n: int) -> List[Tuple[str, float]]:
+    """
+    Return the `n` highest-scoring file paths.
+
+    Args:
+        scores: Dict returned by ``adjusted_file_scores`` mapping
+                ``path -> normalized_score``.
+        n:      Number of top entries to return.
+
+    Returns:
+        List of ``(path, score)`` tuples, sorted in descending order.
+    """
+    # heapq.nlargest is O(k log n) and avoids sorting the entire dict
+    return heapq.nlargest(n, scores.items(), key=lambda t: t[1])
 
 async def count_tokens(text: str) -> int:
     """Estimate the number of tokens in a text string."""

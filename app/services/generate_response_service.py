@@ -12,11 +12,14 @@ from app.utils import (
     remove_duplicate_file_paths,
     separate_file_paths_by_type,
     FileContentResponse,
+    FilePathEntry,
     FileSearchResponse,
     SearchMode,
     count_tokens,
     add_sys_path,
     check_token_limit,
+    adjusted_file_scores,
+    top_n_files,
 )
 from lib.ai.llm_model import LlmModel
 
@@ -123,15 +126,25 @@ async def generate_response(
                 commit_paths, file_paths, localization_paths = separate_file_paths_by_type(list_file_search_response)
 
                 # Get top 5 commit paths
-                top_commit_paths = commit_paths[:1]
-                logger.info(f"Top 5 commit paths before removing duplicates: {top_commit_paths}\n")
+                scores = adjusted_file_scores(list_file_search_response)  # Dict[str, float]
+                if not scores:                          # no commit hits at all
+                    logger.critical(f"adjusted scoring of file paths failed")
+                    top_commit_paths = commit_paths[:5] #fall back to old scoring if fails.
+                else:
+                    top_commit_paths = [
+                        FilePathEntry(path=p)               # return proper object, not bare str
+                        for p, _ in top_n_files(scores, 5)
+                    ]
+                logger.info(f"Top {len(top_commit_paths)} commit paths before dedup: {top_commit_paths}")
+
+                logger.debug(f"file scores for commits:\n\n {scores}")
 
                 # Get top 5 file paths
                 top_file_paths = file_paths[:1]
                 logger.info(f"Top 5 file paths before removing duplicates: {top_file_paths}\n")
 
                 # Get top 5 localization paths
-                top_localization_paths = localization_paths[:1]
+                top_localization_paths = localization_paths[:3]
                 logger.info(f"Top 5 localization paths before removing duplicates: {top_localization_paths}\n")
 
                 list_file_path_entry = top_commit_paths.copy()
