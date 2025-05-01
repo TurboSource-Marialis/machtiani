@@ -140,16 +140,16 @@ async def generate_response(
                 logger.debug(f"file scores for commits:\n\n {scores}")
 
                 # Get top 5 file paths
-                top_file_paths = file_paths[:1]
+                top_file_paths = file_paths[:5]
                 logger.info(f"Top 5 file paths before removing duplicates: {top_file_paths}\n")
 
                 # Get top 5 localization paths
-                top_localization_paths = localization_paths[:3]
+                top_localization_paths = localization_paths[:5]
                 logger.info(f"Top 5 localization paths before removing duplicates: {top_localization_paths}\n")
 
                 list_file_path_entry = top_commit_paths.copy()
                 list_file_path_entry.extend(top_file_paths)
-                #list_file_path_entry.extend(top_localization_paths)
+                list_file_path_entry.extend(top_localization_paths)
                 logger.info(f"list of file paths before removing duplicates: {list_file_path_entry}")
                 if list_file_path_entry:
                     list_file_path_entry = await remove_duplicate_file_paths(list_file_path_entry)
