@@ -19,22 +19,28 @@ import (
 
 // Constants for Environment Variable Names
 const (
-	EnvPrefix               = "MACHTIANI_"
-	EnvModelAPIKey          = EnvPrefix + "MODEL_API_KEY"
-	EnvModelAPIKeyOther     = EnvPrefix + "MODEL_API_KEY_OTHER"
-	EnvModelBaseURL         = EnvPrefix + "MODEL_BASE_URL"
-	EnvModelBaseURLOther    = EnvPrefix + "MODEL_BASE_URL_OTHER"
-	EnvMachtianiURL         = EnvPrefix + "URL" // Note: Adjusted name for consistency if MACHTIANI_URL is intended
-	EnvRepoManagerURL       = EnvPrefix + "REPO_MANAGER_URL"
-	EnvCodeHostURL          = EnvPrefix + "CODE_HOST_URL"
-	EnvCodeHostAPIKey       = EnvPrefix + "CODE_HOST_API_KEY"
-	EnvAPIGatewayHostKey    = EnvPrefix + "API_GATEWAY_HOST_KEY"
-	EnvAPIGatewayHostValue  = EnvPrefix + "API_GATEWAY_HOST_VALUE"
-	EnvContentTypeKey       = EnvPrefix + "CONTENT_TYPE_KEY"
-	EnvContentTypeValue     = EnvPrefix + "CONTENT_TYPE_VALUE"
+	EnvPrefix            = "MACHTIANI_"
+	EnvModelAPIKey       = "MODEL_API_KEY"
+	EnvModelAPIKeyOther  = "MODEL_API_KEY_OTHER"
+	EnvModelBaseURL      = "MODEL_BASE_URL"
+	EnvModelBaseURLOther = "MODEL_BASE_URL_OTHER"
+
+	// **Prefixed names kept only for backward compatibility**
+	EnvModelAPIKeyPrefixed       = "MACHTIANI_MODEL_API_KEY"
+	EnvModelAPIKeyOtherPrefixed  = "MACHTIANI_MODEL_API_KEY_OTHER"
+	EnvModelBaseURLPrefixed      = "MACHTIANI_MODEL_BASE_URL"
+	EnvModelBaseURLOtherPrefixed = "MACHTIANI_MODEL_BASE_URL_OTHER"
+
+	EnvMachtianiURL        = EnvPrefix + "URL" // Note: Adjusted name for consistency if MACHTIANI_URL is intended
+	EnvRepoManagerURL      = EnvPrefix + "REPO_MANAGER_URL"
+	EnvCodeHostURL         = EnvPrefix + "CODE_HOST_URL"
+	EnvCodeHostAPIKey      = EnvPrefix + "CODE_HOST_API_KEY"
+	EnvAPIGatewayHostKey   = EnvPrefix + "API_GATEWAY_HOST_KEY"
+	EnvAPIGatewayHostValue = EnvPrefix + "API_GATEWAY_HOST_VALUE"
+	EnvContentTypeKey      = EnvPrefix + "CONTENT_TYPE_KEY"
+	EnvContentTypeValue    = EnvPrefix + "CONTENT_TYPE_VALUE"
 	// Add other env var names here if needed
 )
-
 
 // EnsureDirExists creates a directory if it doesn't already exist.
 func EnsureDirExists(dirPath string) error {
@@ -165,45 +171,51 @@ func overrideConfig(base *Config, override Config) {
 
 // loadConfigFromEnv overrides the given config struct with values from environment variables.
 func loadConfigFromEnv(config *Config) {
-	if val := os.Getenv(EnvModelAPIKey); val != "" {
-		config.Environment.ModelAPIKey = val
-	}
-	if val := os.Getenv(EnvModelAPIKeyOther); val != "" {
-		config.Environment.ModelAPIKeyOther = val
-	}
-	if val := os.Getenv(EnvModelBaseURL); val != "" {
-		config.Environment.ModelBaseURL = val
-	}
-	if val := os.Getenv(EnvModelBaseURLOther); val != "" {
-		config.Environment.ModelBaseURLOther = val
-	}
-	if val := os.Getenv(EnvMachtianiURL); val != "" {
-		config.Environment.MachtianiURL = val
-	}
-	if val := os.Getenv(EnvRepoManagerURL); val != "" {
-		config.Environment.RepoManagerURL = val
-	}
-	if val := os.Getenv(EnvCodeHostURL); val != "" {
-		config.Environment.CodeHostURL = val
-	}
-	if val := os.Getenv(EnvCodeHostAPIKey); val != "" {
-		config.Environment.CodeHostAPIKey = val
-	}
-	if val := os.Getenv(EnvAPIGatewayHostKey); val != "" {
-		config.Environment.APIGatewayHostKey = val
-	}
-	if val := os.Getenv(EnvAPIGatewayHostValue); val != "" {
-		config.Environment.APIGatewayHostValue = val
-	}
-	if val := os.Getenv(EnvContentTypeKey); val != "" {
-		config.Environment.ContentTypeKey = val
-	}
-	if val := os.Getenv(EnvContentTypeValue); val != "" {
-		config.Environment.ContentTypeValue = val
-	}
-	// Add more fields here if needed
-}
+    // 1) Primary API key: if set, apply it and clear the "Other" slot
+    if v := firstNonEmpty(os.Getenv(EnvModelAPIKey), os.Getenv(EnvModelAPIKeyPrefixed)); v != "" {
+        config.Environment.ModelAPIKey = v
+        config.Environment.ModelAPIKeyOther = ""
+    }
+    // 2) Primary Base URL: if set, apply it and clear the "Other" slot
+    if v := firstNonEmpty(os.Getenv(EnvModelBaseURL), os.Getenv(EnvModelBaseURLPrefixed)); v != "" {
+        config.Environment.ModelBaseURL = v
+        config.Environment.ModelBaseURLOther = ""
+    }
 
+    // 3) Now pick up any explicit "OTHER" overrides
+    if v := firstNonEmpty(os.Getenv(EnvModelAPIKeyOther), os.Getenv(EnvModelAPIKeyOtherPrefixed)); v != "" {
+        config.Environment.ModelAPIKeyOther = v
+    }
+    if v := firstNonEmpty(os.Getenv(EnvModelBaseURLOther), os.Getenv(EnvModelBaseURLOtherPrefixed)); v != "" {
+        config.Environment.ModelBaseURLOther = v
+    }
+
+    // 4) Everything else stays the same
+    if v := os.Getenv(EnvMachtianiURL); v != "" {
+        config.Environment.MachtianiURL = v
+    }
+    if v := os.Getenv(EnvRepoManagerURL); v != "" {
+        config.Environment.RepoManagerURL = v
+    }
+    if v := os.Getenv(EnvCodeHostURL); v != "" {
+        config.Environment.CodeHostURL = v
+    }
+    if v := os.Getenv(EnvCodeHostAPIKey); v != "" {
+        config.Environment.CodeHostAPIKey = v
+    }
+    if v := os.Getenv(EnvAPIGatewayHostKey); v != "" {
+        config.Environment.APIGatewayHostKey = v
+    }
+    if v := os.Getenv(EnvAPIGatewayHostValue); v != "" {
+        config.Environment.APIGatewayHostValue = v
+    }
+    if v := os.Getenv(EnvContentTypeKey); v != "" {
+        config.Environment.ContentTypeKey = v
+    }
+    if v := os.Getenv(EnvContentTypeValue); v != "" {
+        config.Environment.ContentTypeValue = v
+    }
+}
 
 // LoadConfig reads the configuration using the priority:
 // 1. Environment Variables (prefixed with MACHTIANI_)
@@ -256,8 +268,6 @@ func LoadConfig() (Config, error) {
 
 	return finalConfig, nil
 }
-
-
 
 func LoadConfigAndIgnoreFiles() (Config, []string, error) {
 	config, err := LoadConfig()
@@ -346,7 +356,6 @@ func ValidateFlags(modelFlag, matchStrengthFlag, modeFlag *string) {
 		log.Fatalf("Error: Invalid match strength selected. Choose either 'high', 'mid', or 'low'.")
 	}
 
-
 	mode := *modeFlag
 	if mode != "chat" && mode != "pure-chat" && mode != "default" && mode != "answer-only" {
 		log.Fatalf("Error: Invalid mode selected. Choose either chat, pure-chat, answer-only, or default.")
@@ -404,7 +413,6 @@ func ValidateDepthFlag(value int) error {
 
 	return nil
 }
-
 
 // ValidateHeadCommitExistsOnRemote checks if the HEAD commit exists on any branch of the origin remote.
 // Returns nil if the commit is found on at least one remote branch,
@@ -496,8 +504,6 @@ func GetCodehostURLFromCurrentRepository() (string, error) {
 	return codehostURL, nil
 }
 
-
-
 // confirmProceed prompts the user for confirmation to proceed
 func ConfirmProceed() bool {
 	var response string
@@ -505,7 +511,6 @@ func ConfirmProceed() bool {
 	fmt.Scanln(&response)
 	return strings.ToLower(response) == "y"
 }
-
 
 // FormatIntWithCommas returns an int as a string with commas, e.g. 12345 -> "12,345"
 func FormatIntWithCommas(n int) string {
@@ -538,50 +543,58 @@ func FormatIntWithCommas(n int) string {
 // IsAnswerOnlyMode checks if the application is running in answer-only mode
 // by examining command line arguments
 func IsAnswerOnlyMode() bool {
-    for i, arg := range os.Args {
-        if arg == "--mode" && i+1 < len(os.Args) && os.Args[i+1] == "answer-only" {
-            return true
-        }
-        if strings.HasPrefix(arg, "--mode=answer-only") {
-            return true
-        }
-    }
-    return false
+	for i, arg := range os.Args {
+		if arg == "--mode" && i+1 < len(os.Args) && os.Args[i+1] == "answer-only" {
+			return true
+		}
+		if strings.HasPrefix(arg, "--mode=answer-only") {
+			return true
+		}
+	}
+	return false
 }
 
 // PrintIfNotAnswerOnly prints the formatted message only if not in answer-only mode
 //
 // Example:
 //
-//     isAnswerOnlyMode := IsAnswerOnlyMode()
-//     PrintIfNotAnswerOnly(isAnswerOnlyMode, "Using remote URL: %s\n", remoteURL)
+//	isAnswerOnlyMode := IsAnswerOnlyMode()
+//	PrintIfNotAnswerOnly(isAnswerOnlyMode, "Using remote URL: %s\n", remoteURL)
 func PrintIfNotAnswerOnly(isAnswerOnly bool, format string, args ...interface{}) {
-    if !isAnswerOnly {
-        fmt.Printf(format, args...)
-    }
+	if !isAnswerOnly {
+		fmt.Printf(format, args...)
+	}
 }
 
 // LogIfNotAnswerOnly logs the formatted message only if not in answer-only mode
 //
 // Example:
 //
-//     LogIfNotAnswerOnly(isAnswerOnlyMode, "Warning: failed to parse system message frequency: %v", err)
+//	LogIfNotAnswerOnly(isAnswerOnlyMode, "Warning: failed to parse system message frequency: %v", err)
 func LogIfNotAnswerOnly(isAnswerOnly bool, format string, args ...interface{}) {
-    if !isAnswerOnly {
-        log.Printf(format, args...)
-    }
+	if !isAnswerOnly {
+		log.Printf(format, args...)
+	}
 }
 
 // LogErrorIfNotAnswerOnly logs an error message only if the error is not nil and not in answer-only mode
 //
 // Example:
 //
-//     if err := git.SaveSystemMessage(systemMsg); err != nil {
-//         LogErrorIfNotAnswerOnly(isAnswerOnlyMode, err, "Failed to save system message")
-//     }
+//	if err := git.SaveSystemMessage(systemMsg); err != nil {
+//	    LogErrorIfNotAnswerOnly(isAnswerOnlyMode, err, "Failed to save system message")
+//	}
 func LogErrorIfNotAnswerOnly(isAnswerOnly bool, err error, message string) {
-    if err != nil && !isAnswerOnly {
-        log.Printf("%s: %v", message, err)
-    }
+	if err != nil && !isAnswerOnly {
+		log.Printf("%s: %v", message, err)
+	}
 }
 
+func firstNonEmpty(values ...string) string {
+	for _, v := range values {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
+}
