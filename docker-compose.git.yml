@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   git-server:
+    mem_limit: 0.5g
     build:
       context: ./git-server
       dockerfile: Dockerfile
