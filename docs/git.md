@@ -29,7 +29,7 @@ docker exec git-server git init --bare /srv/git/<project>.git
 Add it as your remote
 
 ```
-git remote add origin http://localhost:5072/<project>.git
+git remote add origin http://localhost/<project>.git
 ```
 
 Push, pull and clone as normal.
