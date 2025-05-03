@@ -17,6 +17,25 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// Constants for Environment Variable Names
+const (
+	EnvPrefix               = "MACHTIANI_"
+	EnvModelAPIKey          = EnvPrefix + "MODEL_API_KEY"
+	EnvModelAPIKeyOther     = EnvPrefix + "MODEL_API_KEY_OTHER"
+	EnvModelBaseURL         = EnvPrefix + "MODEL_BASE_URL"
+	EnvModelBaseURLOther    = EnvPrefix + "MODEL_BASE_URL_OTHER"
+	EnvMachtianiURL         = EnvPrefix + "URL" // Note: Adjusted name for consistency if MACHTIANI_URL is intended
+	EnvRepoManagerURL       = EnvPrefix + "REPO_MANAGER_URL"
+	EnvCodeHostURL          = EnvPrefix + "CODE_HOST_URL"
+	EnvCodeHostAPIKey       = EnvPrefix + "CODE_HOST_API_KEY"
+	EnvAPIGatewayHostKey    = EnvPrefix + "API_GATEWAY_HOST_KEY"
+	EnvAPIGatewayHostValue  = EnvPrefix + "API_GATEWAY_HOST_VALUE"
+	EnvContentTypeKey       = EnvPrefix + "CONTENT_TYPE_KEY"
+	EnvContentTypeValue     = EnvPrefix + "CONTENT_TYPE_VALUE"
+	// Add other env var names here if needed
+)
+
+
 // EnsureDirExists creates a directory if it doesn't already exist.
 func EnsureDirExists(dirPath string) error {
 	if _, err := os.Stat(dirPath); os.IsNotExist(err) {
@@ -82,44 +101,163 @@ type Config struct {
 	} `yaml:"environment"`
 }
 
-// LoadConfig reads the configuration from the YAML file and prioritizes the environment variable
-func LoadConfig() (Config, error) {
+// loadConfigFromFile attempts to load configuration from a specific file path.
+// It returns the loaded config and a boolean indicating if the file was found and loaded.
+func loadConfigFromFile(filePath string) (Config, bool, error) {
 	var config Config
-
-	// First, try to load from the current directory
-	configPath := ".machtiani-config.yml"
-	data, err := ioutil.ReadFile(configPath)
+	data, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		// If it doesn't exist, try to load from the home directory
-		homeDir, homeErr := os.UserHomeDir()
-		if homeErr != nil {
-			return config, fmt.Errorf("failed to get home directory: %w", homeErr)
+		if os.IsNotExist(err) {
+			return config, false, nil // File not found is not an error here, just return false
 		}
-		configPath = filepath.Join(homeDir, ".machtiani-config.yml")
-		data, err = ioutil.ReadFile(configPath)
-		if err != nil {
-			return config, fmt.Errorf("failed to read config from both locations: %w", err)
-		}
+		return config, false, fmt.Errorf("failed to read config file %s: %w", filePath, err)
 	}
 
 	err = yaml.Unmarshal(data, &config)
 	if err != nil {
-		return config, fmt.Errorf("failed to unmarshal config: %w", err)
+		return config, false, fmt.Errorf("failed to unmarshal config from %s: %w", filePath, err)
 	}
-
-	// Check for the environment variable and prioritize it
-	if envAPIKey := os.Getenv("MODEL_API_KEY"); envAPIKey != "" {
-		config.Environment.ModelAPIKey = envAPIKey
-	}
-
-	// Determine the LLM Model Base URL, defaulting if not set
-	llmModelBaseURL := config.Environment.ModelBaseURL
-	if llmModelBaseURL == "" {
-		config.Environment.ModelBaseURL = "https://api.openai.com/v1"
-	}
-
-	return config, nil
+	return config, true, nil
 }
+
+// overrideConfig merges the 'override' config onto the 'base' config.
+// Non-empty string values in 'override.Environment' will replace corresponding values in 'base.Environment'.
+func overrideConfig(base *Config, override Config) {
+	// Environment overrides
+	if override.Environment.ModelAPIKey != "" {
+		base.Environment.ModelAPIKey = override.Environment.ModelAPIKey
+	}
+	if override.Environment.ModelAPIKeyOther != "" {
+		base.Environment.ModelAPIKeyOther = override.Environment.ModelAPIKeyOther
+	}
+	if override.Environment.ModelBaseURL != "" {
+		base.Environment.ModelBaseURL = override.Environment.ModelBaseURL
+	}
+	if override.Environment.ModelBaseURLOther != "" {
+		base.Environment.ModelBaseURLOther = override.Environment.ModelBaseURLOther
+	}
+	if override.Environment.MachtianiURL != "" {
+		base.Environment.MachtianiURL = override.Environment.MachtianiURL
+	}
+	if override.Environment.RepoManagerURL != "" {
+		base.Environment.RepoManagerURL = override.Environment.RepoManagerURL
+	}
+	if override.Environment.CodeHostURL != "" {
+		base.Environment.CodeHostURL = override.Environment.CodeHostURL
+	}
+	if override.Environment.CodeHostAPIKey != "" {
+		base.Environment.CodeHostAPIKey = override.Environment.CodeHostAPIKey
+	}
+	if override.Environment.APIGatewayHostKey != "" {
+		base.Environment.APIGatewayHostKey = override.Environment.APIGatewayHostKey
+	}
+	if override.Environment.APIGatewayHostValue != "" {
+		base.Environment.APIGatewayHostValue = override.Environment.APIGatewayHostValue
+	}
+	if override.Environment.ContentTypeKey != "" {
+		base.Environment.ContentTypeKey = override.Environment.ContentTypeKey
+	}
+	if override.Environment.ContentTypeValue != "" {
+		base.Environment.ContentTypeValue = override.Environment.ContentTypeValue
+	}
+	// Add more fields here if the Config struct grows
+}
+
+// loadConfigFromEnv overrides the given config struct with values from environment variables.
+func loadConfigFromEnv(config *Config) {
+	if val := os.Getenv(EnvModelAPIKey); val != "" {
+		config.Environment.ModelAPIKey = val
+	}
+	if val := os.Getenv(EnvModelAPIKeyOther); val != "" {
+		config.Environment.ModelAPIKeyOther = val
+	}
+	if val := os.Getenv(EnvModelBaseURL); val != "" {
+		config.Environment.ModelBaseURL = val
+	}
+	if val := os.Getenv(EnvModelBaseURLOther); val != "" {
+		config.Environment.ModelBaseURLOther = val
+	}
+	if val := os.Getenv(EnvMachtianiURL); val != "" {
+		config.Environment.MachtianiURL = val
+	}
+	if val := os.Getenv(EnvRepoManagerURL); val != "" {
+		config.Environment.RepoManagerURL = val
+	}
+	if val := os.Getenv(EnvCodeHostURL); val != "" {
+		config.Environment.CodeHostURL = val
+	}
+	if val := os.Getenv(EnvCodeHostAPIKey); val != "" {
+		config.Environment.CodeHostAPIKey = val
+	}
+	if val := os.Getenv(EnvAPIGatewayHostKey); val != "" {
+		config.Environment.APIGatewayHostKey = val
+	}
+	if val := os.Getenv(EnvAPIGatewayHostValue); val != "" {
+		config.Environment.APIGatewayHostValue = val
+	}
+	if val := os.Getenv(EnvContentTypeKey); val != "" {
+		config.Environment.ContentTypeKey = val
+	}
+	if val := os.Getenv(EnvContentTypeValue); val != "" {
+		config.Environment.ContentTypeValue = val
+	}
+	// Add more fields here if needed
+}
+
+
+// LoadConfig reads the configuration using the priority:
+// 1. Environment Variables (prefixed with MACHTIANI_)
+// 2. Local config file (.machtiani-config.yml in the current directory)
+// 3. Global config file (~/.machtiani-config.yml)
+func LoadConfig() (Config, error) {
+	var finalConfig Config // Start with an empty config
+
+	// 1. Load Global Config (Lowest Priority)
+	homeDir, homeErr := os.UserHomeDir()
+	if homeErr != nil {
+		// Log warning but continue, global config is optional
+		log.Printf("Warning: failed to get home directory, cannot load global config: %v", homeErr)
+	} else {
+		globalConfigPath := filepath.Join(homeDir, ".machtiani-config.yml")
+		globalConfig, found, err := loadConfigFromFile(globalConfigPath)
+		if err != nil {
+			return finalConfig, fmt.Errorf("error processing global config file %s: %w", globalConfigPath, err)
+		}
+		if found {
+			finalConfig = globalConfig // Use global as the base
+		}
+	}
+
+	// 2. Load Local Config (Middle Priority)
+	localConfigPath := ".machtiani-config.yml"
+	localConfig, found, err := loadConfigFromFile(localConfigPath)
+	if err != nil {
+		return finalConfig, fmt.Errorf("error processing local config file %s: %w", localConfigPath, err)
+	}
+	if found {
+		// Override global config values with local ones
+		overrideConfig(&finalConfig, localConfig)
+	}
+
+	// 3. Load Environment Variables (Highest Priority)
+	loadConfigFromEnv(&finalConfig)
+
+	// Apply Defaults if values are still empty
+	// Determine the LLM Model Base URL, defaulting if not set after all overrides
+	if finalConfig.Environment.ModelBaseURL == "" {
+		finalConfig.Environment.ModelBaseURL = "https://api.openai.com/v1"
+	}
+	// Add other defaults here if needed
+
+	// Final check - ensure essential variables are present if required, or return error
+	// Example: if finalConfig.Environment.MachtianiURL == "" {
+	//	 return finalConfig, errors.New("MACHTIANI_URL or MachtianiURL in config is required but not set")
+	// }
+
+	return finalConfig, nil
+}
+
+
 
 func LoadConfigAndIgnoreFiles() (Config, []string, error) {
 	config, err := LoadConfig()
@@ -312,7 +450,7 @@ func ValidateHeadCommitExistsOnRemote(headCommitHash string) error {
 	// If we reach here, outputStr is not empty, meaning at least one origin branch contains the commit.
 	// The validation passes.
 	// Optional: Log the branches found for debugging/information.
-	log.Printf("Commit %s found on the following origin branches:\n%s", headCommitHash, outputStr)
+	LogIfNotAnswerOnly(false, "Commit %s found on the following origin branches:\n%s", headCommitHash, outputStr) // Assuming !answerOnly for this info log
 
 	return nil // Success: commit found on at least one origin branch
 }
@@ -446,3 +584,4 @@ func LogErrorIfNotAnswerOnly(isAnswerOnly bool, err error, message string) {
         log.Printf("%s: %v", message, err)
     }
 }
+
