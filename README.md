@@ -1,3 +1,4 @@
+```
 # machtiani
 
 **Machtiani** is an experimental command-line interface and local service to chat with git projects, even if it has thousands of files and commits. It understands your git-history and your files to get the right answer.
@@ -101,18 +102,19 @@ The video shows Machtiani receiving the same prompt alongside:
 
    You can override the global config per project by placing a `.machtiani-config.yml` into your git project's root directory.
 
-3. Build the cli and put in path.
+3. Install the CLI tool.
 
    ```bash
    cd machtiani
-
-   go build \
+   go install \
      -ldflags "$(go run generate_ldflags_local.go)" \
-
-   -o mct-cli \
      ./cmd/machtiani
+   ```
 
-   cp mct-cli /$HOME/.local/bin/mct
+   This will install the binary as `machtiani` in your `$GOPATH/bin` (usually `~/go/bin`). You may want to create a symlink for easier access:
+
+   ```bash
+   ln -s ~/go/bin/machtiani ~/.local/bin/mct
    ```
 
 
@@ -156,12 +158,12 @@ The video shows Machtiani receiving the same prompt alongside:
 
 ### Overview
 
-The `machtiani` CLI allows you to interact with the project through command-line parameters. You can provide a markdown file or a prompt directly via the command line, along with various options such as the project name, model type, match strength, and mode of operation.
+The machtiani cli `mct` allows you to interact with the project through command-line parameters. You can provide a markdown file or a prompt directly via the command line, along with various options such as the project name, model type, match strength, and mode of operation.
 
 ### Command Structure
 
 ```bash
-machtiani [flags] [prompt]
+mct [flags] [prompt]
 ```
 
 ### Flags
@@ -218,7 +220,7 @@ mct git-store --remote <remote_name> [--force]
 
 **Example:**
 ```bash
-machtiani git-store --force
+mct git-store --force
 ```
 
 #### `git-sync`
@@ -233,7 +235,7 @@ mct git-sync --remote <remote_name> [--force]
 
 **Example:**
 ```bash
-machtiani git-sync --force
+mct git-sync --force
 ```
 
 ### `git-delete`
@@ -248,7 +250,7 @@ mct git-delete --remote <remote_name> [--force]
 
 **Example:**
 ```bash
-machtiani git-delete --remote origin --force
+mct git-delete --remote origin --force
 ```
 
 ### Ignoring Files with `.machtiani.ignore`
@@ -370,3 +372,5 @@ To run all tests, you can still use:
 python -m unittest discover .
 ```
 
+
+```
