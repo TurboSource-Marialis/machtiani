@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/turboSource-marialis/machtiani/internal/api"
-	"github.com/turboSource-marialis/machtiani/internal/git"
-	"github.com/turboSource-marialis/machtiani/internal/utils"
+	"github.com/turboSource-marialis/machtiani/mct/internal/api"
+	"github.com/turboSource-marialis/machtiani/mct/internal/git"
+	"github.com/turboSource-marialis/machtiani/mct/internal/utils"
 )
 
 

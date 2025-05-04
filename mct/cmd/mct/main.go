@@ -1,7 +1,7 @@
 package main
 
 import (
-    "github.com/turboSource-marialis/machtiani/internal/cli"
+    "github.com/turboSource-marialis/machtiani/mct/internal/cli"
 )
 
 func main() {
