@@ -30,4 +30,3 @@ require (
 	golang.org/x/term v0.23.0 // indirect
 )
 
-replace github.com/coder/aicommit => ../aicommit
