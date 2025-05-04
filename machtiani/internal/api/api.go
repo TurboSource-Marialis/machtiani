@@ -14,7 +14,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/7db9a/machtiani/internal/utils"
+	"github.com/turboSource-marialis/machtiani/internal/utils"
 	"github.com/charmbracelet/glamour"
 )
 

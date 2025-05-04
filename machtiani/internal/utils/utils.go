@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/7db9a/machtiani/internal/git"
+	"github.com/turboSource-marialis/machtiani/internal/git"
 	"gopkg.in/yaml.v2"
 )
 

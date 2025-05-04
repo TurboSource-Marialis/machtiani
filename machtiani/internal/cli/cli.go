@@ -7,9 +7,9 @@ import (
 	"time"
 	"strconv"
 
-	"github.com/7db9a/machtiani/internal/api"
-	"github.com/7db9a/machtiani/internal/git"
-	"github.com/7db9a/machtiani/internal/utils"
+	"github.com/turboSource-marialis/machtiani/internal/api"
+	"github.com/turboSource-marialis/machtiani/internal/git"
+	"github.com/turboSource-marialis/machtiani/internal/utils"
 )
 
 // Build-time variable for system message frequency

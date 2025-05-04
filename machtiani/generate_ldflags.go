@@ -27,7 +27,7 @@ func main() {
 	buildDate := time.Now().Format(time.RFC3339)
 
 	// Start constructing ldflags
-	ldflags := fmt.Sprintf("-X 'github.com/7db9a/machtiani/internal/api.HeadOID=%s' -X 'github.com/7db9a/machtiani/internal/api.BuildDate=%s' -X 'github.com/7db9a/machtiani/internal/api.MachtianiGitRemoteURL=%s' -X 'github.com/7db9a/machtiani/internal/cli.SystemMessageFrequencyHours=24'",
+	ldflags := fmt.Sprintf("-X 'github.com/turboSource-marialis/machtiani/internal/api.HeadOID=%s' -X 'github.com/turboSource-marialis/machtiani/internal/api.BuildDate=%s' -X 'github.com/turboSource-marialis/machtiani/internal/api.MachtianiGitRemoteURL=%s' -X 'github.com/turboSource-marialis/machtiani/internal/cli.SystemMessageFrequencyHours=24'",
 		headOID,
 		buildDate,
 		"https://github.com/turboSource-marialis/machtiani")
@@ -43,8 +43,8 @@ func main() {
 		repoManagerURL := urls[1]
 
 		// Append the ldflags for MachtianiURL and RepoManagerURL for both api and cli packages
-		ldflags += fmt.Sprintf(" -X 'github.com/7db9a/machtiani/internal/api.MachtianiURL=%s' -X 'github.com/7db9a/machtiani/internal/api.RepoManagerURL=%s'", machtianiURL, repoManagerURL)
-		ldflags += fmt.Sprintf(" -X 'github.com/7db9a/machtiani/internal/cli.MachtianiURL=%s' -X 'github.com/7db9a/machtiani/internal/cli.RepoManagerURL=%s'", machtianiURL, repoManagerURL)
+		ldflags += fmt.Sprintf(" -X 'github.com/turboSource-marialis/machtiani/internal/api.MachtianiURL=%s' -X 'github.com/turboSource-marialis/machtiani/internal/api.RepoManagerURL=%s'", machtianiURL, repoManagerURL)
+		ldflags += fmt.Sprintf(" -X 'github.com/turboSource-marialis/machtiani/internal/cli.MachtianiURL=%s' -X 'github.com/turboSource-marialis/machtiani/internal/cli.RepoManagerURL=%s'", machtianiURL, repoManagerURL)
 	}
 
 	// Print the final ldflags

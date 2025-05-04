@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/7db9a/machtiani/internal/api"
-	"github.com/7db9a/machtiani/internal/utils"
+	"github.com/turboSource-marialis/machtiani/internal/api"
+	"github.com/turboSource-marialis/machtiani/internal/utils"
 )
 
 var RepoManagerURL string = "http://localhost:5070"
