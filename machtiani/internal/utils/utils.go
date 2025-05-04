@@ -33,8 +33,8 @@ const (
 
 	EnvMachtianiURL        = EnvPrefix + "URL" // Note: Adjusted name for consistency if MACHTIANI_URL is intended
 	EnvRepoManagerURL      = EnvPrefix + "REPO_MANAGER_URL"
-	EnvCodeHostURL         = EnvPrefix + "CODE_HOST_URL"
-	EnvCodeHostAPIKey      = EnvPrefix + "CODE_HOST_API_KEY"
+	EnvCodeHostURL         = "CODE_HOST_URL"
+	EnvCodeHostAPIKey      = "CODE_HOST_API_KEY"
 	EnvAPIGatewayHostKey   = EnvPrefix + "API_GATEWAY_HOST_KEY"
 	EnvAPIGatewayHostValue = EnvPrefix + "API_GATEWAY_HOST_VALUE"
 	EnvContentTypeKey      = EnvPrefix + "CONTENT_TYPE_KEY"
@@ -171,50 +171,51 @@ func overrideConfig(base *Config, override Config) {
 
 // loadConfigFromEnv overrides the given config struct with values from environment variables.
 func loadConfigFromEnv(config *Config) {
-    // 1) Primary API key: if set, apply it and clear the "Other" slot
-    if v := firstNonEmpty(os.Getenv(EnvModelAPIKey), os.Getenv(EnvModelAPIKeyPrefixed)); v != "" {
-        config.Environment.ModelAPIKey = v
-        config.Environment.ModelAPIKeyOther = ""
-    }
-    // 2) Primary Base URL: if set, apply it and clear the "Other" slot
-    if v := firstNonEmpty(os.Getenv(EnvModelBaseURL), os.Getenv(EnvModelBaseURLPrefixed)); v != "" {
-        config.Environment.ModelBaseURL = v
-        config.Environment.ModelBaseURLOther = ""
-    }
+	// 1) Primary API key: if set, apply it and clear the "Other" slot
+	if v := firstNonEmpty(os.Getenv(EnvModelAPIKey), os.Getenv(EnvModelAPIKeyPrefixed)); v != "" {
+		config.Environment.ModelAPIKey = v
+		config.Environment.ModelAPIKeyOther = ""
+	}
+	// 2) Primary Base URL: if set, apply it and clear the "Other" slot
+	if v := firstNonEmpty(os.Getenv(EnvModelBaseURL), os.Getenv(EnvModelBaseURLPrefixed)); v != "" {
+		config.Environment.ModelBaseURL = v
+		config.Environment.ModelBaseURLOther = ""
+	}
 
-    // 3) Now pick up any explicit "OTHER" overrides
-    if v := firstNonEmpty(os.Getenv(EnvModelAPIKeyOther), os.Getenv(EnvModelAPIKeyOtherPrefixed)); v != "" {
-        config.Environment.ModelAPIKeyOther = v
-    }
-    if v := firstNonEmpty(os.Getenv(EnvModelBaseURLOther), os.Getenv(EnvModelBaseURLOtherPrefixed)); v != "" {
-        config.Environment.ModelBaseURLOther = v
-    }
+	// 3) Now pick up any explicit "OTHER" overrides
+	if v := firstNonEmpty(os.Getenv(EnvModelAPIKeyOther), os.Getenv(EnvModelAPIKeyOtherPrefixed)); v != "" {
+		config.Environment.ModelAPIKeyOther = v
+	}
+	if v := firstNonEmpty(os.Getenv(EnvModelBaseURLOther), os.Getenv(EnvModelBaseURLOtherPrefixed)); v != "" {
+		config.Environment.ModelBaseURLOther = v
+	}
 
-    // 4) Everything else stays the same
-    if v := os.Getenv(EnvMachtianiURL); v != "" {
-        config.Environment.MachtianiURL = v
-    }
-    if v := os.Getenv(EnvRepoManagerURL); v != "" {
-        config.Environment.RepoManagerURL = v
-    }
-    if v := os.Getenv(EnvCodeHostURL); v != "" {
-        config.Environment.CodeHostURL = v
-    }
-    if v := os.Getenv(EnvCodeHostAPIKey); v != "" {
-        config.Environment.CodeHostAPIKey = v
-    }
-    if v := os.Getenv(EnvAPIGatewayHostKey); v != "" {
-        config.Environment.APIGatewayHostKey = v
-    }
-    if v := os.Getenv(EnvAPIGatewayHostValue); v != "" {
-        config.Environment.APIGatewayHostValue = v
-    }
-    if v := os.Getenv(EnvContentTypeKey); v != "" {
-        config.Environment.ContentTypeKey = v
-    }
-    if v := os.Getenv(EnvContentTypeValue); v != "" {
-        config.Environment.ContentTypeValue = v
-    }
+	// 4) Everything else, including CodeHost, picks up both prefixed and unprefixed
+	if v := os.Getenv(EnvMachtianiURL); v != "" {
+		config.Environment.MachtianiURL = v
+	}
+	if v := os.Getenv(EnvRepoManagerURL); v != "" {
+		config.Environment.RepoManagerURL = v
+	}
+	if v := os.Getenv(EnvCodeHostURL); v != "" {
+		config.Environment.CodeHostURL = v
+	}
+	// <-- here’s the key change: look for unprefixed first, then prefixed
+	if v := os.Getenv(EnvCodeHostAPIKey); v != "" {
+		config.Environment.CodeHostAPIKey = v
+	}
+	if v := os.Getenv(EnvAPIGatewayHostKey); v != "" {
+		config.Environment.APIGatewayHostKey = v
+	}
+	if v := os.Getenv(EnvAPIGatewayHostValue); v != "" {
+		config.Environment.APIGatewayHostValue = v
+	}
+	if v := os.Getenv(EnvContentTypeKey); v != "" {
+		config.Environment.ContentTypeKey = v
+	}
+	if v := os.Getenv(EnvContentTypeValue); v != "" {
+		config.Environment.ContentTypeValue = v
+	}
 }
 
 // LoadConfig reads the configuration using the priority:
