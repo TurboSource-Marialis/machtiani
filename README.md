@@ -102,21 +102,25 @@ The video shows Machtiani receiving the same prompt alongside:
 
    You can override the global config per project by placing a `.machtiani-config.yml` into your git project's root directory.
 
-3. Install the CLI tool.
+3. Install `mct`
 
    ```bash
-   cd machtiani
    go install \
-     -ldflags "$(go run generate_ldflags_local.go)" \
-     ./cmd/machtiani
+      -ldflags="$(go run github.com/turboSource-marialis/machtiani/mct/generate_ldflags@latest)" \
+      github.com/turboSource-marialis/machtiani/mct/cmd/mct@latest
    ```
 
-   This will install the binary as `machtiani` in your `$GOPATH/bin` (usually `~/go/bin`). You may want to create a symlink for easier access:
+   If curious, `-ldflags` runs `mct/generate_ldflags/main.go` to set the version (git OID) so that `mct` can let you know if you're using an incompatible version.
+
+
+   Or if you want to build from your git cloned copy of machtiani.
 
    ```bash
-   ln -s ~/go/bin/machtiani ~/.local/bin/mct
+   cd machtiani/mct
+   go install \
+     -ldflags="$(go run ./generate_ldflags)" \
+     ./cmd/mct
    ```
-
 
 4. Launch the application.
 
