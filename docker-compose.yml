@@ -12,9 +12,10 @@ services:
     volumes:
       - ./:/app
       - ./data:/data
-    extra_hosts:
-      # allow the container to resolve host.docker.internal → host gateway
-      - "host.docker.internal:host-gateway"
+      # Unecessary unless deploying with a local git-server (likely you're not).
+      #extra_hosts:
+      #  # allow the container to resolve host.docker.internal → host gateway
+      #  - "host.docker.internal:host-gateway"
     environment:
       - PYTHONUNBUFFERED=1
       - LOG_LEVEL=INFO
@@ -35,8 +36,9 @@ services:
     volumes:
       - ./machtiani-commit-file-retrieval:/app
       - commit_file_retrieval:/data
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      # Unecessary unless deploying with a local git-server (likely you're not).
+      #extra_hosts:
+      #  - "host.docker.internal:host-gateway"
     environment:
       - PYTHONUNBUFFERED=1
       - LOG_LEVEL=INFO

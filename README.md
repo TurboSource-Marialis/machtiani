@@ -124,8 +124,58 @@ The video shows Machtiani receiving the same prompt alongside:
 
 4. Launch the application.
 
+   In the machtiani project root directory.
+
    ```bash
    docker-compose up --build --remove-orphans
+   ```
+
+   Or
+
+   ```
+   docker build \
+     -t machtiani:latest \
+     -f Dockerfile \
+     .
+
+   docker build \
+     -t commit-file-retrieval:latest \
+     -f ./machtiani-commit-file-retrieval/Dockerfile \
+     ./machtiani-commit-file-retrieval
+
+   docker network create machtiani-network
+   docker volume create commit_file_retrieval
+
+
+   docker run -d \
+     --name machtiani \
+     --network machtiani-network \
+     --memory 500m \
+     --add-host host.docker.internal:host-gateway \
+     -p 5071:5071 \
+     -v "$(pwd)":/app \
+     -v "$(pwd)/data":/data \
+     -e PYTHONUNBUFFERED=1 \
+     -e LOG_LEVEL=INFO \
+     -e MLX_SERVER_URL="http://host.docker.internal:8080" \
+     machtiani:latest \
+     poetry run uvicorn app.main:app \
+       --host 0.0.0.0 --port 5071 --reload
+
+   docker run -d \
+     --name commit-file-retrieval \
+     --network machtiani-network \
+     --memory 750m \
+     --add-host host.docker.internal:host-gateway \
+     -p 5070:5070 \
+     -v "$(pwd)/machtiani-commit-file-retrieval:/app" \
+     -v commit_file_retrieval:/data \
+     -e PYTHONUNBUFFERED=1 \
+     -e LOG_LEVEL=INFO \
+     -e MLX_SERVER_URL="http://host.docker.internal:8080" \
+     commit-file-retrieval:latest \
+     poetry run uvicorn app.main:app \
+       --host 0.0.0.0 --port 5070 --reload
    ```
 
 5. Put a project on machtiani.
