@@ -88,8 +88,10 @@ func Execute() {
 	costFlag := fs.Bool("cost", false, "Estimate token cost before proceeding with the sync.")
 	// Added cost-only flag
 	costOnlyFlag := fs.Bool("cost-only", false, "Estimate token cost and exit without performing the sync.")
+
     amplifyFlag := fs.String("amplify", "off", "Amplification level (off, low, mid, high), default is off when flag is present")
     depthFlag := fs.Int("depth", 10000, "Depth of commit history to fetch (integer, default 10000)") // Added depth flag
+    modelFlag := fs.String("model", "", "Specify the model to use for this operation")
 
 
 
@@ -159,7 +161,8 @@ func Execute() {
 		}
 
 
-		if err := handleSync(remoteURL, apiKey, *forceFlag, *verboseFlag, *costFlag, *costOnlyFlag, config, headCommitHash, *amplifyFlag, *depthFlag); err != nil {
+
+		if err := handleSync(remoteURL, apiKey, *forceFlag, *verboseFlag, *costFlag, *costOnlyFlag, config, headCommitHash, *amplifyFlag, *depthFlag, *modelFlag); err != nil {
 			utils.LogErrorIfNotAnswerOnly(isAnswerOnlyMode, err, "Error handling sync")
 			os.Exit(1)
 		}

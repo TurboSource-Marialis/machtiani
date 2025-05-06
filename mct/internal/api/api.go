@@ -159,7 +159,7 @@ func AddRepository(codeURL, name string, apiKey *string, openAIAPIKey, repoManag
 }
 
 // FetchAndCheckoutBranch sends a request to fetch and checkout a branch.
-func FetchAndCheckoutBranch(codeURL, name, branchName string, apiKey *string, openAIAPIKey string, force bool, headCommitHash string, useMockLLM bool, amplificationLevel string, depthLevel int) (string, error) {
+func FetchAndCheckoutBranch(codeURL, name, branchName string, apiKey *string, modelAPIKey *string, modelBaseURL *string, model *string, force bool, headCommitHash string, useMockLLM bool, amplificationLevel string, depthLevel int) (string, error) {
 	config, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
 	if err != nil {
 		return "", err
@@ -179,8 +179,8 @@ func FetchAndCheckoutBranch(codeURL, name, branchName string, apiKey *string, op
 		"codehost_url":        codeURL,
 		"project_name":        name,
 		"api_key":             apiKey,
-		"llm_model_api_key":   openAIAPIKey,
-		"llm_model_base_url":  config.Environment.ModelBaseURL,
+		"llm_model_api_key":   modelAPIKey,
+		"llm_model_base_url":  modelBaseURL,
 		"ignore_files":        ignoreFiles,
 		"head":                headCommitHash,
 		"use_mock_llm":        useMockLLM,
