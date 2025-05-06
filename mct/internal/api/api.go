@@ -96,7 +96,8 @@ func EstimateTokenCount(codeURL string, name string, apiKey *string) (int, int, 
 	return tokenCountEmbedding, tokenCountInference, nil
 }
 
-func AddRepository(codeURL, name string, apiKey *string, openAIAPIKey, repoManagerURL, llmModelBaseURL string, force bool, headCommitHash string, useMockLLM bool, amplificationLevel string, depthLevel int) (AddRepositoryResponse, error) {
+
+func AddRepository(codeURL, name string, apiKey *string, openAIAPIKey, repoManagerURL, llmModelBaseURL string, force bool, headCommitHash string, useMockLLM bool, amplificationLevel string, depthLevel int, llmThreads int) (AddRepositoryResponse, error) {
 	// Load config and ignore files first
 	config, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
 	if err != nil {
@@ -115,7 +116,15 @@ func AddRepository(codeURL, name string, apiKey *string, openAIAPIKey, repoManag
 		"use_mock_llm":        useMockLLM,
 		"amplification_level": amplificationLevel,
 		"depth_level":         depthLevel,
+        "llm_threads":         llmThreads,
+
 	}
+
+	// Only add llm_threads if it's greater than 0
+	if llmThreads > 0 {
+		addRepositoryRequestData["llm_threads"] = llmThreads
+	}
+
 	// Convert data to JSON
 	addRepositoryRequestJson, err := json.Marshal(addRepositoryRequestData)
 	if err != nil {
@@ -158,8 +167,9 @@ func AddRepository(codeURL, name string, apiKey *string, openAIAPIKey, repoManag
 
 }
 
+
 // FetchAndCheckoutBranch sends a request to fetch and checkout a branch.
-func FetchAndCheckoutBranch(codeURL, name, branchName string, apiKey *string, modelAPIKey *string, modelBaseURL *string, model *string, force bool, headCommitHash string, useMockLLM bool, amplificationLevel string, depthLevel int) (string, error) {
+func FetchAndCheckoutBranch(codeURL, name, branchName string, apiKey *string, modelAPIKey *string, modelBaseURL *string, model *string, force bool, headCommitHash string, useMockLLM bool, amplificationLevel string, depthLevel int, llmThreads int) (string, error) {
 	config, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
 	if err != nil {
 		return "", err
@@ -190,8 +200,14 @@ func FetchAndCheckoutBranch(codeURL, name, branchName string, apiKey *string, mo
 	}
 
 	// Only add branch_name to the request if it's provided and not empty
+
 	if branchName != "" {
 		fetchAndCheckoutBranchRequestData["branch_name"] = branchName
+	}
+
+	// Only add llm_threads if it's greater than 0
+	if llmThreads > 0 {
+		fetchAndCheckoutBranchRequestData["llm_threads"] = llmThreads
 	}
 
 	fetchAndCheckoutBranchRequestJson, err := json.Marshal(fetchAndCheckoutBranchRequestData)

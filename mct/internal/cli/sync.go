@@ -13,7 +13,8 @@ import (
 
 
 
-func handleSync(remoteURL string, apiKey *string, force bool, verbose bool, cost bool, costOnly bool, config utils.Config, headCommitHash string, amplificationLevel string, depthLevel int, model string) error {
+
+func handleSync(remoteURL string, apiKey *string, force bool, verbose bool, cost bool, costOnly bool, config utils.Config, headCommitHash string, amplificationLevel string, depthLevel int, model string, modelThreads int) error {
 
 	startTime := time.Now()
 
@@ -83,7 +84,8 @@ func handleSync(remoteURL string, apiKey *string, force bool, verbose bool, cost
 			if cost || costOnly {
 				// Perform dry-run add to allow estimation
 
-                _, err = api.AddRepository(remoteURL, remoteURL, apiKey, llmModelKey, api.RepoManagerURL, modelBaseURL, true, headCommitHash, true, amplificationLevel, depthLevel)
+
+                _, err = api.AddRepository(remoteURL, remoteURL, apiKey, llmModelKey, api.RepoManagerURL, modelBaseURL, true, headCommitHash, true, amplificationLevel, depthLevel, modelThreads)
 				if err != nil && !strings.Contains(err.Error(), "already exists") {
 					return fmt.Errorf("error during initial repository check/add (dry run): %w", err)
 				}
@@ -120,7 +122,8 @@ func handleSync(remoteURL string, apiKey *string, force bool, verbose bool, cost
 
 			if force || utils.ConfirmProceed() {
 
-                response, err := api.AddRepository(remoteURL, remoteURL, apiKey, llmModelKey, api.RepoManagerURL, modelBaseURL, force, headCommitHash, false, amplificationLevel, depthLevel)
+
+                response, err := api.AddRepository(remoteURL, remoteURL, apiKey, llmModelKey, api.RepoManagerURL, modelBaseURL, force, headCommitHash, false, amplificationLevel, depthLevel, modelThreads)
 				if err != nil {
 					return fmt.Errorf("Error adding repository: %w", err)
 				}
@@ -142,6 +145,7 @@ func handleSync(remoteURL string, apiKey *string, force bool, verbose bool, cost
 
 	if cost || costOnly {
 
+
         _, err = api.FetchAndCheckoutBranch(
             remoteURL,
             remoteURL,
@@ -155,6 +159,7 @@ func handleSync(remoteURL string, apiKey *string, force bool, verbose bool, cost
             true,            // useMockLLM = true for dry‑run
             amplificationLevel,
             depthLevel,
+            modelThreads,
         )
 		if err != nil {
 			return fmt.Errorf("Error during repository sync check (dry run): %w", err)
@@ -174,6 +179,7 @@ func handleSync(remoteURL string, apiKey *string, force bool, verbose bool, cost
 
 	if force || utils.ConfirmProceed() {
        var message string
+
        message, err = api.FetchAndCheckoutBranch(
            remoteURL,
            remoteURL,
@@ -187,6 +193,7 @@ func handleSync(remoteURL string, apiKey *string, force bool, verbose bool, cost
            false,           // useMockLLM = false for real sync
            amplificationLevel,
            depthLevel,
+           modelThreads,
        )
 		if err != nil {
 			return fmt.Errorf("Error syncing repository: %w", err)
