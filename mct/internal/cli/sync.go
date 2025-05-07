@@ -246,10 +246,15 @@ func waitForRepoConfirmation(remoteURL string, apiKey *string, codehostURL strin
 			}
 			fmt.Printf("Warning: transient error checking status during wait: %v\n", err)
 		} else {
-			if !status.LockFilePresent {
-				fmt.Println("Repository confirmation received.")
-				return nil
-			}
+            // If error logs present, abort with error
+            if status.ErrorLogs != "" {
+                return fmt.Errorf("Error during repository processing: %s", status.ErrorLogs)
+            }
+            // Proceed when lock file removed with no errors
+            if !status.LockFilePresent {
+                fmt.Println("Repository confirmation received.")
+                return nil
+            }
 		}
 
 		time.Sleep(waitDuration)

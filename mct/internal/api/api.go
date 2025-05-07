@@ -64,9 +64,11 @@ type LoadResponse struct {
 	InferenceTokens int `json:"inference_tokens"`
 }
 
+
 type StatusResponse struct {
 	LockFilePresent  bool    `json:"lock_file_present"`
-	LockTimeDuration float64 `json:"lock_time_duration"` // New field added
+	LockTimeDuration float64 `json:"lock_time_duration"`
+	ErrorLogs        string  `json:"error_logs"`         // New field added
 }
 
 // EstimateTokenCount calls the token-count endpoint and returns embedding and inference token counts.
