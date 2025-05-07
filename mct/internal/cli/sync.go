@@ -120,18 +120,29 @@ func handleSync(remoteURL string, apiKey *string, force bool, verbose bool, cost
 				}
 			}
 
+
 			if force || utils.ConfirmProceed() {
-
-
                 response, err := api.AddRepository(remoteURL, remoteURL, apiKey, llmModelKey, api.RepoManagerURL, modelBaseURL, force, headCommitHash, false, amplificationLevel, depthLevel, modelThreads, model)
 				if err != nil {
 					return fmt.Errorf("Error adding repository: %w", err)
 				}
 				fmt.Println(response.Message)
 				fmt.Println("---")
-				fmt.Println("Your repo is getting added to machtiani is in progress!")
-				fmt.Println("Please check back by running `mct status` to see if it completed.")
-				return nil
+
+				if force {
+					// If force flag is passed, maintain current behavior
+					fmt.Println("Your repo is getting added to machtiani is in progress!")
+					fmt.Println("Please check back by running `mct status` to see if it completed.")
+					return nil
+				} else {
+					// Otherwise, wait for sync to complete like subsequent syncs
+					fmt.Println("Waiting for initial sync to complete. This may take some time...")
+					if err := waitForRepoConfirmation(remoteURL, apiKey, remoteURL); err != nil {
+						return fmt.Errorf("Error waiting for initial sync: %w", err)
+					}
+					fmt.Println("Initial sync completed successfully.")
+					return nil
+				}
 			} else {
 				fmt.Println("Operation cancelled by user.")
 				return nil
