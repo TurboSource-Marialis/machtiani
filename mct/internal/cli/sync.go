@@ -85,7 +85,7 @@ func handleSync(remoteURL string, apiKey *string, force bool, verbose bool, cost
 				// Perform dry-run add to allow estimation
 
 
-                _, err = api.AddRepository(remoteURL, remoteURL, apiKey, llmModelKey, api.RepoManagerURL, modelBaseURL, true, headCommitHash, true, amplificationLevel, depthLevel, modelThreads)
+                _, err = api.AddRepository(remoteURL, remoteURL, apiKey, llmModelKey, api.RepoManagerURL, modelBaseURL, true, headCommitHash, true, amplificationLevel, depthLevel, modelThreads, model)
 				if err != nil && !strings.Contains(err.Error(), "already exists") {
 					return fmt.Errorf("error during initial repository check/add (dry run): %w", err)
 				}
@@ -123,7 +123,7 @@ func handleSync(remoteURL string, apiKey *string, force bool, verbose bool, cost
 			if force || utils.ConfirmProceed() {
 
 
-                response, err := api.AddRepository(remoteURL, remoteURL, apiKey, llmModelKey, api.RepoManagerURL, modelBaseURL, force, headCommitHash, false, amplificationLevel, depthLevel, modelThreads)
+                response, err := api.AddRepository(remoteURL, remoteURL, apiKey, llmModelKey, api.RepoManagerURL, modelBaseURL, force, headCommitHash, false, amplificationLevel, depthLevel, modelThreads, model)
 				if err != nil {
 					return fmt.Errorf("Error adding repository: %w", err)
 				}

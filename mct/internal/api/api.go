@@ -97,7 +97,7 @@ func EstimateTokenCount(codeURL string, name string, apiKey *string) (int, int, 
 }
 
 
-func AddRepository(codeURL, name string, apiKey *string, openAIAPIKey, repoManagerURL, llmModelBaseURL string, force bool, headCommitHash string, useMockLLM bool, amplificationLevel string, depthLevel int, llmThreads int) (AddRepositoryResponse, error) {
+func AddRepository(codeURL, name string, apiKey *string, openAIAPIKey, repoManagerURL, llmModelBaseURL string, force bool, headCommitHash string, useMockLLM bool, amplificationLevel string, depthLevel int, llmThreads int, model string) (AddRepositoryResponse, error) {
 	// Load config and ignore files first
 	config, ignoreFiles, err := utils.LoadConfigAndIgnoreFiles()
 	if err != nil {
@@ -111,6 +111,7 @@ func AddRepository(codeURL, name string, apiKey *string, openAIAPIKey, repoManag
 		"api_key":             apiKey,
 		"llm_model_api_key":   openAIAPIKey,
 		"llm_model_base_url":  llmModelBaseURL,
+                "llm_model":           model,
 		"ignore_files":        ignoreFiles,
 		"head":                headCommitHash,
 		"use_mock_llm":        useMockLLM,
@@ -191,6 +192,7 @@ func FetchAndCheckoutBranch(codeURL, name, branchName string, apiKey *string, mo
 		"api_key":             apiKey,
 		"llm_model_api_key":   modelAPIKey,
 		"llm_model_base_url":  modelBaseURL,
+                "llm_model":           model,
 		"ignore_files":        ignoreFiles,
 		"head":                headCommitHash,
 		"use_mock_llm":        useMockLLM,
