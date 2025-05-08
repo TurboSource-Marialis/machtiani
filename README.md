@@ -69,7 +69,7 @@ So why vibe when you can fly?
    In a git project you want to work on, run
 
    ```bash
-   mct sync
+   mct sync --model gpt-4o-mini --model-threads 10
    ```
 
    Give it time to finish. Run `mct status` to check back if completed.
@@ -78,14 +78,13 @@ So why vibe when you can fly?
 
 
    ```bash
-
-    mct "Ask whatever you want here"
-    ```
+   mct "Ask whatever you want here" --model gpt-4o-mini
+   ```
 
 7. Sync any new commits you pushed to your remote `origin`.
 
    ```bash
-   mct sync
+   mct sync --model gpt-4o-mini --model-threads 10
    ```
 
    Any local git commits must be pushed to the git remote for `mct` to sync it.
@@ -106,64 +105,68 @@ Let's sync the commits [insert project]. You must do this whether you have one i
 
 [ insert short screencast ]
 
-``` $ mct sync ```
+```bash 
+mct sync --model gpt-4o-mini --model-threads 10
+```
 
-Initial sync of a fresh project to mct of a few hundred commits will take a couple minutes and cost few pennies (default is 4o-mini). But once it's done it's done. It saves the data locally.
+Initial sync of a fresh project to mct of a few hundred commits will take a couple minutes and cost few pennies (default is gpt-4o-mini). But once it's done it's done. It saves the data locally.
 
 ***Time and cost is practically nothing on incremental syncs on new commits.*** You can sync as many commits as needed (thousands upon thousands).
 
+> **Speed Up Your Syncs**: The sync process is only constrained by how many requests per second you can make to your LLM provider. By increasing `--model-threads`, you can dramatically speed up syncing. For example, OpenRouter allows 1 request per second for every credit available on your account. With adequate credits and a capable system, using `--model-threads 100` could sync thousands of commits in seconds rather than minutes.
+
 [ insert short screencast ]
 
-```
-$ mct [prompt]
+```bash
+mct [prompt] --model gpt-4o-mini
 ```
 
 It will apply code changes, if applicable. If it's not in git, **it doesn't exist**. Just remember that. So if you want to agentically run tests, or some other follow up workflow, use Codex. Codex can also more easily investigate '90% there' or run tests on a slam-dunk by mct, then trying itself from scratch (expensive and gets confused when it gets more complicated).
 
 Now you can choose any model. If you have OpenRouter, you can use any openrouter model. Otherwise, plug in whatever your provider offers and it complies with OpenAI API format.
 
-```
-$ mct [prompt] --model deepseek/deepseek-r1
+```bash
+mct [prompt] --model deepseek/deepseek-r1
 ```
 
 Also, you can choose for it not to edit or create new files based on the conversation.
 
-```
-$ mct [prompt] --mode chat
+```bash
+mct [prompt] --mode chat --model gpt-4o-mini
 ```
 
 ## FYI
 
 If we do `mct sync` with `amplify` flag, it will drastically increase the accuracy. This is a bail out if your commit history is poor and not well organized, but it costs more. Or if you want to guaranteee absolute peak performance.
 
-```
-$ mct sync --amplify low
+```bash
+mct sync --amplify low --model gpt-4o-mini --model-threads 10
 ```
 
 `sync --amplify low` is about 2 times more costly and somewhat slower.
 
-For example, say we have 15,000 commits. With low amplification, that would be about $0.50 with 4o-mini (default).
+For example, say we have 15,000 commits. With low amplification, that would be about $0.50 with gpt-4o-mini (default).
 
 But we could instead
 
-```
-mct sync --amplify high --depth 5000
+```bash
+mct sync --amplify high --depth 5000 --model gpt-4o-mini --model-threads 10
 ```
 
 And that would only sync the most 5000 commits.
 
 But let's scratch that for a sec and say we want all the commits available to machtiani. We could sync 9,999 of the oldest to newest.
 
-```
+```bash
 git checkout HEAD~5000
-mct sync
+mct sync --model gpt-4o-mini --model-threads 10
 ```
 
 Then to sync the most recent 5001 commits
 
-```
+```bash
 git checkout master
-mct sync --amplify low
+mct sync --amplify low --model gpt-4o-mini --model-threads 10
 ```
 
 That way we have full coverage.
@@ -200,28 +203,24 @@ mct [flags] [prompt]
 1. **Providing a direct prompt:**
 
    ```bash
-
-   mct "Add a new endpoint to get stats."
+   mct "Add a new endpoint to get stats." --model gpt-4o-mini
    ```
 
 2. **Using an existing markdown chat file:**
    ```bash
-
-   mct --file .machtiani/chat/add_state_endpoint.md
+   mct --file .machtiani/chat/add_state_endpoint.md --model gpt-4o-mini
    ```
 
 3. **Specifying additional parameters:**
 
    ```bash
-
    mct "Add a new endpoint to get stats." --model gpt-4o --mode pure-chat --match-strength high
    ```
 
 4. **Using the `--force` flag to skip confirmation:**
 
    ```bash
-
-   mct sync --force
+   mct sync --force --model gpt-4o-mini --model-threads 10
    ```
 
 ### Different Modes
@@ -234,19 +233,26 @@ The `sync` command is used to fetch and checkout a specific branch of the reposi
 
 **Usage:**
 ```bash
-
-mct sync [--force] [--cost-only]
+mct sync [--force] [--cost-only] [--model MODEL] [--model-threads NUM] [--amplify LEVEL] [--depth NUM]
 ```
+
+**Parameters:**
+- `--model` (optional): Specify which LLM to use (e.g., `gpt-4o-mini`, `gpt-4o`). Default is `gpt-4o-mini`.
+- `--model-threads` (optional): Number of concurrent LLM requests to make during sync. Higher values mean faster syncing but require more API throughput and system resources.
+- `--amplify` (optional): Amplification level (`off`, `low`, `mid`, `high`). Higher levels improve accuracy but increase cost.
+- `--depth` (optional): Number of commits to sync, starting from the most recent.
+- `--force` (optional): Skip confirmation prompts.
+- `--cost-only` (optional): Estimate token usage without performing the actual sync.
 
 **Example:**
 ```bash
-mct sync --force
+mct sync --model gpt-4o-mini --model-threads 10 --amplify low --force
 ```
 
-If you just want to estimate how many tokens it will require to sync.
+If you just want to estimate how many tokens it will require to sync:
 
 ```bash
-mct sync --cost-only
+mct sync --cost-only --model gpt-4o-mini
 ```
 
 ### `remove`
@@ -255,7 +261,6 @@ The `remove` command allows you to remove a repository from the Machtiani system
 
 **Usage:**
 ```bash
-
 mct remove [--force]
 ```
 
