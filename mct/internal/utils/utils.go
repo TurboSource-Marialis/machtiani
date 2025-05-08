@@ -13,8 +13,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/turboSource-marialis/machtiani/mct/internal/git"
 	"gopkg.in/yaml.v2"
+
+	"github.com/turboSource-marialis/machtiani/mct/internal/git"
 )
 
 // Constants for Environment Variable Names
@@ -413,55 +414,6 @@ func ValidateDepthFlag(value int) error {
 	}
 
 	return nil
-}
-
-// ValidateHeadCommitExistsOnRemote checks if the HEAD commit exists on any branch of the origin remote.
-// Returns nil if the commit is found on at least one remote branch,
-// error if it's not found on any remote branch or if validation fails.
-func ValidateHeadCommitExistsOnRemote(headCommitHash string) error {
-	// Fetch from origin to ensure we have up-to-date information about its branches.
-	// This is necessary to accurately check if the commit exists on any branch of origin.
-	fetchCmd := exec.Command("git", "fetch", "origin", "--quiet")
-	if fetchOutput, fetchErr := fetchCmd.CombinedOutput(); fetchErr != nil {
-		// It's important to include the command output in the error message for debugging
-		return fmt.Errorf("failed to fetch from origin: %w, output: %s",
-			fetchErr, strings.TrimSpace(string(fetchOutput)))
-	}
-
-	// Check if the headCommitHash exists on any branch of origin.
-	// `git branch -r --contains <commit>` lists all remote-tracking branches that contain the specified commit.
-	// We filter for only origin branches using grep
-	checkCmd := exec.Command("sh", "-c", fmt.Sprintf("git branch -r --contains %s | grep '^  origin/'", headCommitHash))
-	output, err := checkCmd.CombinedOutput() // Use CombinedOutput to capture both stdout and stderr
-
-	// Trim whitespace from the output
-	outputStr := strings.TrimSpace(string(output))
-
-	// git branch --contains will exit with status 0 if the commit is found
-	// on at least one branch, and non-zero (typically 1) if it's not found on any.
-	// If there's an error *and* the output string is empty, it likely means
-	// the commit was not found, which is the condition we're testing for.
-	// If there's an error *and* there IS output, something else went wrong.
-	if err != nil && outputStr != "" {
-		// An error occurred that isn't just the commit not being found.
-		return fmt.Errorf("failed to check origin branches for commit %s: %w, output: %s",
-			headCommitHash, err, outputStr)
-	}
-	// If err is not nil but outputStr is empty, the next check will handle it.
-	// If err is nil, outputStr contains the list of branches (or is empty).
-
-	// If the output string is empty after trimming, it means no origin branch contains the commit.
-	if outputStr == "" {
-		// This is the validation failure case: the commit does not exist on any origin branch.
-		return fmt.Errorf("local commit %s does not exist on any origin branch", headCommitHash)
-	}
-
-	// If we reach here, outputStr is not empty, meaning at least one origin branch contains the commit.
-	// The validation passes.
-	// Optional: Log the branches found for debugging/information.
-	LogIfNotAnswerOnly(false, "Commit %s found on the following origin branches:\n%s", headCommitHash, outputStr) // Assuming !answerOnly for this info log
-
-	return nil // Success: commit found on at least one origin branch
 }
 
 // ParseFlagsWithValidation combines argument format validation with flag parsing

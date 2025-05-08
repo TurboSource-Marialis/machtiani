@@ -2,9 +2,10 @@ package api
 
 import (
 	"bytes"
-	"encoding/json"
-	"fmt"
-	"io"
+   "encoding/json"
+   "errors"
+   "fmt"
+   "io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -235,6 +236,10 @@ func FetchAndCheckoutBranch(codeURL, name, branchName string, apiKey *string, mo
 	}
 	resp, err := client.Do(req)
 	if err != nil {
+		// Detect connection errors and provide a helpful message
+		if errors.Is(err, io.EOF) || strings.Contains(err.Error(), "connection refused") {
+			return "", fmt.Errorf("could not connect to repository manager at %s. Is the service running? Underlying error: %w", repoManagerURL, err)
+		}
 		return "", fmt.Errorf("error making request: %w", err)
 	}
 	defer resp.Body.Close()
