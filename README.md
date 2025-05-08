@@ -34,6 +34,12 @@ So why vibe when you can fly?
    If you're curious, `-ldflags` runs `mct/generate_ldflags/main.go` to set the version (git OID) so that `mct` can let you know if you're using an incompatible version of the local chat service.
 
 
+   If `mct` command isn't found, run this and/or add it as a line in your `~/.bashrc`, `~/.zshrc` or whatever you use for a shell.
+
+   ```
+   export PATH="$PATH:$(go env GOPATH)/bin"
+   ```
+
 3. Launch the local chat service.
 
    Make sure n machtiani project root directory where `docker-compose.yml` resides.
@@ -105,7 +111,7 @@ Let's sync the commits [insert project]. You must do this whether you have one i
 
 [ insert short screencast ]
 
-```bash 
+```bash
 mct sync --model gpt-4o-mini --model-threads 10
 ```
 
