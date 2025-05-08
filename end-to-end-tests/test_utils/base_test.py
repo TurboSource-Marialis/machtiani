@@ -104,7 +104,7 @@ class BaseTestEndToEnd:
         self.setup.checkout_branch("master")
 
 
-        command = 'git checkout master && mct sync --amplify low --cost --force' # Changed command
+        command = 'git checkout master && mct sync --amplify low --cost --force --model-threads 10 --model gpt-4o-mini' # Updated command
         stdout_normalized = self.run_mct_command(command) # Use renamed method
 
         expected_output = [
@@ -114,9 +114,8 @@ class BaseTestEndToEnd:
             "poetry.lock",
             "Repository confirmation received.",
             "---",
-            "Estimating token cost...",
-            "Estimated embedding tokens: 3,000",
-            "Estimated inference tokens: 10,396",
+            "Estimating tokens...",
+            "Estimated tokens: 10,396",
             "---",
             "VCSType.git repository added successfully",
             "---",
@@ -135,7 +134,7 @@ class BaseTestEndToEnd:
 
     def test_02_run_mct_sync_command_not_ready(self): # Renamed test
 
-        command = 'mct sync --amplify low --cost --force' # Changed command
+        command = 'mct sync --amplify low --cost --force --model-threads 10 --model gpt-4o-mini' # Updated command
         stdout_mct, stderr_mct = run_mct_command(command, self.directory) # Use renamed function
         stdout_normalized = clean_output(stdout_mct)
 
@@ -218,7 +217,7 @@ class BaseTestEndToEnd:
     def test_04a_git_sync_invalid_flag_format(self):
         """Test that the sync command fails properly with invalid flag format."""
 
-        command = 'mct sync amplify low --depth 1' # Changed command
+        command = 'mct sync amplify low --depth 1 --model-threads 10 --model gpt-4o-mini' # Updated command
 
         stdout_raw, stderr_raw = run_mct_command(command, self.directory) # Use renamed function
         stdout_clean = clean_output(stdout_raw)
@@ -233,7 +232,7 @@ class BaseTestEndToEnd:
     def test_04b_git_sync_invalid_amplify_value(self):
         """Test that the sync command validates amplify values."""
 
-        command = 'mct sync --amplify invalid --depth 1' # Changed command
+        command = 'mct sync --amplify invalid --depth 1 --model-threads 10 --model gpt-4o-mini' # Updated command
 
         stdout_raw, stderr_raw = run_mct_command(command, self.directory) # Use renamed function
         stdout_clean = clean_output(stdout_raw)
@@ -246,7 +245,7 @@ class BaseTestEndToEnd:
     def test_04c_git_sync_valid_flags(self):
         """Test that the sync command works correctly with valid flags."""
 
-        command = 'mct sync --amplify low --depth 1 --force' # Changed command
+        command = 'mct sync --amplify low --depth 1 --force --model-threads 10 --model gpt-4o-mini' # Updated command
 
         stdout_raw, _ = run_mct_command(command, self.directory) # Use renamed function
         stdout_clean = clean_output(stdout_raw)
@@ -260,7 +259,7 @@ class BaseTestEndToEnd:
         wait_for_status_complete(status_command, self.directory) # Uses updated command
         time.sleep(3)
 
-        command = 'mct  "what does the readme say? does it say anything other than chastler? " --force --mode chat' # Changed command
+        command = 'mct  "what does the readme say? does it say anything other than chastler? " --force --mode chat --model gpt-4o-mini' # Updated command
         stdout_mct, stderr_mct = run_mct_command(command, self.directory) # Use renamed function
         stdout_normalized = clean_output(stdout_mct)
 
@@ -271,7 +270,7 @@ class BaseTestEndToEnd:
 
 
     def test_06_run_mct_sync_command(self): # Renamed test
-        command = 'mct sync --amplify low --cost --force' # Changed command
+        command = 'mct sync --amplify low --cost --force --model-threads 10 --model gpt-4o-mini' # Updated command
         stdout_mct, stderr_mct = run_mct_command(command, self.directory) # Use renamed function
         stdout_normalized = clean_output(stdout_mct)
 
@@ -279,9 +278,8 @@ class BaseTestEndToEnd:
             "Using remote URL: https://github.com/7db9a/chastler", # Common line
             "Repository found. Preparing to sync branch: master", # Changed based on actual output (-)
             "---", # Common line
-            "Estimating token cost...", # Added based on actual output (-)
-            "Estimated embedding tokens: 0", # Common line
-            "Estimated inference tokens: 0", # Common line
+            "Estimating tokens...", # Added based on actual output (-)
+            "Estimated tokens: 0", # Common line
             "---", # Common line
             "Successfully synced 'master' branch of chastler to the chat service",
             "- service message: Fetched and checked out branch master for project"
@@ -301,7 +299,7 @@ class BaseTestEndToEnd:
     def test_07_sync_new_commits_and_prompt_command(self):
         # Step 2: Run git_sync and assert the output
 
-        command = 'git checkout feature && mct sync --amplify low --force --cost' # Changed command
+        command = 'git checkout feature && mct sync --amplify low --force --cost --model-threads 10 --model gpt-4o-mini' # Updated command
         stdout_mct, stderr_mct = run_mct_command(command, self.directory) # Use renamed function
         stdout_normalized = clean_output(stdout_mct)
 
@@ -310,9 +308,8 @@ class BaseTestEndToEnd:
             "Repository found. Preparing to sync branch: feature",
             "",
             "---",
-            "Estimating token cost...",
-            "Estimated embedding tokens: 1,000",
-            "Estimated inference tokens: 85",
+            "Estimating tokens...",
+            "Estimated tokens: 85",
             "---",
             "",
             "Successfully synced 'feature' branch of chastler to the chat service",
@@ -330,7 +327,7 @@ class BaseTestEndToEnd:
                             f"Expected line '{expected_line}' should not be the entire output.")
 
         # Step 3: Run git prompt and assert the output
-        command = 'mct  "what does the readme say?" --force --mode chat' # Changed command
+        command = 'mct  "what does the readme say?" --force --mode chat --model gpt-4o-mini' # Updated command
         stdout_prompt, stderr_prompt = run_mct_command(command, self.directory) # Use renamed function
         stdout_prompt_normalized = clean_output(stdout_prompt)
 
@@ -342,7 +339,7 @@ class BaseTestEndToEnd:
 
     def test_08_run_mct_prompt_file_flag_command(self): # Renamed test
         chat_file_path = append_future_features_to_chat_file(self.directory) # Uses .machtiani/chat path
-        command = f"mct  --file {chat_file_path} --mode chat" # Changed command
+        command = f"mct  --file {chat_file_path} --mode chat --model gpt-4o-mini" # Updated command
         stdout_mct, stderr_mct = run_mct_command(command, self.directory) # Use renamed function
         stdout_normalized = clean_output(stdout_mct)
 
@@ -353,7 +350,7 @@ class BaseTestEndToEnd:
 
     #def test_09_run_mct_status_with_lock(self): # Renamed commented test
     #    def run_sync():
-    #        command = 'git checkout feature && mct sync --amplify low --force' # Changed command
+    #        command = 'git checkout feature && mct sync --amplify low --force --model-threads 10 --model gpt-4o-mini' # Updated command
     #        run_mct_command(command, self.directory) # Use renamed function
 
     #    sync_thread = threading.Thread(target=run_sync)
@@ -381,7 +378,7 @@ class BaseTestEndToEnd:
         time.sleep(5)
 
         # Step 4: Run git_sync again and assert the output now shows the correct token counts
-        command = 'git checkout 7078ecda662103319304730ecdd31ec01b6ce786 && mct sync --amplify low --cost --force' # Changed command
+        command = 'git checkout 7078ecda662103319304730ecdd31ec01b6ce786 && mct sync --amplify low --cost --force --model-threads 10 --model gpt-4o-mini' # Updated command
         stdout_mct, stderr_mct = run_mct_command(command, self.directory) # Use renamed function
         stdout_normalized = clean_output(stdout_mct)
 
@@ -392,9 +389,8 @@ class BaseTestEndToEnd:
             "poetry.lock", # Actual output had this directly after ignore list
             "Repository confirmation received.", # Added based on actual output (-)
             "---", # Added based on actual output (-)
-            "Estimating token cost...", # Added based on actual output (-)
-            "Estimated embedding tokens: 6,000", # Common line
-            "Estimated inference tokens: 10,605", # Common line
+            "Estimating tokens...", # Added based on actual output (-)
+            "Estimated tokens: 10,605", # Common line
             "---", # Common line
             "VCSType.git repository added successfully", # Common line
             "---", # Common line
@@ -416,7 +412,7 @@ class BaseTestEndToEnd:
 
     def test_11_run_mct_sync_command_not_ready(self): # Renamed test
 
-        command = 'mct sync --amplify low --force --cost' # Changed command
+        command = 'mct sync --amplify low --force --cost --model-threads 10 --model gpt-4o-mini' # Updated command
         stdout_mct, stderr_mct = run_mct_command(command, self.directory) # Use renamed function
         stdout_normalized = clean_output(stdout_mct)
 
@@ -722,7 +718,7 @@ class BaseTestEndToEnd:
         time.sleep(3)
 
         # Run command without --mode chat flag to trigger file changes
-        command = 'mct "Add a comment to the README explaining the project is a video processing library" --model gpt-4.1' # Changed command
+        command = 'mct "Add a comment to the README explaining the project is a video processing library" --model gpt-4o-mini' # Updated command
         stdout_mct, stderr_mct = run_mct_command(command, self.directory) # Use renamed function
 
         # Poll for "Response saved" message for up to 2 minutes
@@ -780,7 +776,7 @@ class BaseTestEndToEnd:
         time.sleep(3)
 
         # Run command without --mode chat flag to trigger file changes
-        command = 'mct "Add a comment to the README explaining the project is a video processing library. And add a short and concise contributor guide as a separate file." --model gpt-4.1'
+        command = 'mct "Add a comment to the README explaining the project is a video processing library. And add a short and concise contributor guide as a separate file." --model gpt-4o-mini' # Updated command
         stdout_mct, stderr_mct = run_mct_command(command, self.directory)
 
         # Poll for "Response saved" message and file changes
@@ -879,18 +875,13 @@ class ExtraTestEndToEnd:
         Verifies the specific token counts.
         """
 
-        command = 'mct sync --amplify low --cost-only --verbose' # Changed command
+        command = 'mct sync --amplify low --cost-only --verbose --model-threads 10 --model gpt-4o-mini' # Updated command
         print(f"\nRunning command in {self.directory}: {command}")
         stdout_mct, stderr_mct = self.run_mct_command_in_machtiani_repo(command) # Use renamed method
 
-        # Check for specific token counts
         self.assertTrue(
-            any(line.strip() == "Estimated embedding tokens: 531,000" for line in stdout_mct),
-            "Expected 'Estimated embedding tokens: 531,000' not found in stdout."
-        )
-        self.assertTrue(
-            any(line.strip() == "Estimated inference tokens: 550,098" for line in stdout_mct),
-            "Expected 'Estimated inference tokens: 550,098' not found in stdout."
+            any(line.strip() == "Estimated tokens: 550,098" for line in stdout_mct),
+            "Expected 'Estimated tokens: 550,098' not found in stdout."
         )
 
         # Extract and assert time
@@ -912,18 +903,14 @@ class ExtraTestEndToEnd:
         Verifies the specific token counts.
         """
 
-        command = 'mct sync --cost-only --verbose' # Changed command
+        command = 'mct sync --cost-only --verbose --model-threads 10 --model gpt-4o-mini' # Updated command
         print(f"\nRunning command in {self.directory}: {command}")
         stdout_mct, stderr_mct = self.run_mct_command_in_machtiani_repo(command) # Use renamed method
 
         # Check for specific token counts
         self.assertTrue(
-            any(line.strip() == "Estimated embedding tokens: 265,500" for line in stdout_mct),
-            "Expected 'Estimated embedding tokens: 265,500' not found in stdout."
-        )
-        self.assertTrue(
-            any(line.strip() == "Estimated inference tokens: 36,343" for line in stdout_mct),
-            "Expected 'Estimated inference tokens: 36,343' not found in stdout."
+            any(line.strip() == "Estimated tokens: 36,343" for line in stdout_mct),
+            "Expected 'Estimated tokens: 36,343' not found in stdout."
         )
 
         # Extract and assert time
@@ -946,18 +933,13 @@ class ExtraTestEndToEnd:
         Expects time between 2-4 seconds and specific token counts.
         """
 
-        command = 'mct sync --cost-only --verbose --depth 1' # Changed command
+        command = 'mct sync --cost-only --verbose --depth 1 --model-threads 10 --model gpt-4o-mini' # Updated command
         print(f"\nRunning command in {self.directory}: {command}")
         stdout_mct, stderr_mct = self.run_mct_command_in_machtiani_repo(command) # Use renamed method
 
-        # Check for specific token counts
         self.assertTrue(
-            any(line.strip() == "Estimated embedding tokens: 500" for line in stdout_mct),
-            "Expected 'Estimated embedding tokens: 500' not found in stdout (depth 1, no amplify)."
-        )
-        self.assertTrue(
-            any(line.strip() == "Estimated inference tokens: 15" for line in stdout_mct),
-            "Expected 'Estimated inference tokens: 15' not found in stdout (depth 1, no amplify)."
+            any(line.strip() == "Estimated tokens: 15" for line in stdout_mct),
+            "Expected 'Estimated tokens: 15' not found in stdout (depth 1, no amplify)."
         )
 
         # Extract and assert time
@@ -978,18 +960,13 @@ class ExtraTestEndToEnd:
         Expects time between 2-4 seconds and specific token counts.
         """
 
-        command = 'mct sync --amplify low --cost-only --verbose --depth 1' # Changed command
+        command = 'mct sync --amplify low --cost-only --verbose --depth 1 --model-threads 10 --model gpt-4o-mini' # Updated command
         print(f"\nRunning command in {self.directory}: {command}")
         stdout_mct, stderr_mct = self.run_mct_command_in_machtiani_repo(command) # Use renamed method
 
-        # Check for specific token counts
         self.assertTrue(
-            any(line.strip() == "Estimated embedding tokens: 1,000" for line in stdout_mct),
-            "Expected 'Estimated embedding tokens: 1,000' not found in stdout (depth 1, low amplify)."
-        )
-        self.assertTrue(
-            any(line.strip() == "Estimated inference tokens: 161" for line in stdout_mct),
-            "Expected 'Estimated inference tokens: 161' not found in stdout (depth 1, low amplify)."
+            any(line.strip() == "Estimated tokens: 161" for line in stdout_mct),
+            "Expected 'Estimated tokens: 161' not found in stdout (depth 1, low amplify)."
         )
 
         # Extract and assert time
@@ -1000,7 +977,7 @@ class ExtraTestEndToEnd:
 
         print(f"Asserting estimation time ({estimation_time}s) is between 1 and 4 seconds (depth 1, low amplify).")
         self.assertGreaterEqual(estimation_time, 1.0,
-                                f"Cost estimation time ({estimation_time}s) was less than 1 seconds (depth 1, low amplify).")
+                                f"Cost estimation time ({estimationation_time}s) was less than 1 seconds (depth 1, low amplify).")
         self.assertLessEqual(estimation_time, 4.0,
                                f"Cost estimation time ({estimation_time}s) was more than 4 seconds (depth 1, low amplify).")
 
@@ -1012,18 +989,13 @@ class ExtraTestEndToEnd:
         Expects time between 2-4 seconds and specific token counts.
         """
 
-        command = 'mct sync --cost-only --verbose --depth 137' # Changed command
+        command = 'mct sync --cost-only --verbose --depth 137 --model-threads 10 --model gpt-4o-mini' # Updated command
         print(f"\nRunning command in {self.directory}: {command}")
         stdout_mct, stderr_mct = self.run_mct_command_in_machtiani_repo(command) # Use renamed method
 
-        # Check for specific token counts
         self.assertTrue(
-            any(line.strip() == "Estimated embedding tokens: 68,500" for line in stdout_mct),
-            "Expected 'Estimated embedding tokens: 68,500' not found in stdout (depth 137, no amplify)."
-        )
-        self.assertTrue(
-            any(line.strip() == "Estimated inference tokens: 5,210" for line in stdout_mct),
-            "Expected 'Estimated inference tokens: 5,210' not found in stdout (depth 137, no amplify)."
+            any(line.strip() == "Estimated tokens: 5,210" for line in stdout_mct),
+            "Expected 'Estimated tokens: 5,210' not found in stdout (depth 137, no amplify)."
         )
 
         # Extract and assert time
@@ -1044,18 +1016,13 @@ class ExtraTestEndToEnd:
         Expects time between 8-10 seconds and specific token counts.
         """
 
-        command = 'mct sync --amplify low --cost-only --verbose --depth 137' # Changed command
+        command = 'mct sync --amplify low --cost-only --verbose --depth 137 --model-threads 10 --model gpt-4o-mini' # Updated command
         print(f"\nRunning command in {self.directory}: {command}")
         stdout_mct, stderr_mct = self.run_mct_command_in_machtiani_repo(command) # Use renamed method
 
-        # Check for specific token counts
         self.assertTrue(
-            any(line.strip() == "Estimated embedding tokens: 137,000" for line in stdout_mct),
-            "Expected 'Estimated embedding tokens: 137,000' not found in stdout (depth 137, low amplify)."
-        )
-        self.assertTrue(
-            any(line.strip() == "Estimated inference tokens: 126,125" for line in stdout_mct),
-            "Expected 'Estimated inference tokens: 126,125' not found in stdout (depth 137, low amplify)."
+            any(line.strip() == "Estimated tokens: 126,125" for line in stdout_mct),
+            "Expected 'Estimated tokens: 126,125' not found in stdout (depth 137, low amplify)."
         )
 
         # Extract and assert time
