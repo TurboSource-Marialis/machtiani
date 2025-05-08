@@ -216,15 +216,15 @@ func handleSync(remoteURL string, apiKey *string, force bool, verbose bool, cost
 	return nil
 }
 
+
 func estimateAndPrintCost(remoteURL string, apiKey *string, verbose bool, startTime time.Time) error {
 	fmt.Println("---")
-	fmt.Println("Estimating token cost...")
-	tokenCountEmbedding, tokenCountInference, err := api.EstimateTokenCount(remoteURL, remoteURL, apiKey)
+	_, tokenCountInference, err := api.EstimateTokenCount(remoteURL, remoteURL, apiKey)
 	if err != nil {
 		return fmt.Errorf("error getting token count: %w", err)
 	}
-	fmt.Printf("Estimated embedding tokens: %s\n", utils.FormatIntWithCommas(tokenCountEmbedding))
-	fmt.Printf("Estimated inference tokens: %s\n", utils.FormatIntWithCommas(tokenCountInference))
+	// Only print inference tokens as requested
+	fmt.Printf("Estimated tokens: %s\n", utils.FormatIntWithCommas(tokenCountInference))
 	fmt.Println("---")
 
 	if verbose {
