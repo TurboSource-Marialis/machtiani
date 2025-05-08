@@ -179,86 +179,18 @@ async def generate_response(
                 else:
                     file_paths_payload = []
 
+
                 logger.info(f"Payload for retrieve-file-contents: {file_paths_payload}")
 
                 if not file_paths_payload:
                     yield {"machtiani": "no files found"}
-
-                file_summaries = {}
-                file_paths_to_summarize = [entry["path"] for entry in file_paths_payload]
-
-                try:
-                    file_summary_response = await client.get(
-                        get_file_summary_url,
-                        params={"file_paths": file_paths_to_summarize, "project_name": project}
-                    )
-                    file_summary_response.raise_for_status()
-
-                    summary_data = file_summary_response.json()
-
-                    for summary in summary_data:
-                        file_path = summary["file_path"]
-                        file_summaries[file_path] = summary["summary"]
-
-                except httpx.HTTPStatusError as exc:
-                    if exc.response.status_code == 404:
-                        logger.warning(f"No summary found for one or more file paths.")
-                    else:
-                        logger.error(f"HTTP status error: {exc.response.json()}")
-                        raise
-
-                if not file_summaries:
-                    logger.error("No summaries found for any of the files.")
-                    yield {"error": "No relevant file summaries found."}
-                    return
-
-                summary_prompt = (
-                    f"Here are the file summaries:\n\n{json.dumps(file_summaries, indent=2)}\n\n"
-                    f"Based on these summaries, return only the paths directly relevant to answer the following prompt:\n\n"
-                    f"{prompt}\n\n"
-                    f"Encapsulate the relevant paths between `---` markers.\n"
-                    f"Example format:\n---\n/path/to/relevant_file1\n/path/to/relevant_file2\n---"
-                )
-
-                # Collect tokens from streaming response
-                response_tokens = []
-                async for token_json in llm_model.send_prompt_streaming(summary_prompt):
-                    token_data = json.loads(token_json)
-                    token = token_data.get("token", "")
-                    response_tokens.append(token)
-
-                llm_model_response = ''.join(response_tokens)
-
-                match = re.search(r"---\s*(.*?)\s*---", llm_model_response, re.DOTALL)
-
-                if match:
-                    relevant_file_paths_str = match.group(1).strip()
-                    relevant_file_paths = [line.lstrip("/").strip() for line in relevant_file_paths_str.splitlines() if line.strip()]
-                    logger.info(f"Relevant file paths returned from OpenAI: {relevant_file_paths}")
-                else:
-                    logger.error(f"Failed to extract relevant paths from OpenAI response: {llm_model_response}")
-                    yield {"error": "Invalid response format from OpenAI API."}
-                    return
-
-                if not relevant_file_paths:
-                    yield {"error": "No relevant file paths found from OpenAI response."}
-                    return
-
-                relevant_file_paths_payload = [
-                    entry for entry in file_paths_payload if entry["path"] in relevant_file_paths
-                ]
-
-                # Handle empty file paths payload with warning instead of error
-                if not relevant_file_paths_payload:
-                    logger.warning("No relevant file paths remaining after filtering based on OpenAI's response")
-                    yield {"warning": "No relevant files found after analysis"}
                     return
 
                 content_response = await client.post(
                     f"{base_url}/retrieve-file-contents/",
                     json={
                         "project_name": project,
-                        "file_paths": relevant_file_paths_payload,
+                        "file_paths": file_paths_payload,
                         "ignore_files": ignore_files
                     }
                 )
