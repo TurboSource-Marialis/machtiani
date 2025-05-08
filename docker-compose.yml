@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   machtiani:
-    mem_limit: 0.5g
+    mem_limit: 2g
     build:
       context: .
       dockerfile: Dockerfile
@@ -23,7 +23,7 @@ services:
       - commit-file-retrieval
 
   commit-file-retrieval:
-    mem_limit: 0.75g
+    mem_limit: 2g
     build:
       context: ./machtiani-commit-file-retrieval
       dockerfile: Dockerfile
