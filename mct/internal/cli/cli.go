@@ -121,6 +121,7 @@ func Execute() {
 
 	var apiKey *string = utils.GetCodeHostAPIKey(config)
 
+
 	// Check if no command is provided
 	if len(os.Args) < 2 {
 		printHelp()
@@ -128,6 +129,13 @@ func Execute() {
 	}
 
 	command := os.Args[1]
+
+	// Handle help variants upfront
+	if command == "help" || command == "--help" || command == "-h" {
+		printHelp()
+		return
+	}
+
 	switch command {
 	case "status":
 		handleStatus(&config, remoteURL)
