@@ -2,7 +2,7 @@ package cli
 
 import (
 	"fmt"
-    "log"
+	"log"
 	"strings"
 	"time"
 
@@ -11,15 +11,12 @@ import (
 	"github.com/turboSource-marialis/machtiani/mct/internal/utils"
 )
 
-
-
-
 func handleSync(remoteURL string, apiKey *string, force bool, verbose bool, cost bool, costOnly bool, config utils.Config, headCommitHash string, amplificationLevel string, depthLevel int, model string, modelThreads int) error {
 
 	startTime := time.Now()
 
-    llmModel     := model                            // model name (eg. gpt‑4o)
-    llmModelKey  := config.Environment.ModelAPIKey   // real API key
+	llmModel := model                             // model name (eg. gpt‑4o)
+	llmModelKey := config.Environment.ModelAPIKey // real API key
 
 	modelBaseURL := config.Environment.ModelBaseURL
 
@@ -40,21 +37,21 @@ func handleSync(remoteURL string, apiKey *string, force bool, verbose bool, cost
 		fmt.Printf("Warning: %v. Proceeding anyway due to --force flag.\n", err)
 	}
 
-    var branchName string
-    detached, err := git.IsDetachedHead()
-    if err != nil {
-        // we couldn't even tell—we'll warn and send no branch
-        log.Printf("Warning: unable to determine detached HEAD status: %v", err)
-    }
-    if !detached {
-        // only when we're *not* detached do we send a branch
-        branchName, err = git.GetBranch()
-        if err != nil {
-            log.Printf("Warning: unable to read current branch name: %v", err)
-            // leave branchName empty
-            branchName = ""
-        }
-    }
+	var branchName string
+	detached, err := git.IsDetachedHead()
+	if err != nil {
+		// we couldn't even tell—we'll warn and send no branch
+		log.Printf("Warning: unable to determine detached HEAD status: %v", err)
+	}
+	if !detached {
+		// only when we're *not* detached do we send a branch
+		branchName, err = git.GetBranch()
+		if err != nil {
+			log.Printf("Warning: unable to read current branch name: %v", err)
+			// leave branchName empty
+			branchName = ""
+		}
+	}
 
 	if err != nil {
 		return fmt.Errorf("Error retrieving current branch name: %w", err)
@@ -84,8 +81,7 @@ func handleSync(remoteURL string, apiKey *string, force bool, verbose bool, cost
 			if cost || costOnly {
 				// Perform dry-run add to allow estimation
 
-
-                _, err = api.AddRepository(remoteURL, remoteURL, apiKey, llmModelKey, api.RepoManagerURL, modelBaseURL, true, headCommitHash, true, amplificationLevel, depthLevel, modelThreads, model)
+				_, err = api.AddRepository(remoteURL, remoteURL, apiKey, llmModelKey, api.RepoManagerURL, modelBaseURL, true, headCommitHash, true, amplificationLevel, depthLevel, modelThreads, model)
 				if err != nil && !strings.Contains(err.Error(), "already exists") {
 					return fmt.Errorf("error during initial repository check/add (dry run): %w", err)
 				}
@@ -120,9 +116,8 @@ func handleSync(remoteURL string, apiKey *string, force bool, verbose bool, cost
 				}
 			}
 
-
 			if force || utils.ConfirmProceed() {
-                response, err := api.AddRepository(remoteURL, remoteURL, apiKey, llmModelKey, api.RepoManagerURL, modelBaseURL, force, headCommitHash, false, amplificationLevel, depthLevel, modelThreads, model)
+				response, err := api.AddRepository(remoteURL, remoteURL, apiKey, llmModelKey, api.RepoManagerURL, modelBaseURL, force, headCommitHash, false, amplificationLevel, depthLevel, modelThreads, model)
 				if err != nil {
 					return fmt.Errorf("Error adding repository: %w", err)
 				}
@@ -156,22 +151,21 @@ func handleSync(remoteURL string, apiKey *string, force bool, verbose bool, cost
 
 	if cost || costOnly {
 
-
-        _, err = api.FetchAndCheckoutBranch(
-            remoteURL,
-            remoteURL,
-            branchName,
-            apiKey,
-            &llmModelKey,    // <- real key (string)
-            &modelBaseURL,
-            &llmModel,       // <- model name (string)
-            force,           // force flag
-            headCommitHash,  // headCommitHash
-            true,            // useMockLLM = true for dry‑run
-            amplificationLevel,
-            depthLevel,
-            modelThreads,
-        )
+		_, err = api.FetchAndCheckoutBranch(
+			remoteURL,
+			remoteURL,
+			branchName,
+			apiKey,
+			&llmModelKey, // <- real key (string)
+			&modelBaseURL,
+			&llmModel,      // <- model name (string)
+			force,          // force flag
+			headCommitHash, // headCommitHash
+			true,           // useMockLLM = true for dry‑run
+			amplificationLevel,
+			depthLevel,
+			modelThreads,
+		)
 		if err != nil {
 			return fmt.Errorf("Error during repository sync check (dry run): %w", err)
 		}
@@ -189,23 +183,23 @@ func handleSync(remoteURL string, apiKey *string, force bool, verbose bool, cost
 	}
 
 	if force || utils.ConfirmProceed() {
-       var message string
+		var message string
 
-       message, err = api.FetchAndCheckoutBranch(
-           remoteURL,
-           remoteURL,
-           branchName,
-           apiKey,
-           &llmModelKey,
-           &modelBaseURL,
-           &llmModel,       // <- model name
-           force,           // respect --force here
-           headCommitHash,
-           false,           // useMockLLM = false for real sync
-           amplificationLevel,
-           depthLevel,
-           modelThreads,
-       )
+		message, err = api.FetchAndCheckoutBranch(
+			remoteURL,
+			remoteURL,
+			branchName,
+			apiKey,
+			&llmModelKey,
+			&modelBaseURL,
+			&llmModel, // <- model name
+			force,     // respect --force here
+			headCommitHash,
+			false, // useMockLLM = false for real sync
+			amplificationLevel,
+			depthLevel,
+			modelThreads,
+		)
 		if err != nil {
 			return fmt.Errorf("Error syncing repository: %w", err)
 		}
@@ -216,9 +210,9 @@ func handleSync(remoteURL string, apiKey *string, force bool, verbose bool, cost
 	return nil
 }
 
-
 func estimateAndPrintCost(remoteURL string, apiKey *string, verbose bool, startTime time.Time) error {
 	fmt.Println("---")
+	fmt.Println("Estimating tokens...")
 	_, tokenCountInference, err := api.EstimateTokenCount(remoteURL, remoteURL, apiKey)
 	if err != nil {
 		return fmt.Errorf("error getting token count: %w", err)
@@ -246,15 +240,15 @@ func waitForRepoConfirmation(remoteURL string, apiKey *string, codehostURL strin
 			}
 			fmt.Printf("Warning: transient error checking status during wait: %v\n", err)
 		} else {
-            // If error logs present, abort with error
-            if status.ErrorLogs != "" {
-                return fmt.Errorf("Error during repository processing: %s", status.ErrorLogs)
-            }
-            // Proceed when lock file removed with no errors
-            if !status.LockFilePresent {
-                fmt.Println("Repository confirmation received.")
-                return nil
-            }
+			// If error logs present, abort with error
+			if status.ErrorLogs != "" {
+				return fmt.Errorf("Error during repository processing: %s", status.ErrorLogs)
+			}
+			// Proceed when lock file removed with no errors
+			if !status.LockFilePresent {
+				fmt.Println("Repository confirmation received.")
+				return nil
+			}
 		}
 
 		time.Sleep(waitDuration)
