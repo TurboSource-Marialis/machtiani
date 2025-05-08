@@ -4,58 +4,80 @@ import (
     "fmt"
 )
 
+
 func printHelp() {
     helpText := `Usage: mct [flags] [prompt]
 
-    Machtiani is a command-line interface (CLI) tool designed to facilitate code chat and information retrieval from code repositories.
+Machtiani (mct) — code chat for large, real codebases.
 
+Commands:
+  sync          Add or sync a project repository with machtiani.
+  remove        Remove a repository from the machtiani system.
+  status        View the indexing/status of this repository.
+  help          Show this help message.
 
-    Commands:
-      sync                        Add or sync a repository with the Machtiani system.
-      remove                      Remove a repository from the Machtiani system.
-      status                      Check the status of the current project.
+Prompt Usage:
+  mct [flags] [prompt]
+    e.g. mct "Add a new endpoint to calculate stats." --model gpt-4o-mini
 
-    Global Flags:
-      -file string                 Path to the markdown file (optional).
-      -project string              Name of the project (optional).
-      -model string                Model to use (options: gpt-4o, gpt-4o-mini; default: gpt-4o-mini).
-      -match-strength string       Match strength (options: high, mid, low; default: mid).
-      -mode string                 Search mode (options: pure-chat, commit, super; default: commit).
-      --force                      Skip confirmation prompt and proceed with the operation.
-      -verbose                     Enable verbose output.
+Global Flags (apply to chat/prompt mode):
+  --file <path>            Use a markdown file as conversation prompt. (optional)
+  --project <string>       Project name. Inferred from git remote if unset.
+  --model <string>         LLM model name expected by your chosen API provider (e.g. gpt-4o-mini, deepseek/deepseek-r1, ...)
+  --match-strength         File retrieval match strength: high | mid | low. Default: mid
+  --mode <string>          Retrieval mode: commit | pure-chat | super. Default: commit
+  --force                  Skip confirmation for operations (e.g. file changes, syncing)
+  --verbose                Print verbose/log output
 
-    Subcommands:
+Sync Flags:
+  mct sync [flags]
+    --remote <string>      Source git remote. Default: origin
+    --model <string>       Specify LLM model. Overrides global --model
+    --model-threads <n>    Number of sync LLM requests in parallel (faster if LLM/API allows high QPS). (default: 0 = auto)
+    --amplify <level>      Data amplification for accuracy: off | low | mid | high. Default: off
+    --depth <n>            Number of most recent commits to sync. (default: 10000)
+    --force                Skip sync confirmation prompt
+    --cost                 Estimate LLM/token cost before performing sync
+    --cost-only            Estimate token usage and exit without syncing
 
+Remove Flags:
+  mct remove [flags]
+    --remote <string>      Source git remote. Default: origin
+    --force                Skip confirmation prompt
 
-    sync:
-      Usage: mct sync --remote <remote_name> [--force]
-      Syncs a repository with Machtiani system.
-      Flags:
-        --remote string            Name of the remote repository (default: "origin").
-        --force                    Skip confirmation prompt.
+Examples:
 
-    remove:
-      Usage: mct remove --remote <remote_name> [--force]
-      Removes a repository from Machtiani system.
-      Flags:
-        --remote string            Name of the remote repository (required).
-        --force                    Skip confirmation prompt.
+  Prompt chat using text:
+    mct "Summarize architecture and main APIs." --model Qwen2.5-Coder-1.5B-Instruct
 
-    Examples:
-      Providing a direct prompt:
-        mct "Add a new endpoint to get stats."
+  Use a markdown chat file as input:
+    mct --file .machtiani/chat/my_chat.md --model deepseek-coder
 
-      Using an existing markdown chat file:
-        mct --file .machtiani/chat/add_state_endpoint.md
+  Specify extra retrieval and LLM flags:
+    mct "Refactor payment module." --model anthropic/claude-3.7-sonnet:thinking --mode pure-chat --match-strength high
 
-      Specifying additional parameters:
-        mct "Add a new endpoint to get stats." --model gpt-4o --mode pure-chat --match-strength high
+  Add/sync project with high concurrency:
+    mct sync --amplify low --model google/gemini-2.0-flash-001 --model-threads 10 --force
 
+  Only estimate sync token/cost, do not sync:
+    mct sync --cost-only --model gpt-4o-mini
 
-      Using the '--force' flag to skip confirmation:
-        mct sync --force
+  Remove a project from machtiani:
+    mct remove --force
 
-    `
+Advanced:
+  --amplify low/mid/high        Drastically increases context accuracy (cost ↑).
+  --depth 5000                  Only sync latest 5,000 commits.
+  --model-threads 50            Use 50 sync requests in parallel.
+  --cost, --cost-only           Print estimated token cost and/or exit without syncing.
+
+More info:
+  - File ignores: List paths in .machtiani.ignore to exclude from retrieval/sync.
+  - Sync/project status:      mct status
+
+Machtiani - code chat for real projects, thousands of files and commits.
+
+`
     fmt.Println(helpText)
 }
 
