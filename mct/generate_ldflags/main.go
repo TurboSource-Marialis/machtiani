@@ -23,10 +23,10 @@ func main() {
 
 	// Start constructing ldflags
 
-    ldflags := fmt.Sprintf("-X 'github.com/turboSource-marialis/machtiani/mct/internal/api.HeadOID=%s' -X 'github.com/turboSource-marialis/machtiani/mct/internal/api.BuildDate=%s' -X 'github.com/turboSource-marialis/machtiani/mct/internal/api.MachtianiGitRemoteURL=%s' -X 'github.com/turboSource-marialis/machtiani/mct/internal/cli.SystemMessageFrequencyHours=24'",
+    ldflags := fmt.Sprintf("-X 'github.com/tursomari/machtiani/mct/internal/api.HeadOID=%s' -X 'github.com/tursomari/machtiani/mct/internal/api.BuildDate=%s' -X 'github.com/tursomari/machtiani/mct/internal/api.MachtianiGitRemoteURL=%s' -X 'github.com/tursomari/machtiani/mct/internal/cli.SystemMessageFrequencyHours=24'",
 		headOID,
 		buildDate,
-		"https://github.com/turboSource-marialis/machtiani")
+		"https://github.com/tursomari/machtiani")
 
 	fmt.Println(ldflags)
 }

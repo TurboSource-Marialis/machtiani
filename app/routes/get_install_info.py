@@ -6,9 +6,9 @@ router = APIRouter()
 message = (
     "If building from source, run `./build.sh` in `machtiani/`.\n\n"
     "For installer, run:\n"
-    "    curl -L https://raw.githubusercontent.com/turbosource-marialis/machtiani-releases/main/install.sh | bash\n"
+    "    curl -L https://raw.githubusercontent.com/tursomari/machtiani-releases/main/install.sh | bash\n"
     "     or\n"
-    "    wget -O - https://raw.githubusercontent.com/turbosource-marialis/machtiani-releases/main/install.sh | bash"
+    "    wget -O - https://raw.githubusercontent.com/tursomari/machtiani-releases/main/install.sh | bash"
 )
 
 

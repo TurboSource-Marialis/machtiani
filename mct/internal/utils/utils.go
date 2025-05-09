@@ -15,7 +15,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/turboSource-marialis/machtiani/mct/internal/git"
+	"github.com/tursomari/machtiani/mct/internal/git"
 )
 
 // Constants for Environment Variable Names

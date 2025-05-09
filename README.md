@@ -18,7 +18,7 @@ So why vibe when you can fly?
 1. Clone this project.
 
    ```bash
-   git clone --recurse-submodules https://github.com/TurboSource-Marialis/machtiani
+   git clone --recurse-submodules https://github.com/tursomari/machtiani
    ```
 
 2. Install `mct`

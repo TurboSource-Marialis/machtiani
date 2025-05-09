@@ -15,9 +15,9 @@ import (
 	"time" // Added for generateFilename timeout
 	"errors" // Added for generateFilename error handling
 
-	"github.com/turboSource-marialis/machtiani/mct/internal/api"
-	"github.com/turboSource-marialis/machtiani/mct/internal/git" // Import the git package
-	"github.com/turboSource-marialis/machtiani/mct/internal/utils"
+	"github.com/tursomari/machtiani/mct/internal/api"
+	"github.com/tursomari/machtiani/mct/internal/git" // Import the git package
+	"github.com/tursomari/machtiani/mct/internal/utils"
 	"github.com/charmbracelet/glamour"
 	"github.com/spf13/pflag"
 )

@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/turboSource-marialis/machtiani/mct/internal/api"
-	"github.com/turboSource-marialis/machtiani/mct/internal/utils"
+	"github.com/tursomari/machtiani/mct/internal/api"
+	"github.com/tursomari/machtiani/mct/internal/utils"
 )
 
 func handleStatus(config *utils.Config, remoteURL string) {

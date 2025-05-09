@@ -1,12 +1,12 @@
 [submodule "machtiani-commit-file-retrieval"]
 	path = machtiani-commit-file-retrieval
-	url = https://github.com/turboSource-marialis/machtiani-commit-file-retrieval
+	url = https://github.com/tursomari/machtiani-commit-file-retrieval
 [submodule "api-gateway"]
 	path = api-gateway
-	url = https://github.com/TurboSource-Marialis/api-gateway
+	url = https://github.com/tursomari/api-gateway
 [submodule "machtiani-releases"]
 	path = machtiani-releases
-	url = https://github.com/TurboSource-Marialis/machtiani-releases
+	url = https://github.com/tursomari/machtiani-releases
 [submodule "git-server"]
 	path = git-server
-	url = https://github.com/turboSource-marialis/git-server
+	url = https://github.com/tursomari/git-server

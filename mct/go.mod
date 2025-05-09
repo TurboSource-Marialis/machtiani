@@ -1,4 +1,4 @@
-module github.com/turboSource-marialis/machtiani/mct
+module github.com/tursomari/machtiani/mct
 
 go 1.22.6
 
