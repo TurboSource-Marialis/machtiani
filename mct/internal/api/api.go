@@ -65,11 +65,25 @@ type LoadResponse struct {
 	InferenceTokens int `json:"inference_tokens"`
 }
 
+ type StatusResponse struct {
+       LockFilePresent  bool    `json:"lock_file_present"`
+       LockTimeDuration float64 `json:"lock_time_duration"`
+       ErrorLogs        string  `json:"error_logs,omitempty"`
+       Progress         *ProgressDetails `json:"progress,omitempty"`
+ }
 
-type StatusResponse struct {
-	LockFilePresent  bool    `json:"lock_file_present"`
-	LockTimeDuration float64 `json:"lock_time_duration"`
-	ErrorLogs        string  `json:"error_logs"`         // New field added
+// ProgressDetails matches the structure produced by LogsStatus in the backend.
+type ProgressDetails struct {
+       OverallProgress int                       `json:"overall_progress"`
+       ActiveStage     string                    `json:"active_stage"`
+       Stages          map[string]StageStatus    `json:"stages"`
+}
+
+type StageStatus struct {
+       Description string  `json:"description"`
+       Status      string  `json:"status"`   // pending | in_progress | completed | failed
+       Progress    int     `json:"progress"` // 0‑100
+       Error       *string `json:"error"`    // nil unless failed
 }
 
 // EstimateTokenCount calls the token-count endpoint and returns embedding and inference token counts.
