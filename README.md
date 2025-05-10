@@ -113,9 +113,9 @@ So why vibe when you can fly?
 
 ## How it Works
 
-Let's sync the commits [insert project]. You must do this whether you have one initial commit or 1,000 commits in history (or more). It will make some inference requests, then **locally** generate and save some embeddings (cpu + 8GB RAM is just fine).
+Let's sync the commits a project. You must do this whether you have one initial commit or 1,000 commits in history (or more). It will make some inference requests, then **locally** generate and save some embeddings (cpu + 8GB RAM is just fine).
 
-[ insert short screencast ]
+First, navigate to the directory where the git project resides.
 
 ```bash
 mct sync --model gpt-4o-mini --model-threads 10
@@ -127,7 +127,6 @@ Initial sync of a fresh project to mct of a few hundred commits will take a coup
 
 > **Speed Up Your Syncs**: The sync process is only constrained by how many requests per second you can make to your LLM provider. By increasing `--model-threads`, you can dramatically speed up syncing. For example, OpenRouter allows 1 request per second for every credit available on your account. With adequate credits and a capable system, using `--model-threads 100` could sync thousands of commits in seconds rather than minutes.
 
-[ insert short screencast ]
 
 ```bash
 mct [prompt] --model gpt-4o-mini
