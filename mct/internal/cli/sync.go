@@ -228,9 +228,20 @@ func estimateAndPrintCost(remoteURL string, apiKey *string, verbose bool, startT
 	return nil
 }
 
+
 func waitForRepoConfirmation(remoteURL string, apiKey *string, codehostURL string) error {
 	const maxRetries = 1800
 	const waitDuration = 1 * time.Second
+
+	// Record start time for accurate elapsed duration
+	startTime := time.Now()
+
+	// Array of different waiting messages with oscillating dots
+	waitingMsgs := []string{
+		"Waiting to complete.",
+		"Waiting to complete..",
+		"Waiting to complete...",
+	}
 
 	for i := 0; i < maxRetries; i++ {
 		status, err := api.CheckStatus(codehostURL)
@@ -246,16 +257,19 @@ func waitForRepoConfirmation(remoteURL string, apiKey *string, codehostURL strin
 			}
 			// Proceed when lock file removed with no errors
 			if !status.LockFilePresent {
-				fmt.Println("Repository confirmation received.")
+				fmt.Println("\rRepository confirmation received.                   ") // Clear the line
 				return nil
 			}
 		}
 
+       // Display oscillating dots and elapsed time every second
+       elapsedSeconds := int(time.Since(startTime).Seconds())
+       waitIdx := elapsedSeconds % len(waitingMsgs)
+       fmt.Printf("\r%s (%ds)    ", waitingMsgs[waitIdx], elapsedSeconds)
+
 		time.Sleep(waitDuration)
-		if (i+1)%10 == 0 {
-			fmt.Printf("Still waiting for confirmation (%ds)...\n", (i+1)*int(waitDuration.Seconds()))
-		}
 	}
-	fmt.Println("Timed out waiting for repository confirmation.")
+
+	fmt.Println("\rTimed out waiting for repository confirmation.                 ") // Clear the line
 	return fmt.Errorf("timed out waiting for repository confirmation")
 }
