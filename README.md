@@ -10,8 +10,14 @@ So why vibe when you can fly?
 
 - Stands on own, but composes in the terminal with other command line tools, such Claude Code or Codex.
 
-
-***But Codex can be directed to run tests, execute code, etc, which is very complimentary. You could have it also run `mct`, all together.***
+- <div style="display: flex; align-items: center; text-align: left;">
+    <span style="font-size: 1.1em; margin-right: 0.5em;">
+      Enjoy this demo video and show support  👉   
+    </span>
+    <a href="https://givebutter.com/mnGQAj" style="display: inline-block;">
+      <img src="images/givebutter.svg" alt="Support machtiani" width="100" />
+    </a>
+  </div>
 
 ## Quick Launch
 
