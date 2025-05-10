@@ -21,10 +21,10 @@ import (
 // Constants for Environment Variable Names
 const (
 	EnvPrefix            = "MACHTIANI_"
-	EnvModelAPIKey       = "MODEL_API_KEY"
-	EnvModelAPIKeyOther  = "MODEL_API_KEY_OTHER"
-	EnvModelBaseURL      = "MODEL_BASE_URL"
-	EnvModelBaseURLOther = "MODEL_BASE_URL_OTHER"
+	EnvModelAPIKey       = "MCT_MODEL_API_KEY"
+	EnvModelAPIKeyOther  = "MCT_MODEL_API_KEY_OTHER"
+	EnvModelBaseURL      = "MCT_MODEL_BASE_URL"
+	EnvModelBaseURLOther = "MCT_MODEL_BASE_URL_OTHER"
 
 	// **Prefixed names kept only for backward compatibility**
 	EnvModelAPIKeyPrefixed       = "MACHTIANI_MODEL_API_KEY"
@@ -93,10 +93,10 @@ func IsDryRunEnabled() bool {
 
 type Config struct {
 	Environment struct {
-		ModelAPIKey         string `yaml:"MODEL_API_KEY"`
-		ModelAPIKeyOther    string `yaml:"MODEL_API_KEY_OTHER"`
-		ModelBaseURL        string `yaml:"MODEL_BASE_URL"`
-		ModelBaseURLOther   string `yaml:"MODEL_BASE_URL_OTHER"`
+		ModelAPIKey         string `yaml:"MCT_MODEL_API_KEY"`
+		ModelAPIKeyOther    string `yaml:"MCT_MODEL_API_KEY_OTHER"`
+		ModelBaseURL        string `yaml:"MCT_MODEL_BASE_URL"`
+		ModelBaseURLOther   string `yaml:"MCT_MODEL_BASE_URL_OTHER"`
 		MachtianiURL        string `yaml:"MACHTIANI_URL"`
 		RepoManagerURL      string `yaml:"MACHTIANI_REPO_MANAGER_URL"`
 		CodeHostURL         string `yaml:"CODE_HOST_URL"`

@@ -51,15 +51,15 @@ So why vibe when you can fly?
 4. Set your OpenAI api key and base url.
 
    ```
-   export MODEL_BASE_URL="https://api.openai.com/v1"
-   export OPENAI_API_KEY=sk...
+   export MCT_MODEL_BASE_URL="https://api.openai.com/v1"
+   export MCT_MODEL_API_KEY=sk...
    ```
 
    If you're using another API provider, for example OpenRouter.
 
    ```
-   export MODEL_BASE_URL="https://openrouter.ai/api/v1"
-   export MODEL_API_KEY=sk...
+   export MCT_MODEL_BASE_URL="https://openrouter.ai/api/v1"
+   export MCT_MODEL_API_KEY=sk...
    ```
 
    If the git remote url (e.g. on Github) of the project you intend to use `mct` with is private (i.e., requires password or api key).
