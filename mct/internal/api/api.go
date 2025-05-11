@@ -19,6 +19,7 @@ import (
 	"github.com/charmbracelet/glamour"
 )
 
+
 var (
 	HeadOID               string = "none"
 	BuildDate             string = "unknown"

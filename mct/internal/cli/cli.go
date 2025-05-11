@@ -74,9 +74,70 @@ func Execute() {
 
 
 
+
 	config, err := utils.LoadConfig()
 	if err != nil {
 		utils.LogErrorIfNotAnswerOnly(isAnswerOnlyMode, err, "Error loading config")
+		os.Exit(1)
+	}
+
+	// Check for missing API key and base URL
+	missingRequired := false
+	var missingFields []string
+
+	// Check for missing ModelAPIKey
+	if config.Environment.ModelAPIKey == "" {
+		missingFields = append(missingFields, "MCT_MODEL_API_KEY")
+		missingRequired = true
+	}
+
+	// Check for missing ModelBaseURL
+	if config.Environment.ModelBaseURL == "" {
+		missingFields = append(missingFields, "MCT_MODEL_BASE_URL")
+		missingRequired = true
+	}
+
+	// Check for missing MachtianiURL
+	if api.MachtianiURL == "" {
+		missingFields = append(missingFields, "MACHTIANI_URL")
+		missingRequired = true
+	}
+
+	// Check for missing RepoManagerURL
+	if api.RepoManagerURL == "" {
+		missingFields = append(missingFields, "MACHTIANI_REPO_MANAGER_URL")
+		missingRequired = true
+	}
+
+
+	// If any required fields are missing, display an error and exit
+	if missingRequired {
+		utils.PrintIfNotAnswerOnly(isAnswerOnlyMode, "Error: Missing required configuration.\n")
+
+		// Display specific guidance based on missing fields
+		for _, field := range missingFields {
+			if field == "MCT_MODEL_API_KEY" {
+				utils.PrintIfNotAnswerOnly(isAnswerOnlyMode, `
+Please add MCT_MODEL_API_KEY using your API provider api key, such as:
+
+$ export MCT_MODEL_API_KEY=sk...
+
+`)
+			} else if field == "MCT_MODEL_BASE_URL" {
+				utils.PrintIfNotAnswerOnly(isAnswerOnlyMode, `
+Please add MCT_MODEL_BASE_URL using your API provider base url, such as
+
+$ export MCT_MODEL_BASE_URL="https://openrouter.ai/api/v1"
+
+or
+
+$ export MCT_MODEL_BASE_URL="https://api.openai.com/v1"
+`)
+			} else {
+				// For other missing fields, use the generic message
+				utils.PrintIfNotAnswerOnly(isAnswerOnlyMode, "  - %s (environment variable or config file entry)\n", field)
+			}
+		}
 		os.Exit(1)
 	}
 

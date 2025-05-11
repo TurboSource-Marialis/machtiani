@@ -256,11 +256,10 @@ func LoadConfig() (Config, error) {
 	// 3. Load Environment Variables (Highest Priority)
 	loadConfigFromEnv(&finalConfig)
 
-	// Apply Defaults if values are still empty
 	// Determine the LLM Model Base URL, defaulting if not set after all overrides
-	if finalConfig.Environment.ModelBaseURL == "" {
-		finalConfig.Environment.ModelBaseURL = "https://api.openai.com/v1"
-	}
+	//if finalConfig.Environment.ModelBaseURL == "" {
+	//	finalConfig.Environment.ModelBaseURL = "https://api.openai.com/v1"
+	//}
 	// Add other defaults here if needed
 
 	// Final check - ensure essential variables are present if required, or return error
