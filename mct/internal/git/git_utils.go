@@ -73,7 +73,6 @@ func getSystemMessageWithGit(machtianiGitRemoteURL string) (string, error) {
 	return string(content), nil
 }
 
-
 // getSystemMessageLastDisplayedPath returns the path to the file that tracks when the system message was last displayed
 func getSystemMessageLastDisplayedPath() (string, error) {
 	homeDir, err := os.UserHomeDir()
@@ -95,51 +94,51 @@ func getSystemMessageLastDisplayedPath() (string, error) {
 
 // getLastSystemMessagePath returns the path to the file that stores the last shown system message
 func getLastSystemMessagePath() (string, error) {
-    homeDir, err := os.UserHomeDir()
-    if err != nil {
-        return "", fmt.Errorf("failed to get user home directory: %w", err)
-    }
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("failed to get user home directory: %w", err)
+	}
 
-    machtianiDir := filepath.Join(homeDir, ".machtiani")
-    if err := os.MkdirAll(machtianiDir, 0755); err != nil {
-        if os.IsPermission(err) {
-            return "", fmt.Errorf("permission denied creating directory %s: %w", machtianiDir, err)
-        }
-        return "", fmt.Errorf("failed to create .machtiani directory: %w", err)
-    }
+	machtianiDir := filepath.Join(homeDir, ".machtiani")
+	if err := os.MkdirAll(machtianiDir, 0755); err != nil {
+		if os.IsPermission(err) {
+			return "", fmt.Errorf("permission denied creating directory %s: %w", machtianiDir, err)
+		}
+		return "", fmt.Errorf("failed to create .machtiani directory: %w", err)
+	}
 
-    return filepath.Join(machtianiDir, ".last_system_message"), nil
+	return filepath.Join(machtianiDir, ".last_system_message"), nil
 }
 
 // GetLastSystemMessage reads the content of the last shown system message
 func GetLastSystemMessage() (string, error) {
-    path, err := getLastSystemMessagePath()
-    if err != nil {
-        return "", err
-    }
+	path, err := getLastSystemMessagePath()
+	if err != nil {
+		return "", err
+	}
 
-    content, err := os.ReadFile(path)
-    if os.IsNotExist(err) {
-        return "", nil // No last message exists yet
-    } else if err != nil {
-        return "", fmt.Errorf("failed to read last system message: %w", err)
-    }
+	content, err := os.ReadFile(path)
+	if os.IsNotExist(err) {
+		return "", nil // No last message exists yet
+	} else if err != nil {
+		return "", fmt.Errorf("failed to read last system message: %w", err)
+	}
 
-    return string(content), nil
+	return string(content), nil
 }
 
 // SaveSystemMessage saves the given message as the last shown system message
 func SaveSystemMessage(message string) error {
-    path, err := getLastSystemMessagePath()
-    if err != nil {
-        return err
-    }
+	path, err := getLastSystemMessagePath()
+	if err != nil {
+		return err
+	}
 
-    err = os.WriteFile(path, []byte(message), 0640)
-    if err != nil {
-        return fmt.Errorf("failed to write system message to %s: %w", path, err)
-    }
-    return nil
+	err = os.WriteFile(path, []byte(message), 0640)
+	if err != nil {
+		return fmt.Errorf("failed to write system message to %s: %w", path, err)
+	}
+	return nil
 }
 
 // RecordSystemMessageDisplayed records the current time as when the system message was last displayed
@@ -280,6 +279,68 @@ func getRemoteURL(remoteName string) (string, error) {
 	return strings.TrimSpace(string(output)), nil
 }
 
+// CheckRemoteConnectivity tests if the remote is reachable and if it requires authentication
+func CheckRemoteConnectivity(remoteName string, apiKey *string) (isReachable bool, requiresAuth bool, err error) {
+	// Use ls-remote command to check remote connectivity without credentials first
+	cmd := exec.Command("git", "ls-remote", "--heads", remoteName)
+	// Inherit the current environment *plus* the one‑shot variable(s)
+	cmd.Env = append(os.Environ(),
+		"GIT_TERMINAL_PROMPT=0",               // fail fast for HTTPS
+		"GIT_SSH_COMMAND=ssh -oBatchMode=yes", // fail fast for SSH (optional)
+	)
+
+	output, err := cmd.CombinedOutput()
+
+	if err != nil {
+		errStr := string(output)
+
+		// Check for authentication issues (common error messages)
+		if strings.Contains(strings.ToLower(errStr), "authentication") ||
+			strings.Contains(strings.ToLower(errStr), "authorization") ||
+			strings.Contains(strings.ToLower(errStr), "access denied") ||
+			strings.Contains(strings.ToLower(errStr), "could not read username") ||
+			strings.Contains(strings.ToLower(errStr), "permission denied") {
+
+			// If authentication is required and an API key is provided, try using it
+			if apiKey != nil && *apiKey != "" {
+				// Get the remote URL
+				remoteURL, err := getRemoteURL(remoteName)
+				if err != nil {
+					return false, true, nil // Continue with normal auth error flow
+				}
+
+				// Only proceed if the remote URL is an HTTPS URL
+				if strings.HasPrefix(remoteURL, "https://") {
+					// Create a URL with the API key embedded
+					authURL := strings.Replace(remoteURL, "https://", "https://"+*apiKey+"@", 1)
+
+					// Try to connect to the remote with the API key
+					authCmd := exec.Command("git", "ls-remote", "--heads", authURL)
+					authCmd.Env = append(os.Environ(),
+						"GIT_TERMINAL_PROMPT=0",               // fail fast for HTTPS
+						"GIT_SSH_COMMAND=ssh -oBatchMode=yes", // fail fast for SSH (optional)
+					)
+					_, authErr := authCmd.CombinedOutput()
+
+					if authErr == nil {
+						// Successfully connected with the API key
+						return true, false, nil
+					}
+				}
+			}
+
+			// No API key provided or not an HTTPS URL or API key didn't work
+			return false, true, nil
+		}
+
+		// Other errors (could be connectivity, invalid remote, etc.)
+		return false, false, fmt.Errorf("error checking remote connectivity: %w\nOutput: %s", err, errStr)
+	}
+
+	// Remote is reachable without authentication
+	return true, false, nil
+}
+
 func GetBranch() (string, error) {
 	// Run the git command to get the current branch name
 	// FYI it returns 'HEAD' if not in a branch, if detached.
@@ -346,7 +407,6 @@ func GetBranch() (string, error) {
 
 	return branchName, nil
 }
-
 
 // GetHeadCommitHash returns the current HEAD commit hash of the git repository.
 func GetHeadCommitHash() (string, error) {
@@ -449,7 +509,6 @@ func ApplyGitPatches(patchDir string, existingPatchFiles []string) error {
 		} else {
 			log.Printf("Patch stats for %s:\n%s", patchBaseName, string(statOutput))
 		}
-
 
 		// Now actually apply
 		// Use --reject to leave rejected hunks in .rej files instead of failing outright?

@@ -1,9 +1,11 @@
 
 package cli
 
+
 import (
 	"flag"
 	"os"
+	"strings"
 	"time"
 	"strconv"
 
@@ -110,6 +112,7 @@ func Execute() {
 	}
 
 
+
 	// If any required fields are missing, display an error and exit
 	if missingRequired {
 		utils.PrintIfNotAnswerOnly(isAnswerOnlyMode, "Error: Missing required configuration.\n")
@@ -141,6 +144,9 @@ $ export MCT_MODEL_BASE_URL="https://api.openai.com/v1"
 		os.Exit(1)
 	}
 
+	// Get the API key BEFORE checking remote connectivity
+	var apiKey *string = utils.GetCodeHostAPIKey(config)
+
 	fs := flag.NewFlagSet("mct", flag.ContinueOnError)
 	remoteName := fs.String("remote", "origin", "Name of the remote repository")
 	forceFlag := fs.Bool("force", false, "Skip confirmation prompt and proceed with the operation.")
@@ -171,16 +177,45 @@ $ export MCT_MODEL_BASE_URL="https://api.openai.com/v1"
 
 
 
+
 	// Use the new remote URL function
 	remoteURL, err := git.GetRemoteURL(remoteName)
 	if err != nil {
+		// Check for specific error about remote not found
+		if strings.Contains(err.Error(), "not found") {
+			utils.PrintIfNotAnswerOnly(isAnswerOnlyMode, "Error: Git remote '%s' is not set.\n", *remoteName)
+			utils.PrintIfNotAnswerOnly(isAnswerOnlyMode, "Please set up a remote with:\n")
+			utils.PrintIfNotAnswerOnly(isAnswerOnlyMode, "  git remote add %s <repository-url>\n", *remoteName)
+			os.Exit(1)
+		}
 		utils.LogErrorIfNotAnswerOnly(isAnswerOnlyMode, err, "Error getting remote url")
 		os.Exit(1)
 	}
+
+
+	// Check if the remote is reachable, passing the API key
+	isReachable, requiresAuth, err := git.CheckRemoteConnectivity(*remoteName, apiKey)
+	if err != nil {
+		utils.LogErrorIfNotAnswerOnly(isAnswerOnlyMode, err, "Error checking remote connectivity")
+		os.Exit(1)
+	}
+
+	if !isReachable {
+		if requiresAuth {
+			utils.PrintIfNotAnswerOnly(isAnswerOnlyMode, "Error: Authentication required for remote '%s'.\n", *remoteName)
+			utils.PrintIfNotAnswerOnly(isAnswerOnlyMode, "Set CODEHOST_API_KEY environment variable:\n")
+			utils.PrintIfNotAnswerOnly(isAnswerOnlyMode, "     export CODEHOST_API_KEY=github_api_token_or_other\n")
+			os.Exit(1)
+		} else {
+			utils.PrintIfNotAnswerOnly(isAnswerOnlyMode, "Error: Cannot connect to remote '%s'.\n", *remoteName)
+			utils.PrintIfNotAnswerOnly(isAnswerOnlyMode, "Please check your internet connection and that the remote URL is correct.\n")
+			os.Exit(1)
+		}
+	}
+
+
 	utils.PrintIfNotAnswerOnly(isAnswerOnlyMode, "Using remote URL: %s\n", remoteURL)
 	projectName := remoteURL
-
-	var apiKey *string = utils.GetCodeHostAPIKey(config)
 
 
 	// Check if no command is provided
