@@ -12,7 +12,7 @@ So why vibe when you can fly?
 
 - <div style="display: flex; align-items: center; text-align: left;">
     <span style="font-size: 1.1em; margin-right: 0.5em;">
-      Enjoy this demo video and show support  👉   
+      Enjoy this demo video and show support  👉
     </span>
     <a href="https://givebutter.com/mnGQAj" style="display: inline-block;">
       <img src="images/givebutter.svg" alt="Support machtiani" width="100" />
@@ -101,7 +101,6 @@ So why vibe when you can fly?
 
    Any local git commits must be pushed to the git remote for `mct` to sync it.
 
-`mct` stands on its own, and is generally more performant based on direct experience on the vast majority of real world problems than with mainstream agents today. But we can go further together. We believe mct + Codex combo exceeds anything you ever tried.
 
  No 'yolo'. mct agentic ability is constrained to:
 
@@ -110,6 +109,36 @@ So why vibe when you can fly?
  - reading files checked into git
 
  - saving chat convos and patch history to `.machtiani/`
+
+## Configuration
+
+Machtiani can be driven either by environment variables **or** by a YML machtiani-config file. Environment variables always win if set, but if you prefer to keep your keys and URLs in a file, you can place a `.machtiani-config.yml` in one of two locations:
+
+1. **Project-local**
+   `<your‐repo‐root>/.machtiani-config.yml`
+2. **Home directory**
+   `~/.machtiani-config.yml`
+
+Lookup and precedence:
+
+1. If you set an env var (for example `MCT_MODEL_API_KEY`), it always overrides any value from a config file.
+2. Otherwise mct will look for **project-local** `./.machtiani-config.yml` first.
+3. Failing that, it will fall back to your **home** `~/.machtiani-config.yml`.
+4. If neither exists you must use env vars.
+
+Supported keys in the JSON are exactly the same names as the env vars:
+
+Example of a project-local file (`./.machtiani-config.yml`):
+
+```yml
+environment:
+  MCT_MODEL_BASE_URL: "https://api.openai.com/v1",
+  MCT_MODEL_API_KEY: "sk-REPLACE_WITH_YOURS",
+  CODE_HOST_API_KEY: "ghp-REPLACE_WITH_YOURS"
+}
+```
+
+You can omit any key that you still prefer to supply via `export`. Any missing key will simply fall back to its corresponding environment variable (or error out if not set anywhere).
 
 ## How it Works
 
