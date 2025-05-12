@@ -4,11 +4,15 @@ import git
 router = APIRouter()
 
 message = (
-    "If building from source, run `./build.sh` in `machtiani/`.\n\n"
-    "For installer, run:\n"
-    "    curl -L https://raw.githubusercontent.com/tursomari/machtiani-releases/main/install.sh | bash\n"
-    "     or\n"
-    "    wget -O - https://raw.githubusercontent.com/tursomari/machtiani-releases/main/install.sh | bash"
+    'Rebuild your mct cli:\n\n'
+    'See README.md or run the below command in your terminal in the machtiani project directory:\n\n'
+    ' ==================================\n'
+    '  cd mct\n'
+    '  go install \\\n'
+    '    -ldflags="$(go run ./generate_ldflags)" \\\n'
+    '    ./cmd/mct\n'
+    '  cd -\n'
+    ' =================================='
 )
 
 
