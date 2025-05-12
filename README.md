@@ -1,13 +1,12 @@
 # machtiani
 
-**Machtiani (mct)** is an experimental terminal based, locally ran code chat service. It's designed to work with real projects. Thousands of commits. Thousands of files. It rewards developer experience, but doesn't punish inexperience either.
+**Machtiani (mct)** is an experimental terminal based, locally ran code chat service. It's designed to work with real projects. Thousands of commits. Thousands of files. For most cases, you’ll get faster, higher quality answers at a fraction of the cost than token-guzzling alternatives. It also punches above its weight, and you won’t find a better agent that can even run locally on your MacBook.
 
 So why vibe when you can fly?
 
-- Unrivaled at finding the right answer based on precise context out of thousands of files in a project.
-
+- Efficiently finds right answer based on precise context out of thousands of files in a project.
 - Choose any API provider that adheres to OpenAI API spec, including locally ran ollama or mxl-lm.
-
+- Stands on own, but composes in the terminal with other command line tools, such Codex.
 - <div style="display: flex; align-items: center; text-align: left;">
     <span style="font-size: 1.1em; margin-right: 0.5em;">
       Enjoy this demo video and show support  👉
