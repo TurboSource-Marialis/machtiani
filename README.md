@@ -100,7 +100,7 @@ codex "$(mct \"Add error handling for API calls\" --mode answer-only --model Qwe
    In a git project you want to work on, run
 
    ```bash
-   mct sync --model gpt-4o-mini --model-threads 10
+   mct sync --model google/gemini-2.0-flash-001 --model-threads 10
    ```
 
    Give it time to finish. Run `mct status` to check back if completed.
@@ -109,7 +109,7 @@ codex "$(mct \"Add error handling for API calls\" --mode answer-only --model Qwe
 
 
    ```bash
-   mct "Ask whatever you want here" --model gpt-4o-mini
+   mct "Ask whatever you want here" --model anthropic/claude-3.7-sonnet:thinking
    ```
 
 7. Sync any new commits you pushed to your remote `origin`.
@@ -250,19 +250,28 @@ mct [flags] [prompt]
 
 ### Flags
 
-- `-file string` (optional): Specify the path to a markdown file. If provided, the content of this file will be used as the prompt.
-- `-project string` (optional): Name of the project. If not set, it will be fetched from Git.
-- `-model string` (optional): Model to use. Options include `gpt-4o` or `gpt-4o-mini`. Default is `gpt-4o-mini`.
-- `-match-strength string` (optional): Match strength options are `high`, `mid`, or `low`. Default is `mid`.
-- `-mode string` (optional): Search mode, which can be `pure-chat`, `commit`, or `super`. Default is `commit`.
-- `--force` (optional): Skip confirmation prompt and proceed with the operation.
+Common flags when chatting with a project:
+
+- `--file <path>`            Use a markdown file as the conversation prompt.
+- `--model <string>`         LLM model name (e.g. gpt-4o-mini, deepseek/deepseek-r1). Default: `gpt-4o-mini`.
+- `--match-strength <level>` Context match strength (`high`, `mid`, `low`). Default: `mid`.
+- `--mode <mode>`            Retrieval mode (`chat`, `pure-chat`, `answer-only`). Default: `commit`.
+- `--force`                  Skip confirmation prompts.
+- `--verbose`                Enable verbose logging.
+
+Sync (`mct sync`) and remove (`mct remove`) commands support additional flags such as `--model-threads`, `--amplify`, `--depth`, `--cost-only`, etc. For the
+full list of flags and detailed usage, run:
+
+```bash
+mct help
+```
 
 ### Example Usage
 
-1. **Providing a direct prompt:**
+1. **Providing a direct prompt, without apply git patches:**
 
    ```bash
-   mct "Add a new endpoint to get stats." --model gpt-4o-mini
+   mct "Add a new endpoint to get stats." --model gpt-4o-mini --mode chat
    ```
 
 2. **Using an existing markdown chat file:**
@@ -270,10 +279,10 @@ mct [flags] [prompt]
    mct --file .machtiani/chat/add_state_endpoint.md --model gpt-4o-mini
    ```
 
-3. **Specifying additional parameters:**
+3. **Make it more selective to reduce context size:**
 
    ```bash
-   mct "Add a new endpoint to get stats." --model gpt-4o --mode pure-chat --match-strength high
+   mct "Add a new endpoint to get stats." --model gpt-4o --match-strength high
    ```
 
 4. **Using the `--force` flag to skip confirmation:**
@@ -284,7 +293,7 @@ mct [flags] [prompt]
 
 ### Different Modes
 
-In `commit` mode, it searches commits for possible files to help answer the prompt. In `pure-chat` mode, it does not retrieve any files.
+In default `commit` mode, it searches commits for possible files to help answer the prompt. In `pure-chat` mode, it does not retrieve any files. In `chat` mode, it doesn't apply implement changes with git patches.
 
 #### `sync`
 
