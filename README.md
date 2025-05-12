@@ -150,8 +150,8 @@ Example of a project-local file (`./.machtiani-config.yml`):
 
 ```yml
 environment:
-  MCT_MODEL_BASE_URL: "https://api.openai.com/v1",
-  MCT_MODEL_API_KEY: "sk-REPLACE_WITH_YOURS",
+  MCT_MODEL_BASE_URL: "https://api.openai.com/v1"
+  MCT_MODEL_API_KEY: "sk-REPLACE_WITH_YOURS"
   CODE_HOST_API_KEY: "ghp-REPLACE_WITH_YOURS"
 }
 ```
