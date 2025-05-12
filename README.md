@@ -8,8 +8,6 @@ So why vibe when you can fly?
 
 - Choose any API provider that adheres to OpenAI API spec, including locally ran ollama or mxl-lm.
 
-- Stands on own, but composes in the terminal with other command line tools, such Claude Code or Codex.
-
 - <div style="display: flex; align-items: center; text-align: left;">
     <span style="font-size: 1.1em; margin-right: 0.5em;">
       Enjoy this demo video and show support  👉
@@ -18,6 +16,27 @@ So why vibe when you can fly?
       <img src="images/givebutter.svg" alt="Support machtiani" width="100" />
     </a>
   </div>
+
+## mct ❤️ codex
+
+**Combine the strongest strengths with --mode answer-only:**
+
+- `mct` excels at understanding large, real codebases — grabbing the _right_ context and returning exactly what needs to be changed, with file paths and functions — at minimal token cost.
+- `codex` is a superb executor for code implementation, refactor, and test runs, but works best when given precise instructions and context.
+
+### Example: Compose for Peak Productivity
+
+```bash
+# Use mct to derive a minimal, context-aware plan and feed it directly to codex:
+codex "$(mct \"Add error handling for API calls\" --mode answer-only --model Qwen2.5-Coder-7B-Instruct-Q6)"
+```
+
+- **Mix match models:** have `mct` do the heavy lifting with any model of your choice, while codex uses o4-mini (or whatever you want) to implement.
+- **Lower token usage.** `mct`'s highly targeted planning leverages the code/project structure, so LLMs do less redundant thought and token looping.
+- **Win/Win:**
+  - *Best case*: `codex` can implement the change directly, with step-by-step details and file paths distilled by `mct` — bypassing expensive, imprecise code search.
+  - *Worst case*: `codex` still benefits by having all ambiguity boiled out, so it simply fills in implementation details.
+- **Result:** Faster, more precise, and _cheaper_ answers for big projects. When you combine their strengths, you waste less time, fewer tokens — and get more reliable automation at the CLI.
 
 ## Quick Launch
 
