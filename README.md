@@ -244,7 +244,7 @@ The machtiani cli `mct` allows you to interact with the project through command-
 ### Command Structure
 
 ```bash
-mct [flags] [prompt]
+mct [prompt] [flags]
 ```
 
 ### Flags
