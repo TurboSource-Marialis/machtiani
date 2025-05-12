@@ -11,7 +11,7 @@ So why vibe when you can fly?
     <span style="font-size: 1.1em; margin-right: 0.5em;">
       Enjoy this demo video and show support  👉
     </span>
-    <a href="https://givebutter.com/mnGQAj" style="display: inline-block;">
+    <a href="https://givebutter.com/mnGQAj/machtiani" style="display: inline-block;">
       <img src="images/givebutter.svg" alt="Support machtiani" width="100" />
     </a>
   </div>
