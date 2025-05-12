@@ -17,9 +17,9 @@ So why vibe when you can fly?
     </a>
   </div>
 
-## mct ❤️ codex
+## mct <img src="images/heart-svgrepo-com.svg" alt="heart" width="20" style="vertical-align:middle; margin:0 0.2em;"/> codex
 
-**Combine the strongest strengths with --mode answer-only:**
+**Combine the strongest strengths with `--mode answer-only`:**
 
 - `mct` excels at understanding large, real codebases — grabbing the _right_ context and returning exactly what needs to be changed, with file paths and functions — at minimal token cost.
 - `codex` is a superb executor for code implementation, refactor, and test runs, but works best when given precise instructions and context.
