@@ -1,6 +1,6 @@
 # machtiani
 
-**Machtiani (mct)** is an experimental terminal based, locally ran code chat service. It's designed to work with real projects. Thousands of commits. Thousands of files. For most cases, you’ll get faster, higher quality answers at a fraction of the cost than token-guzzling alternatives. It also punches above its weight, and you won’t find a better agent that can even run locally on your MacBook.
+**Machtiani (mct)** is an experimental terminal based, locally ran code chat service. It's designed to work with real projects. Thousands of commits. Thousands of files. For most cases, you’ll get faster, higher quality answers at a fraction of the cost than token-guzzling alternatives. If you run a local model on your laptop, you won't find anything better.
 
 So why vibe when you can fly?
 
