@@ -144,7 +144,7 @@ Lookup and precedence:
 3. Failing that, it will fall back to your **home** `~/.machtiani-config.yml`.
 4. If neither exists you must use env vars.
 
-Supported keys in the JSON are exactly the same names as the env vars:
+Supported keys in the yaml are exactly the same names as the env vars:
 
 Example of a project-local file (`./.machtiani-config.yml`):
 
@@ -296,7 +296,7 @@ In default `commit` mode, it searches commits for possible files to help answer 
 
 #### `sync`
 
-The `sync` command is used to fetch and checkout a specific branch of the repository.
+The `sync` command is used to sync machtiani with the project's git..
 
 **Usage:**
 ```bash
