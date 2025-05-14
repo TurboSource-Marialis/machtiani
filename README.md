@@ -103,6 +103,8 @@ codex "$(mct \"Add error handling for API calls\" --mode answer-only --model Qwe
    ```
    **USE A LOW COST** and fast model when syncing. If you use Claude or something for syncing, you're just wasting money and time.
 
+   Also, it will only work if you have a git remote origin as a http/s urls (no ssh), at the moment.
+
    Give it time to finish. Run `mct status` to check back if completed.
 
 6. Chat with the project
