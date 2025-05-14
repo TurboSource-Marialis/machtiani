@@ -101,6 +101,7 @@ codex "$(mct \"Add error handling for API calls\" --mode answer-only --model Qwe
    ```bash
    mct sync --model google/gemini-2.0-flash-001 --model-threads 10
    ```
+   **USE A LOW COST** and fast model when syncing. If you use Claude or something for syncing, you're just wasting money and time.
 
    Give it time to finish. Run `mct status` to check back if completed.
 
