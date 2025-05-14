@@ -265,7 +265,8 @@ class BaseTestEndToEnd:
 
         self.assertTrue(any("Using remote URL" in line for line in stdout_normalized))
         self.assertTrue(any("chastler" in line for line in stdout_normalized))
-        self.assertFalse(any("video" in line for line in stdout_normalized))
+        self.assertTrue(any("video" in line for line in stdout_normalized))
+        self.assertFalse(any("audio" in line for line in stdout_normalized))
         self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_normalized)) # Path unchanged
 
 
