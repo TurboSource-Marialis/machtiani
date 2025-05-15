@@ -125,7 +125,7 @@ codex "$(mct \"Add error handling for API calls\" --mode answer-only --model Qwe
 
 ***Local LLMs and quantized models***
 
-See the [llama.cpp guide](docs/llama-cpp.md) and the [MLX-LM guide](docs/mlx-lm.md) for setup and best practices if you plan to use mct with a local model instead of an API provider.
+See the [llama.cpp guide for Linux users](docs/llama-cpp.md) or the [MLX-LM guide for Mac users](docs/mlx-lm.md) for setup and best practices if you plan to use mct with a local model instead of an API provider.
 
 ***Local git-servers***
 
