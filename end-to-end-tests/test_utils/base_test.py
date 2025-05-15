@@ -978,7 +978,7 @@ class ExtraTestEndToEnd:
 
         print(f"Asserting estimation time ({estimation_time}s) is between 1 and 4 seconds (depth 1, low amplify).")
         self.assertGreaterEqual(estimation_time, 1.0,
-                                f"Cost estimation time ({estimationation_time}s) was less than 1 seconds (depth 1, low amplify).")
+                                f"Cost estimation time ({estimation_time}s) was less than 1 seconds (depth 1, low amplify).")
         self.assertLessEqual(estimation_time, 4.0,
                                f"Cost estimation time ({estimation_time}s) was more than 4 seconds (depth 1, low amplify).")
 
