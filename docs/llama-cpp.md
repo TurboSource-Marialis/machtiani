@@ -52,4 +52,12 @@ mct sync --cost  --model Qwen2.5-Coder-1.5B-Instruct-Q6_K_L.gguf --model-threads
 
 ### Prompting
 
+Test it out with no file retrieval (--mode pure-chat).
+
+```
 mct "Ask whatever you want here" --mode pure-chat --model Qwen2.5-Coder-1.5B-Instruct-GGUF
+```
+
+For real repo aware chat use `--mode chat`.
+
+If you want code suggestions to be applied, please wrap your command using Codex as shown in README. The small local model could be very janky for mct otherwise. In any case, without any `--mode` flag it will attempt to apply suggestions.
