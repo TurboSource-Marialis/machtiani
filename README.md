@@ -123,13 +123,13 @@ codex "$(mct \"Add error handling for API calls\" --mode answer-only --model Qwe
    Any local git commits must be pushed to the git remote for `mct` to sync it.
 
 
- No 'yolo'. mct agentic ability is constrained to:
+***Local LLMs and quantized models***
 
- - applying git patches
+See the [llama.cpp guide](docs/llama-cpp.md) and the [MLX-LM guide](docs/mlx-lm.md) for setup and best practices if you plan to use mct with a local model instead of an API provider.
 
- - reading files checked into git
+***Local git-servers***
 
- - saving chat convos and patch history to `.machtiani/`
+See here if the project you want to chat to is purely local and not on Github or other codehosts.
 
 ## Configuration
 
