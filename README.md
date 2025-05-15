@@ -7,14 +7,7 @@ So why vibe when you can fly?
 - Efficiently finds right answer based on precise context out of thousands of files in a project.
 - Choose any API provider that adheres to OpenAI API spec, including locally ran ollama or mxl-lm.
 - Stands on own, but composes in the terminal with other command line tools, such Codex.
-- <div style="display: flex; align-items: center; text-align: left;">
-    <span style="font-size: 1.1em; margin-right: 0.5em;">
-      Enjoy this demo video and show support  👉
-    </span>
-    <a href="https://givebutter.com/mnGQAj/machtiani" style="display: inline-block;">
-      <img src="images/givebutter.svg" alt="Support machtiani" width="100" />
-    </a>
-  </div>
+- Enjoy this demo video  👉 [mct intro](https://vimeo.com/1082494564/fce3fc7b6a)<div style="display: flex; align-items: center; text-align: left;">
 
 ## mct <img src="images/heart-svgrepo-com.svg" alt="heart" width="20" style="vertical-align:middle; margin:0 0.2em;"/> codex
 
