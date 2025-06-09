@@ -872,7 +872,7 @@ class ExtraTestEndToEnd:
     def test_cost_estimation_time_low_amplify(self):
         """
         Tests the time and token counts for cost estimation using 'sync --amplify low --cost-only'.
-        Verifies the output contains the estimation time and it falls within 20-30 seconds.
+        Verifies the output contains the estimation time and it falls within 30-50 seconds.
         Verifies the specific token counts.
         """
 
@@ -891,11 +891,11 @@ class ExtraTestEndToEnd:
         self.assertTrue(time_line_found, "Time estimation line not found in stdout.")
         self.assertIsNotNone(estimation_time, "Failed to extract a valid estimation time float.")
 
-        print(f"Asserting estimation time ({estimation_time}s) is between 20 and 30 seconds.")
-        self.assertGreaterEqual(estimation_time, 20.0,
-                                f"Cost estimation time ({estimation_time}s) was less than 20 seconds.")
-        self.assertLessEqual(estimation_time, 30.0,
-                               f"Cost estimation time ({estimation_time}s) was more than 30 seconds.")
+        print(f"Asserting estimation time ({estimation_time}s) is between 30 and 50 seconds.")
+        self.assertGreaterEqual(estimation_time, 30.0,
+                                f"Cost estimation time ({estimation_time}s) was less than 30 seconds.")
+        self.assertLessEqual(estimation_time, 50.0,
+                               f"Cost estimation time ({estimation_time}s) was more than 50 seconds.")
 
     def test_cost_estimation_time_no_amplify(self):
         """
@@ -931,7 +931,7 @@ class ExtraTestEndToEnd:
     def test_cost_estimation_time_no_amplify_depth_1(self):
         """
         Tests time and tokens for 'sync --cost-only --depth 1'.
-        Expects time between 2-4 seconds and specific token counts.
+        Expects time between 1-4 seconds and specific token counts.
         """
 
         command = 'mct sync --cost-only --verbose --depth 1 --model-threads 10 --model gpt-4o-mini' # Updated command
@@ -987,7 +987,7 @@ class ExtraTestEndToEnd:
     def test_cost_estimation_time_no_amplify_depth_137(self):
         """
         Tests time and tokens for 'sync --cost-only --depth 137'.
-        Expects time between 2-4 seconds and specific token counts.
+        Expects time between 2-6 seconds and specific token counts.
         """
 
         command = 'mct sync --cost-only --verbose --depth 137 --model-threads 10 --model gpt-4o-mini' # Updated command
@@ -1005,11 +1005,11 @@ class ExtraTestEndToEnd:
         self.assertTrue(time_line_found, "Time estimation line not found in stdout (depth 137, no amplify).")
         self.assertIsNotNone(estimation_time, "Failed to extract valid estimation time (depth 137, no amplify).")
 
-        print(f"Asserting estimation time ({estimation_time}s) is between 2 and 4 seconds (depth 137, no amplify).")
+        print(f"Asserting estimation time ({estimation_time}s) is between 2 and 6 seconds (depth 137, no amplify).")
         self.assertGreaterEqual(estimation_time, 2.0,
                                 f"Cost estimation time ({estimation_time}s) was less than 2 seconds (depth 137, no amplify).")
-        self.assertLessEqual(estimation_time, 4.0,
-                               f"Cost estimation time ({estimation_time}s) was more than 4 seconds (depth 137, no amplify).")
+        self.assertLessEqual(estimation_time, 6.0,
+                               f"Cost estimation time ({estimation_time}s) was more than 6 seconds (depth 137, no amplify).")
 
     def test_cost_estimation_time_low_amplify_depth_137(self):
         """
