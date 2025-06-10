@@ -813,6 +813,7 @@ class BaseTestEndToEnd:
         self.assertTrue(any("README" in line for line in stdout_normalized))
         self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_normalized))
 
+
         # Verify contributor guide exists
         self.assertTrue(contrib_found, "No contributor guide file (CONTRIBUTOR.md or similar) found")
 
@@ -837,9 +838,21 @@ class ExtraTestEndToEnd:
         cls.logger = logging.getLogger(__name__)
 
     @classmethod
-    def teardown_end_to_end(cls):
-        """Tear down after tests run within the machtiani repository."""
-        print(f"\n--- Tearing down TestMachtianiRepoEndToEnd for machtiani ---") # Project name unchanged
+    def teardown_end_to_end(cls, unstage_files=True):
+        """Clean up the test environment."""
+        try:
+            cls.teardown = Teardown(cls.directory)
+
+            cls.teardown.delete_ignore_file() # Deletes .machtiani.ignore
+            cls.teardown.delete_chat_files() # Deletes files in .machtiani/chat
+            if unstage_files:
+                cls.teardown.restore_untracked_changes()  # Added method call
+
+            stdout, stderr = cls.teardown.run_remove() # Uses mct remove internally
+            print("Teardown Output:", stdout)
+            print("Teardown Errors:", stderr)
+        except Exception as e:
+            print(f"Error during teardown: {e}")
         # No specific teardown needed for this test yet
 
     def run_mct_command_in_machtiani_repo(self, command): # Renamed method
@@ -1037,3 +1050,127 @@ class ExtraTestEndToEnd:
                                 f"Cost estimation time ({estimation_time}s) was less than 8 seconds (depth 137, low amplify).")
         self.assertLessEqual(estimation_time, 10.0,
                                f"Cost estimation time ({estimation_time}s) was more than 10 seconds (depth 137, low amplify).")
+
+    def test_sync_interruption_and_recovery(self):
+        """Test interrupting sync operation and verifying recovery."""
+
+        # Checkout end-to-end-test branch first to ensure we're syncing from a clean state
+        self.setup.checkout_branch("end-to-end-test")
+
+        # Run sync command in the background (you might need to adjust this depending on how your command runs)
+        command = 'git checkout end-to-end-test && mct sync --amplify low --force --model-threads 3 --model gpt-4o-mini'
+        # Note: self.run_mct_command_in_machtiani_repo might be blocking.
+        # For a true interruption test, you may need to run this command in a non-blocking way,
+        # for example, using subprocess.Popen. For now, we assume it kicks off a background process
+        # that the container handles.
+        stdout_mct, stderr_mct = self.run_mct_command_in_machtiani_repo(command)
+
+        # Wait for approximately 30 seconds to let the sync process start
+        print("Waiting for sync process to begin...")
+        time.sleep(30)
+
+        # --- ROBUST STOP SEQUENCE ---
+        service_name = "commit-file-retrieval"
+        print(f"Stopping {service_name} service with a 10-second grace period...")
+        try:
+            # Use a longer timeout for graceful shutdown.
+            # Using a list for subprocess.run is safer than shell=True.
+            subprocess.run(["docker", "stop", "-t", "10", service_name], check=True, capture_output=True)
+        except subprocess.CalledProcessError as e:
+            # If that fails, try the alternative name.
+            if "No such container" in e.stderr.decode():
+                service_name = "machtiani-commit-file-retrieval"
+                print(f"First attempt failed. Stopping alternative '{service_name}'...")
+                subprocess.run(["docker", "stop", "-t", "10", service_name], check=True, capture_output=True)
+            else:
+                 # The command failed for another reason
+                 self.fail(f"Failed to stop container: {e.stderr.decode()}")
+
+        # Instead of time.sleep(), poll to confirm the container is actually stopped.
+        wait_for_container_status(service_name, 'exited', timeout=40)
+
+        # --- ROBUST START SEQUENCE ---
+        print(f"Starting {service_name} service...")
+        subprocess.run(["docker", "start", service_name], shell=False, check=True)
+
+        # Poll to confirm the service is back up and running.
+        wait_for_container_status(service_name, 'running', timeout=10)
+
+        # Wait for the application inside the container to be ready
+        print("Waiting for MCT status to be 'complete'...")
+        status_command = 'mct status'
+        wait_for_status_complete(status_command, self.directory) # Your existing function is good for this
+
+        # --- The rest of your test logic ---
+        try:
+            copy_command = f"docker cp {service_name}:/data/users/repositories/github_com_7db9a_machtiani-end-to-end-test/commits/logs/commits_logs.json ./commits_logs.json"
+            subprocess.run(copy_command, shell=True, check=True) # shell=True is okay for simple commands like this
+
+            with open('commits_logs.json', 'r') as file:
+                commits_logs = json.load(file)
+            # Extract OIDs from the commits logs and verify the first one appears in git history
+            if isinstance(commits_logs, dict):
+                oids = list(commits_logs.keys())
+            elif isinstance(commits_logs, list):
+                oids = [entry.get('oid') for entry in commits_logs if 'oid' in entry]
+            else:
+                self.fail("Unexpected format for commits_logs.json")
+
+            self.assertTrue(oids, "No OIDs found in commits logs")
+            first_oid = oids[0]
+
+            git_history = subprocess.check_output(
+                "git rev-list --all", shell=True, cwd=self.directory
+            ).decode('utf-8').splitlines()
+            self.assertIn(
+                first_oid, git_history,
+                f"OID {first_oid} from commits logs not found in git history"
+            )
+
+            os.remove('commits_logs.json')
+        except subprocess.CalledProcessError as e:
+            self.fail(f"Error copying or processing commits logs: {e}")
+
+        command = 'mct  "What kind of license does the project have " --force --mode chat --model gpt-4o-mini' # Updated command
+        stdout_mct, stderr_mct = run_mct_command(command, self.directory) # Use renamed function
+        stdout_normalized = clean_output(stdout_mct)
+
+        self.assertTrue(any("MIT" in line for line in stdout_normalized))
+        self.assertTrue(any("Response saved to .machtiani/chat/" in line for line in stdout_normalized)) # Path unchanged
+
+# Helper function to poll for container status
+def wait_for_container_status(container_name, target_status, timeout=60):
+    """
+    Waits for a Docker container to reach a target status ('running', 'exited').
+
+    Args:
+        container_name (str): The name of the Docker container.
+        target_status (str): The desired status (e.g., 'running', 'exited').
+        timeout (int): Maximum time to wait in seconds.
+
+    Raises:
+        TimeoutError: If the container does not reach the target status within the timeout.
+    """
+    start_time = time.time()
+    while time.time() - start_time < timeout:
+        try:
+            # Use docker inspect to get reliable, machine-readable JSON output
+            cmd = ["docker", "inspect", "-f", "{{.State.Status}}", container_name]
+            result = subprocess.check_output(cmd, text=True, stderr=subprocess.PIPE).strip()
+
+            if result == target_status:
+                print(f"Container '{container_name}' successfully reached status '{target_status}'.")
+                return
+        except subprocess.CalledProcessError as e:
+            # This can happen if the container doesn't exist yet or was just removed.
+            # If we're waiting for it to be 'exited', this is a success condition.
+            if target_status == 'exited' and "No such object" in e.stderr:
+                 print(f"Container '{container_name}' is confirmed to be gone.")
+                 return
+            print(f"Waiting for container '{container_name}': could not inspect yet. Retrying...")
+
+        time.sleep(2) # Poll every 2 seconds
+
+    raise TimeoutError(f"Container '{container_name}' did not reach status '{target_status}' within {timeout} seconds.")
+
+
